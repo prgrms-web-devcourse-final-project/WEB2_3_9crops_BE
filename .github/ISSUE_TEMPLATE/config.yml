@@ -1,5 +1,14 @@
-blank_issues_enabled: true  # true로 설정하여 빈 이슈도 허용
+blank_issues_enabled: false
 contact_links:
-  - name: 🌱 9crops Discussions
+  - name: GitHub Community Support
     url: https://github.com/prgrms-web-devcourse-final-project/WEB2_3_9crops_BE/discussions
-    about: template
+    about: Please ask and answer questions here.
+
+templates:
+  - name: Issue Template
+    about: 기능 요청 또는 개선사항을 제안해주세요
+    filename: feature_request.md
+
+  - name: Bug Template
+    about: 발견한 버그를 리포트해주세요
+    filename: bug_report.md

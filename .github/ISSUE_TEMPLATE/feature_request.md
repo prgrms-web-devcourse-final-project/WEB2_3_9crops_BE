@@ -1,20 +1,29 @@
----
-name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
+# Feature Request
 
----
+## 📝 기능 설명
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+- 구현하고자 하는 기능을 설명해주세요.
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+## 🎯 목적
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+- 이 기능이 필요한 이유와 해결하고자 하는 문제를 설명해주세요.
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+## 📋 구현 상세
+
+1.
+2.
+3.
+
+## ✅ 완료 조건
+
+- [ ] 조건 1
+- [ ] 조건 2
+- [ ] 조건 3
+
+## 🎨 UI/UX (선택사항)
+
+- 디자인 관련 설명이나 참고 이미지를 첨부해주세요.
+
+## 📎 참고사항
+
+- 추가적인 정보나 문서 링크를 첨부해주세요.

@@ -1,5 +1,5 @@
-blank_issues_enabled: false
+blank_issues_enabled: true  # true로 설정하여 빈 이슈도 허용
 contact_links:
-  - name: GitHub Community Support
-    url: https://github.com/orgs/community/discussions
-    about: Please ask and answer questions here.
+  - name: 🌱 9crops Discussions
+    url: https://github.com/prgrms-web-devcourse-final-project/WEB2_3_9crops_BE/discussions
+    about: template

@@ -1,4 +1,4 @@
-package io.corps.warmletter.global.error.response;
+package io.crops.warmletter.global.error.response;
 
 import java.time.LocalDateTime;
 import lombok.AccessLevel;

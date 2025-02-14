@@ -1,4 +1,4 @@
-package io.corps.warmletter.global.response;
+package io.crops.warmletter.global.response;
 
 import java.util.List;
 import lombok.Getter;

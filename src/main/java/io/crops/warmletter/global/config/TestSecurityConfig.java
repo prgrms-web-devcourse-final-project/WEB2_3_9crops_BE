@@ -1,4 +1,4 @@
-package io.corps.warmletter.global.config;
+package io.crops.warmletter.global.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

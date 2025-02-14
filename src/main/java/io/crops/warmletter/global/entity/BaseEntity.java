@@ -1,4 +1,4 @@
-package io.corps.warmletter.global.entity;
+package io.crops.warmletter.global.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;

@@ -1,6 +1,6 @@
-package io.corps.warmletter.global.error.exception;
+package io.crops.warmletter.global.error.exception;
 
-import io.corps.warmletter.global.error.common.ErrorCode;
+import io.crops.warmletter.global.error.common.ErrorCode;
 import lombok.Getter;
 
 @Getter

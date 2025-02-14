@@ -1,4 +1,4 @@
-package io.corps.warmletter.global.config;
+package io.crops.warmletter.global.config;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;

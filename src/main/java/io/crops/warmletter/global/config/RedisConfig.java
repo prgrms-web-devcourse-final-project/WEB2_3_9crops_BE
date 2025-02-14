@@ -1,4 +1,4 @@
-package io.corps.warmletter.global.config;
+package io.crops.warmletter.global.config;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;

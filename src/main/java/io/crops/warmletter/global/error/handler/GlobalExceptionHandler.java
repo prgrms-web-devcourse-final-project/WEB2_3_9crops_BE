@@ -1,8 +1,8 @@
-package io.corps.warmletter.global.error.handler;
+package io.crops.warmletter.global.error.handler;
 
-import io.corps.warmletter.global.error.common.ErrorCode;
-import io.corps.warmletter.global.error.exception.BusinessException;
-import io.corps.warmletter.global.error.response.ErrorResponse;
+import io.crops.warmletter.global.error.common.ErrorCode;
+import io.crops.warmletter.global.error.exception.BusinessException;
+import io.crops.warmletter.global.error.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.ResponseEntity;

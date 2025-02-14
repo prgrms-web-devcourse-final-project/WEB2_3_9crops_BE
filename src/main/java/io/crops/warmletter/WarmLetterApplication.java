@@ -1,4 +1,4 @@
-package io.corps.warmletter;
+package io.crops.warmletter;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

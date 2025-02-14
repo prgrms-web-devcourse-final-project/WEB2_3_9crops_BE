@@ -1,4 +1,4 @@
-package io.corps.warmletter.global.error.common;
+package io.crops.warmletter.global.error.common;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

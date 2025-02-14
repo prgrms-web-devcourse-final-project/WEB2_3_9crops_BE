@@ -163,6 +163,12 @@ jacocoTestCoverageVerification {
 // Spotless 설정
 spotless {
     java {
+        target {
+            project.files(
+                    "src/main/java/**/*.java",
+                    "src/test/java/**/*.java"
+            )
+        }
         importOrder()  // import 문 정렬
         removeUnusedImports()  // 사용하지 않는 import 제거
         googleJavaFormat().aosp()  // Google Java 스타일 가이드 적용, aosp 4칸 들여쓰기
@@ -170,8 +176,9 @@ spotless {
     }
 }
 
-// 빌드 전에 Spotless 체크 실행
-build.dependsOn 'spotlessApply'
+// 의존성 순서 설정
+spotlessJava.dependsOn compileJava
+build.dependsOn spotlessApply
 
 // test 실행 후 Jacoco 리포트 생성
 test {

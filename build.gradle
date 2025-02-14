@@ -7,7 +7,7 @@ plugins {
     id "org.sonarqube" version "4.4.1.3373"
 }
 
-group = 'io.corps'
+group = 'io.crops'
 version = '0.0.1-SNAPSHOT'
 
 java {
@@ -105,6 +105,14 @@ jacoco {
     toolVersion = '0.8.11'
 }
 
+// 공통 exclude 패턴을 상단에 정의
+def excludePatterns = [
+        '**/Q*.class',
+        '**/*Application.class',
+        '**/dto/**',
+        '**/global/**',
+]
+
 jacocoTestReport {
     reports {
         xml.required = true
@@ -113,17 +121,9 @@ jacocoTestReport {
         html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
     }
 
-    def excludes = [
-            '**/Q*.class',
-            '**/*Application.class',
-            '**/dto/**',
-            '**/entity/**',
-            '**/config/**'
-    ]
-
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
-            fileTree(dir: it, excludes: excludes)
+            fileTree(dir: it, excludes: excludePatterns)
         }))
     }
 
@@ -149,14 +149,14 @@ jacocoTestCoverageVerification {
                 minimum = 0.60
             }
 
-            excludes = [
-                    '**/Q*.class',
-                    '**/*Application.class',
-                    '**/dto/**',
-                    '**/entity/**',
-                    '**/config/**'
-            ]
+            excludes = excludePatterns
         }
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, excludes: excludePatterns)
+        }))
     }
 }
 

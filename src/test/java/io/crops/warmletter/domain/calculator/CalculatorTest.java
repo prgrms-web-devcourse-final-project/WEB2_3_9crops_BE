@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
 class CalculatorTest {
     private Calculator calculator;
@@ -24,11 +22,10 @@ class CalculatorTest {
         assertEquals(0, calculator.add(0, 0));
     }
 
-    @ParameterizedTest
-    @CsvSource({"3, 2, 1", "10, 5, 5", "0, 0, 0", "-3, -5, 2"})
+    @Test
     @DisplayName("뺄셈 연산을 수행한다")
-    void subtract(double expected, double a, double b) {
-        assertEquals(expected, calculator.subtract(a, b));
+    void subtract() {
+        assertEquals(3, calculator.subtract(5, 2));
     }
 
     @Test

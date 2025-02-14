@@ -4,21 +4,24 @@ services:
   mysql:
     image: mysql:8.0
     ports:
-      - "3307:3307"
+      - "3307:3306"
     environment:
-      - MYSQL_DATABASE=crops
-      - MYSQL_ROOT_PASSWORD=csedbadmin
+      - MYSQL_DATABASE=corps
+      - MYSQL_ROOT_PASSWORD=123456
     volumes:
       - mysql_data:/var/lib/mysql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 
   redis:
-    image: redis:7.0
+    image: redis:latest
+    container_name: redis
     ports:
       - "6379:6379"
-    command: redis-server --requirepass mZIG0PLk!hFx1e!
     volumes:
-      - redis_data:/data
+      - ../config/redis.conf:/usr/local/etc/redis/redis.conf # Redis conf 파일 지정
+    command: redis-server /usr/local/etc/redis/redis.conf # 실행할 Command 명령어
+    user: root  # root 권한으로 실행
+    restart: always # Redis 컨테이너가 종료되면 자동으로 재시작
 
 volumes:
   mysql_data:

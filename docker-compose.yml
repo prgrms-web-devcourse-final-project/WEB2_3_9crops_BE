@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3307:3307"
+    environment:
+      - MYSQL_DATABASE=crops
+      - MYSQL_ROOT_PASSWORD=csedbadmin
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  redis:
+    image: redis:7.0
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass mZIG0PLk!hFx1e!
+    volumes:
+      - redis_data:/data
+
+volumes:
+  mysql_data:
+  redis_data:

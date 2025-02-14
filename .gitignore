@@ -292,3 +292,4 @@ redis/
 
 ### .env ###
 **/resources/.env
+.env

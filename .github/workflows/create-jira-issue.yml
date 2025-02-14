@@ -1,3 +1,4 @@
+
 name: Create Jira issue
 on:
   issues:
@@ -28,9 +29,9 @@ jobs:
 
       - name: Log Issue Parser
         run: |
-          echo "Parent Key: ${{ steps.issue-parser.outputs.issueparser_parentKey }}"
-          echo "Ticket Number: ${{ steps.issue-parser.outputs.__ticket_number }}"
-          echo "JSON String: ${{ steps.issue-parser.outputs.jsonString }}"
+          echo '${{ steps.issue-parser.outputs.issueparser_parentKey }}'
+          echo '${{ steps.issue-parser.outputs.__ticket_number }}'
+          echo '${{ steps.issue-parser.outputs.jsonString }}'
 
       - name: Convert markdown to Jira Syntax
         uses: peter-evans/jira2md@v1
@@ -52,10 +53,14 @@ jobs:
           summary: '${{ github.event.issue.title }}'
           description: '${{ steps.md2jira.outputs.output-text }}'
           fields: |
-            ${{ steps.issue-parser.outputs.issueparser_parentKey != '' && format('{{"parent": {{"key": "{0}"}}}}, steps.issue-parser.outputs.issueparser_parentKey) || '{}' }}
+            {
+              "parent": {
+                "key": "${{ steps.issue-parser.outputs.issueparser_parentKey }}"
+              }
+            }
 
       - name: Log created issue
-        run: echo "Jira Issue ${{ steps.create.outputs.issue }} was created"
+        run: echo "Jira Issue ${{ steps.issue-parser.outputs.parentKey }}/${{ steps.create.outputs.issue }} was created"
 
       - name: Checkout develop code
         uses: actions/checkout@v4
@@ -65,10 +70,8 @@ jobs:
       - name: Create branch with Ticket number
         run: |
           ISSUE_NUMBER="${{ steps.create.outputs.issue }}"
-          ISSUE_TITLE="${{ steps.issue-parser.outputs.issueparser_branch }}"
-          # Remove special characters and limit branch name length
-          SANITIZED_TITLE=$(echo "${ISSUE_TITLE}" | iconv -f utf8 -t ascii//TRANSLIT | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-\|-$//g' | cut -c1-50 | tr '[:upper:]' '[:lower:]')
-          BRANCH_NAME="${ISSUE_NUMBER}-${SANITIZED_TITLE}"
+          ISSUE_TITLE="${{ steps.issue-parser.outputs.issueparser_branch}}"
+          BRANCH_NAME="${ISSUE_NUMBER}-$(echo ${ISSUE_TITLE} | sed 's/ /-/g')"
           git checkout -b "${BRANCH_NAME}"
           git push origin "${BRANCH_NAME}"
 
@@ -86,3 +89,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.issue.number }}
           body: 'Jira Issue Created: [${{ steps.create.outputs.issue }}](${{ secrets.JIRA_BASE_URL }}/browse/${{ steps.create.outputs.issue }})'
+

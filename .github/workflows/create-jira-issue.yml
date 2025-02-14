@@ -1,92 +1,86 @@
-
-name: Create Jira issue
+name: Jira Workflow
 on:
+  pull_request:
+    types: [opened, reopened, closed]
   issues:
-    types:
-      - opened
+    types: [opened, closed, reopened]
+
 jobs:
   create-issue:
-    name: Create Jira issue
+    name: Sync with Jira
     runs-on: ubuntu-latest
     steps:
-      - name: Login
+      - name: Login to Jira
         uses: atlassian/gajira-login@v3
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
 
-      - name: Checkout main code
-        uses: actions/checkout@v4
-        with:
-          ref: main
-
-      - name: Issue Parser
-        uses: stefanbuck/github-issue-praser@v3
-        id: issue-parser
-        with:
-          template-path: .github/ISSUE_TEMPLATE/issue-form.yml
-
-      - name: Log Issue Parser
+      - name: Extract Jira Issue Key
+        id: extract-key
         run: |
-          echo '${{ steps.issue-parser.outputs.issueparser_parentKey }}'
-          echo '${{ steps.issue-parser.outputs.__ticket_number }}'
-          echo '${{ steps.issue-parser.outputs.jsonString }}'
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            TITLE="${{ github.event.pull_request.title }}"
+          else
+            TITLE="${{ github.event.issue.title }}"
+          fi
+          JIRA_KEY=$(echo "$TITLE" | grep -oE '[A-Z]+-[0-9]+' || echo "")
+          echo "JIRA_KEY=$JIRA_KEY" >> $GITHUB_ENV
 
-      - name: Convert markdown to Jira Syntax
-        uses: peter-evans/jira2md@v1
-        id: md2jira
+      # Issue or PR opened -> Move to In Progress
+      - name: Move to In Progress
+        if: |
+          env.JIRA_KEY != '' && 
+          (github.event.action == 'opened' || github.event.action == 'reopened')
+        uses: atlassian/gajira-transition@v3
         with:
-          input-text: |
-            ### Github Issue Link
-            - ${{ github.event.issue.html_url }}
+          issue: ${{ env.JIRA_KEY }}
+          transition: "In Progress"
 
-            ${{ github.event.issue.body }}
-          mode: md2jira
-
-      - name: Create Issue
-        id: create
-        uses: atlassian/gajira-create@v3
+      # PR merged -> Move to Code Review
+      - name: Move to Code Review
+        if: |
+          env.JIRA_KEY != '' && 
+          github.event_name == 'pull_request' && 
+          github.event.pull_request.merged == true
+        uses: atlassian/gajira-transition@v3
         with:
-          project: WR9
-          issuetype: Task
-          summary: '${{ github.event.issue.title }}'
-          description: '${{ steps.md2jira.outputs.output-text }}'
-          fields: |
-            {
-              "parent": {
-                "key": "${{ steps.issue-parser.outputs.issueparser_parentKey }}"
-              }
-            }
+          issue: ${{ env.JIRA_KEY }}
+          transition: "Code Review"
 
-      - name: Log created issue
-        run: echo "Jira Issue ${{ steps.issue-parser.outputs.parentKey }}/${{ steps.create.outputs.issue }} was created"
-
-      - name: Checkout develop code
-        uses: actions/checkout@v4
+      # Issue closed -> Move to Done
+      - name: Move to Done
+        if: |
+          env.JIRA_KEY != '' && 
+          github.event.action == 'closed'
+        uses: atlassian/gajira-transition@v3
         with:
-          ref: develop
+          issue: ${{ env.JIRA_KEY }}
+          transition: "Done"
 
-      - name: Create branch with Ticket number
-        run: |
-          ISSUE_NUMBER="${{ steps.create.outputs.issue }}"
-          ISSUE_TITLE="${{ steps.issue-parser.outputs.issueparser_branch}}"
-          BRANCH_NAME="${ISSUE_NUMBER}-$(echo ${ISSUE_TITLE} | sed 's/ /-/g')"
-          git checkout -b "${BRANCH_NAME}"
-          git push origin "${BRANCH_NAME}"
-
-      - name: Update issue title
-        uses: actions-cool/issues-helper@v3
+      # Add comment on Jira when PR is created
+      - name: Comment on Jira (PR Created)
+        if: |
+          env.JIRA_KEY != '' && 
+          github.event_name == 'pull_request' && 
+          github.event.action == 'opened'
+        uses: atlassian/gajira-comment@v3
         with:
-          actions: 'update-issue'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: '[${{ steps.create.outputs.issue }}] ${{ github.event.issue.title }}'
+          issue: ${{ env.JIRA_KEY }}
+          comment: |
+            Pull Request created: [${{ github.event.pull_request.title }}](${{ github.event.pull_request.html_url }})
+            Author: ${{ github.event.pull_request.user.login }}
 
-      - name: Add comment with Jira issue link
-        uses: actions-cool/issues-helper@v3
+      # Add comment on Jira when PR is merged
+      - name: Comment on Jira (PR Merged)
+        if: |
+          env.JIRA_KEY != '' && 
+          github.event_name == 'pull_request' && 
+          github.event.pull_request.merged == true
+        uses: atlassian/gajira-comment@v3
         with:
-          actions: 'create-comment'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.issue.number }}
-          body: 'Jira Issue Created: [${{ steps.create.outputs.issue }}](${{ secrets.JIRA_BASE_URL }}/browse/${{ steps.create.outputs.issue }})'
-
+          issue: ${{ env.JIRA_KEY }}
+          comment: |
+            Pull Request merged: [${{ github.event.pull_request.title }}](${{ github.event.pull_request.html_url }})
+            Merged by: ${{ github.event.pull_request.merged_by.login }}\

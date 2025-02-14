@@ -290,6 +290,4 @@ redis/
 ### QueryDSL QClass ###
 **/generated
 
-### .env ###
-**/resources/.env
 .env

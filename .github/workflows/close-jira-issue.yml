@@ -21,7 +21,7 @@ jobs:
         id: extract-key
         run: |
           ISSUE_TITLE="${{ github.event.issue.title }}"
-          JIRA_KEY=$(echo "$ISSUE_TITLE" | grep -oE '[A-Z]+-[0-9]+' || true)
+          JIRA_KEY=$(echo "$ISSUE_TITLE" | grep -oE '[A-Z0-9]+-[0-9]+' || true)
           
           if [[ -z "$JIRA_KEY" ]]; then
             echo "❌ ERROR: JIRA_KEY is empty. Check the ISSUE_TITLE format."

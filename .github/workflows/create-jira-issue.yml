@@ -71,7 +71,7 @@ jobs:
         run: |
           ISSUE_NUMBER="${{ steps.create.outputs.issue }}"
           ISSUE_TITLE="${{ steps.issue-parser.outputs.issueparser_branch}}"
-          BRANCH_NAME="${ISSUE_NUMBER}-$(echo ${ISSUE_TITLE} | sed 's/ /-/g')"
+          BRANCH_NAME="$(echo ${ISSUE_TITLE} | sed 's/ /-/g')(${ISSUE_NUMBER})"
           git checkout -b "${BRANCH_NAME}"
           git push origin "${BRANCH_NAME}"
 

@@ -21,12 +21,20 @@ jobs:
         id: extract-key
         run: |
           ISSUE_TITLE="${{ github.event.issue.title }}"
-          JIRA_KEY=$(echo "$ISSUE_TITLE" | grep -oE '[A-Z]+-[0-9]+')
+          JIRA_KEY=$(echo "$ISSUE_TITLE" | grep -oE '[A-Z]+-[0-9]+' || true)
+          
+          if [[ -z "$JIRA_KEY" ]]; then
+            echo "❌ ERROR: JIRA_KEY is empty. Check the ISSUE_TITLE format."
+            exit 1
+          fi
+          echo "✅ Jira Key extracted: $JIRA_KEY"
           echo "JIRA_KEY=$JIRA_KEY" >> $GITHUB_ENV
 
-      - name: Close Jira issue
-        if: env.JIRA_KEY != ''
+      - name: Transition Jira Issue to Done
         uses: atlassian/gajira-transition@v3
         with:
           issue: ${{ env.JIRA_KEY }}
-          transition: Done
+          transition: "Done"
+
+      - name: Log Jira Transition
+        run: echo "✅ Jira issue ${{ env.JIRA_KEY }} transitioned to Done."

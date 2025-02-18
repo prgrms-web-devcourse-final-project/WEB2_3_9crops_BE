@@ -1,6 +1,6 @@
 package io.crops.warmletter.domain.letter.controller;
 
-import io.crops.warmletter.domain.letter.dto.request.LettersCreateDTO;
+import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.service.LettersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ public class LettersController {
 
 
     @PostMapping("/api/letters")
-    public void createLetters(@RequestBody LettersCreateDTO lettersCreate) {
+    public void createLetters(@RequestBody CreateLetterRequest lettersCreate) {
 
     }
 }

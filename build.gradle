@@ -192,6 +192,10 @@ sonar {
         property "sonar.tests", "src/test/java"
         property "sonar.java.binaries", "${buildDir}/classes"
         property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+
+        property "sonar.coverage.exclusions", excludePatterns.collect {
+            it.replace('.class', '.java') // class 확장자를 java로 변경
+        }.join(',')
     }
 }
 

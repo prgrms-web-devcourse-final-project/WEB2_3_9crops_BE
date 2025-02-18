@@ -1,6 +1,6 @@
-package io.crops.warmletter.domain.moderation.cache;
+package io.crops.warmletter.domain.badword.cache;
 
-import io.crops.warmletter.domain.moderation.repository.ModerationRepository;
+import io.crops.warmletter.domain.badword.repository.BadWordRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,10 +16,10 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ModerationCacheInitializerTest {
+class BadWordCacheInitializerTest {
 
     @Mock
-    private ModerationRepository moderationRepository;
+    private BadWordRepository badWordRepository;
 
     @Mock
     private RedisTemplate<String, String> redisTemplate;
@@ -27,11 +27,11 @@ class ModerationCacheInitializerTest {
     @Mock
     private SetOperations<String, String> setOperations;
 
-    private ModerationCacheInitializer moderationCacheInitializer;
+    private BadWordCacheInitializer badWordCacheInitializer;
 
     @BeforeEach
     void setUp() {
-        moderationCacheInitializer = new ModerationCacheInitializer(moderationRepository, redisTemplate);
+        badWordCacheInitializer = new BadWordCacheInitializer(badWordRepository, redisTemplate);
         lenient().when(redisTemplate.opsForSet()).thenReturn(setOperations);
     }
 
@@ -40,10 +40,10 @@ class ModerationCacheInitializerTest {
     void loadBannedWordsRedis_hasWords() {
         // given
         List<String> words = List.of("시발", "병신");
-        when(moderationRepository.findAllWordsOnly()).thenReturn(words);
+        when(badWordRepository.findAllWordsOnly()).thenReturn(words);
 
         // when
-        moderationCacheInitializer.loadBannedWordsRedis();
+        badWordCacheInitializer.loadBannedWordsRedis();
 
         // then
         verify(redisTemplate).delete("banned_words");
@@ -56,10 +56,10 @@ class ModerationCacheInitializerTest {
     @DisplayName("금칙어가 없을 때 Redis에 아무 일도 발생하지 않음")
     void loadBannedWordsRedis_noWords() {
         // given
-        when(moderationRepository.findAllWordsOnly()).thenReturn(List.of());
+        when(badWordRepository.findAllWordsOnly()).thenReturn(List.of());
 
         // when
-        moderationCacheInitializer.loadBannedWordsRedis();
+        badWordCacheInitializer.loadBannedWordsRedis();
 
         // then
         verify(redisTemplate, never()).delete(any(String.class));
@@ -71,11 +71,11 @@ class ModerationCacheInitializerTest {
     @DisplayName("금칙어가 null일 때 Redis 작업 안 함")
     void loadBannedWordsRedis_nullWords() {
         // given
-        when(moderationRepository.findAllWordsOnly()).thenReturn(Collections.emptyList());
+        when(badWordRepository.findAllWordsOnly()).thenReturn(Collections.emptyList());
 
 
         // when
-        moderationCacheInitializer.loadBannedWordsRedis();
+        badWordCacheInitializer.loadBannedWordsRedis();
 
         // then
         verify(redisTemplate, never()).delete(any(String.class));

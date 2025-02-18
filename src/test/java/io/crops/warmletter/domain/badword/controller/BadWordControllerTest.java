@@ -1,7 +1,7 @@
-package io.crops.warmletter.domain.moderation.controller;
+package io.crops.warmletter.domain.badword.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.crops.warmletter.domain.moderation.dto.request.ModerationRequest;
-import io.crops.warmletter.domain.moderation.service.ModerationService;
+import io.crops.warmletter.domain.badword.dto.request.BadWordRequest;
+import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import org.junit.jupiter.api.DisplayName;
@@ -21,13 +21,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 
 @AutoConfigureMockMvc(addFilters = false)  // 이거 추가!!
-@WebMvcTest(ModerationController.class)
-class ModerationControllerTest {
+@WebMvcTest(BadWordController.class)
+class BadWordControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
-    private ModerationService moderationService;
+    private BadWordService badWordService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -36,7 +36,7 @@ class ModerationControllerTest {
     @DisplayName("금칙어 등록 API 성공 테스트")
     void createModerationWord_success() throws Exception {
         // given
-        ModerationRequest request = new ModerationRequest("금칙어");
+        BadWordRequest request = new BadWordRequest("금칙어");
 
         // when & then
         mockMvc.perform(post("/api/moderations")
@@ -46,17 +46,17 @@ class ModerationControllerTest {
                 .andExpect(jsonPath("$.data").value("검열단어 등록완료"))
                 .andExpect(jsonPath("$.message").value("성공"));
 
-        Mockito.verify(moderationService).saveModerationWord(any(ModerationRequest.class));
+        Mockito.verify(badWordService).saveModerationWord(any(BadWordRequest.class));
     }
 
     @Test
     @DisplayName("금칙어 등록 API 실패 테스트 - 중복 단어")
     void createModerationWord_fail_duplicate() throws Exception {
         // given
-        ModerationRequest request = new ModerationRequest("금칙어");
+        BadWordRequest request = new BadWordRequest("금칙어");
 
         doThrow(new BusinessException(ErrorCode.DUPLICATE_BANNED_WORD))
-                .when(moderationService).saveModerationWord(any(ModerationRequest.class));
+                .when(badWordService).saveModerationWord(any(BadWordRequest.class));
 
         // when & then
         mockMvc.perform(post("/api/moderations")

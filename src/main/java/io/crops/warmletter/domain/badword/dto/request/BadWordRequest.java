@@ -1,4 +1,4 @@
-package io.crops.warmletter.domain.moderation.dto.request;
+package io.crops.warmletter.domain.badword.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ModerationRequest {
+public class BadWordRequest {
     private String word;
 }

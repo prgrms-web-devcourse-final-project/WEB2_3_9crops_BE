@@ -1,4 +1,4 @@
-package io.crops.warmletter.domain.moderation.entity;
+package io.crops.warmletter.domain.badword.entity;
 
 import io.crops.warmletter.global.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -13,7 +13,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Moderation extends BaseEntity {
+@Table(name = "bad_words")
+public class BadWord extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

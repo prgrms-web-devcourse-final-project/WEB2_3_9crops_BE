@@ -1,6 +1,6 @@
-package io.crops.warmletter.domain.moderation.cache;
+package io.crops.warmletter.domain.badword.cache;
 
-import io.crops.warmletter.domain.moderation.repository.ModerationRepository;
+import io.crops.warmletter.domain.badword.repository.BadWordRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
@@ -13,17 +13,17 @@ import org.slf4j.Logger;
 
 @Component
 @RequiredArgsConstructor
-public class ModerationCacheInitializer {
+public class BadWordCacheInitializer {
 
-    private final ModerationRepository moderationRepository;
-    private static final Logger log = LoggerFactory.getLogger(ModerationCacheInitializer.class);
+    private final BadWordRepository badWordRepository;
+    private static final Logger log = LoggerFactory.getLogger(BadWordCacheInitializer.class);
     private final RedisTemplate<String, String> redisTemplate;
 
 
 
     @PostConstruct //서버실행될 때 자동실행
     public void loadBannedWordsRedis() {
-        List<String> words = moderationRepository.findAllWordsOnly();
+        List<String> words = badWordRepository.findAllWordsOnly();
         if(!words.isEmpty()) {
             redisTemplate.delete("banned_words");
             redisTemplate.opsForSet().add("banned_words", words.toArray(new String[0]));

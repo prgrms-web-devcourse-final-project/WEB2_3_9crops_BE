@@ -1,11 +1,8 @@
-package io.crops.warmletter.domain.moderation.service;
+package io.crops.warmletter.domain.badword.service;
 
-import io.crops.warmletter.domain.moderation.dto.request.ModerationRequest;
-import io.crops.warmletter.domain.moderation.entity.Moderation;
-import io.crops.warmletter.domain.moderation.exception.DuplicateBannedWordException;
-import io.crops.warmletter.domain.moderation.repository.ModerationRepository;
-import io.crops.warmletter.global.error.common.ErrorCode;
-import io.crops.warmletter.global.error.exception.BusinessException;
+import io.crops.warmletter.domain.badword.dto.request.BadWordRequest;
+import io.crops.warmletter.domain.badword.exception.DuplicateBannedWordException;
+import io.crops.warmletter.domain.badword.repository.BadWordRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,13 +17,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 @Transactional // 테스트 끝나면 롤백 (DB 안 지저분해짐)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD) // 각 테스트 끝날 때마다 컨텍스트 초기화 (DB 상태 초기화 효과)
-class ModerationServiceIntegrationTest {
+class BadWordServiceIntegrationTest {
 
     @Autowired
-    private ModerationService moderationService;
+    private BadWordService badWordService;
 
     @Autowired
-    private ModerationRepository moderationRepository;
+    private BadWordRepository badWordRepository;
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
@@ -35,13 +32,13 @@ class ModerationServiceIntegrationTest {
     @DisplayName("금칙어 저장 성공")
     void saveModerationWord_success() {
         // given
-        ModerationRequest request = new ModerationRequest("십새끼");
+        BadWordRequest request = new BadWordRequest("십새끼");
 
         // when
-        moderationService.saveModerationWord(request);
+        badWordService.saveModerationWord(request);
 
         // then
-        boolean exists = moderationRepository.existsByWord("십새끼");
+        boolean exists = badWordRepository.existsByWord("십새끼");
         assertTrue(exists);
         Boolean isRedis = redisTemplate.opsForSet().isMember("banned_words", "십새끼");
         assertTrue(isRedis);
@@ -50,9 +47,9 @@ class ModerationServiceIntegrationTest {
     @Test
     @DisplayName("이미 등록된 금칙어일 때 예외 발생")
     void saveModerationWord_duplicate() {
-        ModerationRequest request = new ModerationRequest("십새끼");
-        moderationService.saveModerationWord(request);
+        BadWordRequest request = new BadWordRequest("십새끼");
+        badWordService.saveModerationWord(request);
 
-        assertThrows(DuplicateBannedWordException.class, () -> moderationService.saveModerationWord(request));
+        assertThrows(DuplicateBannedWordException.class, () -> badWordService.saveModerationWord(request));
     }
 }

@@ -1,4 +1,4 @@
-package io.crops.warmletter.domain.moderation.exception;
+package io.crops.warmletter.domain.badword.exception;
 
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;

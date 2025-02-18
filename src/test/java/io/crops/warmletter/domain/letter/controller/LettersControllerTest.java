@@ -6,7 +6,7 @@ import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.FontType;
 import io.crops.warmletter.domain.letter.enums.PaperType;
-import io.crops.warmletter.domain.letter.repository.LettersRepository;
+import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ class LettersControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private LettersRepository lettersRepository;
+    private LetterRepository lettersRepository;
 
     @BeforeEach
     void clean() {
@@ -41,7 +41,7 @@ class LettersControllerTest {
     }
 
     @Test
-    @DisplayName("/api/letters 첫 편지 요청시 값 출력 확인")
+    @DisplayName("/api/letters 요청시 첫 편지 생성 후 값 출력 확인")
     void create_first_letter_success() throws Exception {
         //given
         CreateLetterRequest request = CreateLetterRequest.builder()
@@ -78,7 +78,7 @@ class LettersControllerTest {
     }
 
     @Test
-    @DisplayName("/api/letters 랜덤 편지 답장, 주고 받는 편지 요청시 값 출력 확인")
+    @DisplayName("/api/letters 요청 시 랜덤 편지 답장, 주고 받는 편지 값 출력 확인")
     void create_exchanged_letter_success() throws Exception {
         //given
         CreateLetterRequest request = CreateLetterRequest.builder()
@@ -108,7 +108,7 @@ class LettersControllerTest {
         Letter letter = lettersRepository.findAll().get(0);
         assertEquals("제목입니다", letter.getTitle());
         assertEquals("편지 내용입니다", letter.getContent());
-        assertEquals(Category.SAD, letter.getCategory());
+        assertEquals(null, letter.getCategory());
         assertEquals(PaperType.TYPE_A, letter.getPaperType());
         assertEquals(FontType.BOLD, letter.getFontType());
     }

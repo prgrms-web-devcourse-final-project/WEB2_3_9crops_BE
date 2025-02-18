@@ -1,9 +1,7 @@
 package io.crops.warmletter.domain.letter.entity;
 
-import io.crops.warmletter.domain.letter.enums.Category;
-import io.crops.warmletter.domain.letter.enums.DeliveryStatus;
-import io.crops.warmletter.domain.letter.enums.LetterType;
-import io.crops.warmletter.domain.letter.enums.PaperType;
+import io.crops.warmletter.domain.letter.enums.*;
+import io.crops.warmletter.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,8 +12,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
-public class Letters {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Letters extends BaseTimeEntity {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,7 +22,7 @@ public class Letters {
 
     private Long writerId;           // 보낸사람 (writer_id)
     private Long receiverId;         // 받는사람 (receiver_id)
-    private Long parentLetterId;     // 부모 편지아이디 (parent_letter_id)
+    private Long parentLetterId;     // 상위 편지아이디 (parent_letter_id)
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -48,8 +47,8 @@ public class Letters {
 
     private Boolean isRead;          // 열람 여부 (YES/NO 대신 boolean 처리)
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt; // 생성시간
+    @Enumerated(EnumType.STRING)
+    private FontType fontType;
 
     @Enumerated(EnumType.STRING)
     private PaperType paperType;     // 편지지 유형 등(필요시 enum 정의)
@@ -57,20 +56,11 @@ public class Letters {
     private Boolean isActive;        // 활성화 여부
 
     @Builder
-    public Letters(Long writerId,
-                   Long receiverId,
-                   Long parentLetterId,
-                   LetterType letterType,
-                   Category category,
-                   String title,
-                   String content,
-                   DeliveryStatus deliveryStatus,
-                   LocalDateTime deliveryStartedAt,
-                   LocalDateTime deliveryCompletedAt,
-                   Boolean isRead,
-                   LocalDateTime createdAt,
-                   PaperType paperType,
-                   Boolean isActive) {
+    public Letters(Long writerId, Long receiverId,
+                   Long parentLetterId, LetterType letterType,
+                   Category category, String title, String content,
+                   FontType fontType, PaperType paperType) {
+
         this.writerId = writerId;
         this.receiverId = receiverId;
         this.parentLetterId = parentLetterId;
@@ -78,12 +68,14 @@ public class Letters {
         this.category = category;
         this.title = title;
         this.content = content;
-        this.deliveryStatus = deliveryStatus;
-        this.deliveryStartedAt = deliveryStartedAt;
-        this.deliveryCompletedAt = deliveryCompletedAt;
-        this.isRead = isRead;
-        this.createdAt = createdAt;
+        this.deliveryStatus = DeliveryStatus.IN_DELIVERY;
+        this.deliveryStartedAt = LocalDateTime.now();
+        this.deliveryCompletedAt = LocalDateTime.now().plusHours(1); //편지 생성 시, 답장 시 한 시간 뒤에 도착
+        this.isRead = false;
+        this.fontType = fontType;
         this.paperType = paperType;
-        this.isActive = isActive;
+        this.isActive = false;
     }
+
+
 }

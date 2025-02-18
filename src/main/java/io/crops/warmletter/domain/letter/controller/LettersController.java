@@ -16,9 +16,13 @@ public class LettersController {
 
     private final LettersService lettersService;
 
-
+    /**
+     * 편지를 처음 쓰는지
+     * 답장을 보내는지
+     */
     @PostMapping("/api/letters")
     public void createLetters(@RequestBody CreateLetterRequest lettersCreate) {
+        lettersService.write(lettersCreate);
 
     }
 }

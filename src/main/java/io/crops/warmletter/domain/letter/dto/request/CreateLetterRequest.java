@@ -19,23 +19,30 @@ import lombok.Getter;
 @Getter
 public class CreateLetterRequest {
 
+    //받는사람 아이디 -> null이면 첫편지
+    public Long receiverId;
+
+    //상위 편지 id
+    public Long parentLetterId; //상위 편지 id
+
     @NotBlank(message = "제목을 입력해주세요.")
     public String title;
 
     @NotBlank(message = "내용을 입력해주세요.")
     public String content;
 
-    @NotBlank(message = "카테고리를 입력해주세요.")
-    private Category category;
+    public Category category; //null이면 주고받는 답장 편지
 
-    @NotBlank(message = "카테고리를 입력해주세요.")
-    private PaperType paperType;
+    @NotBlank(message = "편지지 타입을 입력해주세요.")
+    public PaperType paperType;
 
-    @NotBlank(message = "카테고리를 입력해주세요.")
-    private FontType font;
+    @NotBlank(message = "글꼴을 입력해주세요.")
+    public FontType font;
 
     @Builder
-    public CreateLetterRequest(String title, String content, Category category, PaperType paperType, FontType font) {
+    public CreateLetterRequest(Long receiverId, Long parentLetterId, String title, String content, Category category, PaperType paperType, FontType font) {
+        this.receiverId = receiverId;
+        this.parentLetterId = parentLetterId;
         this.title = title;
         this.content = content;
         this.category = category;

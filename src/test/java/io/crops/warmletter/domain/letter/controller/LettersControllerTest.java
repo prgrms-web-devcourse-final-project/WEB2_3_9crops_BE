@@ -41,7 +41,7 @@ class LettersControllerTest {
     }
 
     @Test
-    @DisplayName("/api/letters 요청시 첫 편지 생성 후 값 출력 확인")
+    @DisplayName("/api/letters 요청 시 첫 편지 생성 후 값 출력 확인")
     void create_first_letter_success() throws Exception {
         //given
         CreateLetterRequest request = CreateLetterRequest.builder()
@@ -86,7 +86,7 @@ class LettersControllerTest {
                 .parentLetterId(2L) //상위 편지 id
                 .title("제목입니다")
                 .content("편지 내용입니다")
-                .category(null)
+                .category(Category.SAD)
                 .paperType(PaperType.TYPE_A)
                 .font(FontType.BOLD)
                 .build();
@@ -108,13 +108,13 @@ class LettersControllerTest {
         Letter letter = lettersRepository.findAll().get(0);
         assertEquals("제목입니다", letter.getTitle());
         assertEquals("편지 내용입니다", letter.getContent());
-        assertEquals(null, letter.getCategory());
+        assertEquals(Category.SAD, letter.getCategory());
         assertEquals(PaperType.TYPE_A, letter.getPaperType());
         assertEquals(FontType.BOLD, letter.getFontType());
     }
 
     @Test
-    @DisplayName("/api/letters 요청시 title 값은 필수이다.")
+    @DisplayName("/api/letters 요청 시 title 값은 필수다.")
     void required_title_value() throws Exception {
         //given
         CreateLetterRequest request = CreateLetterRequest.builder()
@@ -138,6 +138,37 @@ class LettersControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("COM-001"))
                 .andExpect(jsonPath("$.message").value("제목을 입력해주세요."))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andDo(print());
+
+        assertEquals(0L, lettersRepository.count());
+    }
+
+    @Test
+    @DisplayName("/api/letters 요청 시 content 값은 필수다.")
+    void required_content_value() throws Exception {
+        //given
+        CreateLetterRequest request = CreateLetterRequest.builder()
+                .receiverId(null)
+                .parentLetterId(null)
+                .title("제목입니다!")
+                .content("")
+                .category(Category.SAD)
+                .paperType(PaperType.TYPE_A)
+                .font(FontType.BOLD)
+                .build();
+
+
+        String json = objectMapper.writeValueAsString(request);
+
+        //expected
+        mockMvc.perform(post("/api/letters")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding("UTF-8")
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COM-001"))
+                .andExpect(jsonPath("$.message").value("내용을 입력해주세요."))
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andDo(print());
 

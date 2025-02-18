@@ -19,7 +19,7 @@ public class LetterService {
     public void write(CreateLetterRequest request){
 
         //랜덤 편지로 가는 첫 편지 작성
-        if(request.getReceiverId() == null){ //받는사람
+        if(request.getReceiverId() == null){  //받는사람이 없으면 첫 편지 전송
             Letter letters = Letter.builder()
                     .writerId(1L) //todo 내 아이디 넣어야 함
                     .receiverId(null)
@@ -34,8 +34,8 @@ public class LetterService {
             lettersRepository.save(letters);
         }
 
-        //주고받는 답장편지
-        else if (request.getCategory() == null) {
+        //주고받는 답장편지, 랜덤편지에 대한 답장
+        else{
             Letter letters = Letter.builder()
                     .writerId(1L) //todo 내 아이디 넣어야 함
                     .receiverId(request.getReceiverId())

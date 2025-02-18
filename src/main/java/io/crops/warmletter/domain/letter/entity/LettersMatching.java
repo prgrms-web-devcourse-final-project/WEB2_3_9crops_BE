@@ -20,7 +20,7 @@ public class LettersMatching {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id")
-    private Letters letters;
+    private Letter letter;
 
 //    @ManyToOne(fetch = FetchType.LAZY)
 //    @JoinColumn(name = "id") //최초로 편지를 쓴 ID

@@ -7,22 +7,13 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
 
-/**
- * {
- * 	"title": "저 요즘 슬퍼요.." ,
- * 	"message": "블라블라",
- * 	"category": "위로"(or null),
- * 	"paperType": "", - 편지지 종류 뭐뭐있지?
- * 	"font": "" - 글꼴 종류 뭐뭐있지?
- * }
- */
 @Getter
 public class CreateLetterRequest {
 
     //받는사람 아이디 -> null이면 첫편지
     public Long receiverId;
 
-    //상위 편지 id
+    //상위 편지 id -> null이면 첫편지
     public Long parentLetterId; //상위 편지 id
 
     @NotBlank(message = "제목을 입력해주세요.")
@@ -33,10 +24,8 @@ public class CreateLetterRequest {
 
     public Category category; //null이면 주고받는 답장 편지
 
-    @NotBlank(message = "편지지 타입을 입력해주세요.")
     public PaperType paperType;
 
-    @NotBlank(message = "글꼴을 입력해주세요.")
     public FontType font;
 
     @Builder

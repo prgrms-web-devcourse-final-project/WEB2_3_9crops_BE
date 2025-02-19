@@ -50,6 +50,9 @@ dependencies {
     // Websocket
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
+    // Oauth
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

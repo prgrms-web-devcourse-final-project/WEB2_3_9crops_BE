@@ -23,6 +23,9 @@ public class Member extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(unique = true)
     private String zipCode;
 
     private String password;
@@ -43,7 +46,8 @@ public class Member extends BaseEntity {
     private List<SocialAccount> socialAccounts = new ArrayList<>();
 
     @Builder
-    public Member(String zipCode, String password, float temperature, Role role, LocalDateTime lastMatchedAt) {
+    public Member(String email, String zipCode, String password, float temperature, Role role, LocalDateTime lastMatchedAt) {
+        this.email = email;
         this.zipCode = zipCode;
         this.password = password;
         this.temperature = temperature;

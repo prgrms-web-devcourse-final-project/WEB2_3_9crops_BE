@@ -20,8 +20,10 @@ public class BadWord extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     @Column(nullable = false, unique = true)
     private String word;
+
+    @Column(nullable = false, name = "is_used")
+    private Boolean isUsed;
 
 }

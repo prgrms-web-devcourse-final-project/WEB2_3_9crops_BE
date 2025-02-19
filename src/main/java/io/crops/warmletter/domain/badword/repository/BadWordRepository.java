@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface BadWordRepository extends JpaRepository<BadWord, Long> {
 
-    @Query("SELECT m.word FROM BadWord m")
+    @Query("SELECT m.word FROM BadWord m WHERE m.isUsed =true")
     List<String> findAllWordsOnly();
 
     boolean existsByWord(String word);

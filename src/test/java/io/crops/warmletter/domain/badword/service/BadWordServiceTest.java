@@ -42,7 +42,7 @@ class BadWordServiceTest {
         // then
         boolean exists = badWordRepository.existsByWord("십새끼");
         assertTrue(exists);
-        Boolean isRedis = redisTemplate.opsForSet().isMember("banned_words", "십새끼");
+        Boolean isRedis = redisTemplate.opsForSet().isMember("bad_word", "십새끼");
         assertTrue(isRedis);
     }
 

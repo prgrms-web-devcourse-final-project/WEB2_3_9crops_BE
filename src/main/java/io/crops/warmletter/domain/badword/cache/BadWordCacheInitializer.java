@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import org.slf4j.Logger;
@@ -13,10 +14,10 @@ import org.slf4j.Logger;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class BadWordCacheInitializer {
 
     private final BadWordRepository badWordRepository;
-    private static final Logger log = LoggerFactory.getLogger(BadWordCacheInitializer.class);
     private final RedisTemplate<String, String> redisTemplate;
 
 

@@ -23,6 +23,5 @@ public class LetterController {
     @PostMapping("/api/letters")
     public void createLetters(@RequestBody @Valid CreateLetterRequest lettersCreate) {
         lettersService.write(lettersCreate);
-
     }
 }

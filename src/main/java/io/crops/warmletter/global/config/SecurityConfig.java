@@ -55,8 +55,11 @@ public class SecurityConfig {
                                         .permitAll() // Swagger UI 허용
                                         .requestMatchers("/v3/api-docs/**")
                                         .permitAll() // API Docs 허용
+                                        .requestMatchers("/api/letters").permitAll()
+
                                         .anyRequest()
-                                        .authenticated() // 그 외 요청은 인증 필요
+//                                        .authenticated() // 그 외 요청은 인증 필요
+                                        .permitAll()
                         );
 
         return http.build();
@@ -70,6 +73,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(
                 List.of(
                         "http://localhost:3000", // 로컬 프론트엔드
+                        "http://localhost:8080",
                         "https://your-domain.com" // 운영 프론트엔드
                         ));
 

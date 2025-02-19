@@ -11,22 +11,22 @@ import lombok.Getter;
 public class CreateLetterRequest {
 
     //받는사람 아이디 -> null이면 첫편지
-    public Long receiverId;
+    private Long receiverId;
 
     //상위 편지 id -> null이면 첫편지
-    public Long parentLetterId; //상위 편지 id
+    private Long parentLetterId; //상위 편지 id
 
     @NotBlank(message = "제목을 입력해주세요.")
-    public String title;
+    private String title;
 
     @NotBlank(message = "내용을 입력해주세요.")
-    public String content;
+    private String content;
 
-    public Category category; //null이면 주고받는 답장 편지
+    private Category category;
 
-    public PaperType paperType;
+    private PaperType paperType;
 
-    public FontType font;
+    private FontType font;
 
     @Builder
     public CreateLetterRequest(Long receiverId, Long parentLetterId, String title, String content, Category category, PaperType paperType, FontType font) {

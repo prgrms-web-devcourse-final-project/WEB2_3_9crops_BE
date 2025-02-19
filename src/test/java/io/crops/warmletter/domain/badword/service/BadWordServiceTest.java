@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.badword.service;
 
+import io.crops.warmletter.config.TestConfig;
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
 import io.crops.warmletter.domain.badword.entity.BadWord;
@@ -12,14 +13,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-
+@ActiveProfiles("test")
+@Import(TestConfig.class)
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional // 테스트 끝나면 롤백 (DB 안 지저분해짐)

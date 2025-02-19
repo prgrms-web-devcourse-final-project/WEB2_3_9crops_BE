@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.badword.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.crops.warmletter.config.TestConfig;
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
 import io.crops.warmletter.domain.badword.entity.BadWord;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 
 import org.springframework.test.context.ActiveProfiles;
@@ -21,6 +23,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ActiveProfiles("test")
+@Import(TestConfig.class)
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc(addFilters = false)

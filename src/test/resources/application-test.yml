@@ -20,6 +20,9 @@ spring:
       port: 6379
       host: localhost
       password:
+
+jwt:
+  secret: aejkfhakjehfkajsdhfkjahsekufhasekuhfaksdjhfjksahfekuhskjdhf
 logging:
   level:
     root: INFO

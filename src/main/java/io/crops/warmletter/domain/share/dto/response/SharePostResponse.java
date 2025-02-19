@@ -10,14 +10,14 @@ import java.time.LocalDateTime;
 public class SharePostResponse {
 
     private Long shareProposalId;
-    private String title;
     private String content;
+    private boolean isActive;
     private LocalDateTime createdAt;
 
     public SharePostResponse(SharePost sharePost) {
         this.shareProposalId = sharePost.getShareProposalId();
-        this.title = sharePost.getTitle();
         this.content = sharePost.getContent();
+        this.isActive = sharePost.isActive();
         this.createdAt = sharePost.getCreatedAt();
     }
 

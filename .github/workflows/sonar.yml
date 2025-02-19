@@ -45,7 +45,7 @@ jobs:
       # 테스트 결과 저장 (테스트 실패해도 실행)
       - name: 테스트 결과 저장
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: |

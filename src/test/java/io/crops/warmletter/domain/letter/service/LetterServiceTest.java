@@ -45,9 +45,9 @@ class LetterServiceTest {
                 .parentLetterId(null)
                 .title("랜덤 편지 제목")
                 .content("랜덤 편지 내용")
-                .category(Category.SAD)
-                .paperType(PaperType.TYPE_A)
-                .font(FontType.BOLD)
+                .category(Category.CONSULT)
+                .paperType(PaperType.COMFORT)
+                .font(FontType.HIMCHAN)
                 .build();
 
         // when
@@ -58,9 +58,9 @@ class LetterServiceTest {
         assertNotNull(response);
         assertEquals("랜덤 편지 제목", response.getTitle());
         assertEquals("랜덤 편지 내용", response.getContent());
-        assertEquals(Category.SAD, response.getCategory());
-        assertEquals(PaperType.TYPE_A, response.getPaperType());
-        assertEquals(FontType.BOLD, response.getFont());
+        assertEquals(Category.CONSULT, response.getCategory());
+        assertEquals(PaperType.COMFORT, response.getPaperType());
+        assertEquals(FontType.HIMCHAN, response.getFont());
 
         // writerId는 하드코딩 되어 1L로 설정되어 있음
         assertEquals(1L, response.getWriterId());
@@ -95,9 +95,9 @@ class LetterServiceTest {
                 .parentLetterId(5L)
                 .title("답장 편지 제목")
                 .content("답장 편지 내용")
-                .category(Category.HAPPY)
-                .paperType(PaperType.TYPE_A)
-                .font(FontType.BOLD)
+                .category(Category.ETC)
+                .paperType(PaperType.PAPER)
+                .font(FontType.GYEONGGI)
                 .build();
 
         // when
@@ -108,9 +108,9 @@ class LetterServiceTest {
         assertNotNull(response);
         assertEquals("답장 편지 제목", response.getTitle());
         assertEquals("답장 편지 내용", response.getContent());
-        assertEquals(Category.HAPPY, response.getCategory());
-        assertEquals(PaperType.TYPE_A, response.getPaperType());
-        assertEquals(FontType.BOLD, response.getFont());
+        assertEquals(Category.ETC, response.getCategory());
+        assertEquals(PaperType.PAPER, response.getPaperType());
+        assertEquals(FontType.GYEONGGI, response.getFont());
         assertEquals(1L, response.getWriterId());
 
         // 답장 편지인 경우 receiverId, parentLetterId가 요청 값과 일치해야 함

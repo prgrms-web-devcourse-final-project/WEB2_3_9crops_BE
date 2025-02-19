@@ -49,9 +49,9 @@ class LettersControllerTest {
                 .parentLetterId(null)
                 .title("제목입니다")
                 .content("편지 내용입니다")
-                .category(Category.SAD)
-                .paperType(PaperType.TYPE_A)
-                .font(FontType.BOLD)
+                .category(Category.CONSOLATION)
+                .paperType(PaperType.BASIC)
+                .font(FontType.KYOBO)
                 .build();
 
         String json = objectMapper.writeValueAsString(request);
@@ -68,9 +68,9 @@ class LettersControllerTest {
                 .andExpect(jsonPath("$.data.parentLetterId").doesNotExist())
                 .andExpect(jsonPath("$.data.title").value("제목입니다"))
                 .andExpect(jsonPath("$.data.content").value("편지 내용입니다"))
-                .andExpect(jsonPath("$.data.category").value("SAD"))
-                .andExpect(jsonPath("$.data.paperType").value("TYPE_A"))
-                .andExpect(jsonPath("$.data.font").value("BOLD"))
+                .andExpect(jsonPath("$.data.category").value("CONSOLATION"))
+                .andExpect(jsonPath("$.data.paperType").value("BASIC"))
+                .andExpect(jsonPath("$.data.font").value("KYOBO"))
                 .andExpect(jsonPath("$.data.deliveryStatus").value("IN_DELIVERY"))
                 .andExpect(jsonPath("$.message").value("편지가 성공적으로 생성되었습니다."))
                 .andDo(print());
@@ -89,9 +89,9 @@ class LettersControllerTest {
                 .parentLetterId(2L) //상위 편지 id
                 .title("제목입니다")
                 .content("편지 내용입니다")
-                .category(Category.SAD)
-                .paperType(PaperType.TYPE_A)
-                .font(FontType.BOLD)
+                .category(Category.CONSULT)
+                .paperType(PaperType.COMFORT)
+                .font(FontType.HIMCHAN)
                 .build();
 
         String json = objectMapper.writeValueAsString(request);
@@ -108,9 +108,9 @@ class LettersControllerTest {
                 .andExpect(jsonPath("$.data.parentLetterId").value(2L))
                 .andExpect(jsonPath("$.data.title").value("제목입니다"))
                 .andExpect(jsonPath("$.data.content").value("편지 내용입니다"))
-                .andExpect(jsonPath("$.data.category").value("SAD"))
-                .andExpect(jsonPath("$.data.paperType").value("TYPE_A"))
-                .andExpect(jsonPath("$.data.font").value("BOLD"))
+                .andExpect(jsonPath("$.data.category").value("CONSULT"))
+                .andExpect(jsonPath("$.data.paperType").value("COMFORT"))
+                .andExpect(jsonPath("$.data.font").value("HIMCHAN"))
                 .andExpect(jsonPath("$.data.deliveryStatus").value("IN_DELIVERY"))
                 .andExpect(jsonPath("$.message").value("편지가 성공적으로 생성되었습니다."))
                 .andDo(print());
@@ -128,9 +128,9 @@ class LettersControllerTest {
                 .parentLetterId(null)
                 .title("")
                 .content("편지 내용입니다")
-                .category(Category.SAD)
-                .paperType(PaperType.TYPE_A)
-                .font(FontType.BOLD)
+                .category(Category.CONSULT)
+                .paperType(PaperType.COMFORT)
+                .font(FontType.HIMCHAN)
                 .build();
 
         String json = objectMapper.writeValueAsString(request);
@@ -158,9 +158,9 @@ class LettersControllerTest {
                 .parentLetterId(null)
                 .title("제목입니다!")
                 .content("")
-                .category(Category.SAD)
-                .paperType(PaperType.TYPE_A)
-                .font(FontType.BOLD)
+                .category(Category.CONSULT)
+                .paperType(PaperType.COMFORT)
+                .font(FontType.HIMCHAN)
                 .build();
 
         String json = objectMapper.writeValueAsString(request);

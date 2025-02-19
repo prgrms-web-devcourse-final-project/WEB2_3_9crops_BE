@@ -16,6 +16,10 @@ public class EventPostService {
     private final EventPostRepository eventPostRepository;
 
     public void createEventPost(CreateEventPostRequest createEventPostRequest) {
+        EventPost eventPost = EventPost.builder()
+                .title(createEventPostRequest.getTitle())
+                .content(createEventPostRequest.getContent())
+                .build();
+        eventPostRepository.save(eventPost);
     }
-
 }

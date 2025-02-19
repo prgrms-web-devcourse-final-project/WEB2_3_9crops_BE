@@ -1,7 +1,8 @@
 package io.crops.warmletter.global.oauth.userinfo;
 
 import io.crops.warmletter.global.error.common.ErrorCode;
-import io.crops.warmletter.global.oauth.exception.OAuth2AuthenticationProcessingException;
+import io.crops.warmletter.global.error.exception.OAuth2Exception;
+import io.crops.warmletter.global.oauth.exception.UnsupportedSocialTypeException;
 
 import java.util.Map;
 
@@ -15,8 +16,7 @@ public class OAuth2UserInfoFactory {
         } else if (registrationId.equalsIgnoreCase("naver")) {
             return new NaverOAuth2UserInfo(attributes);
         } else {
-            throw new OAuth2AuthenticationProcessingException(
-                    String.format(ErrorCode.UNSUPPORTED_SOCIAL_LOGIN.getMessage() + " (%s)", registrationId));
+            throw new UnsupportedSocialTypeException();
         }
     }
 

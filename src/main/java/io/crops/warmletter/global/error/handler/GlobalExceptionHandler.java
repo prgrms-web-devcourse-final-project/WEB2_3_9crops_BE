@@ -3,7 +3,7 @@ package io.crops.warmletter.global.error.handler;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import io.crops.warmletter.global.error.response.ErrorResponse;
-import io.crops.warmletter.global.oauth.exception.OAuth2AuthenticationProcessingException;
+import io.crops.warmletter.global.error.exception.OAuth2Exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.ResponseEntity;
@@ -50,9 +50,9 @@ public class GlobalExceptionHandler {
     }
 
     // oauth 관련 에러
-    @ExceptionHandler(OAuth2AuthenticationProcessingException.class)
+    @ExceptionHandler(OAuth2Exception.class)
     public ResponseEntity<ErrorResponse> handleOAuth2AuthenticationProcessingException(
-            OAuth2AuthenticationProcessingException e) {
+            OAuth2Exception e) {
         log.error("OAuth2 authentication error occurred: {}", e.getMessage(), e);
         return createErrorResponse(ErrorCode.OAUTH2_PROCESSING_ERROR, e.getMessage());
     }

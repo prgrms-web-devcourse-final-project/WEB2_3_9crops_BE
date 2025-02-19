@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.eventpost.service;
 
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
+import io.crops.warmletter.domain.eventpost.dto.response.CreateEventPostResponse;
 import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.repository.EventPostRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,11 +16,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class EventPostService {
     private final EventPostRepository eventPostRepository;
 
-    public void createEventPost(CreateEventPostRequest createEventPostRequest) {
+    public CreateEventPostResponse createEventPost(CreateEventPostRequest createEventPostRequest) {
         EventPost eventPost = EventPost.builder()
                 .title(createEventPostRequest.getTitle())
                 .content(createEventPostRequest.getContent())
                 .build();
-        eventPostRepository.save(eventPost);
+        EventPost saveEventPost = eventPostRepository.save(eventPost);
+        return CreateEventPostResponse.builder()
+                .eventPostId(saveEventPost.getId())
+                .title(saveEventPost.getTitle())
+                .content(saveEventPost.getContent())
+                .createdBy(saveEventPost.getCreatedBy())
+                .createdAt(saveEventPost.getCreatedAt())
+                .build();
     }
 }

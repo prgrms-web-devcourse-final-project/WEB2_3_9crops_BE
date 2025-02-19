@@ -18,12 +18,12 @@ public class SharePostService {
     private final ShareRepository shareRepository;
 
     @Transactional(readOnly = true)
-    public Page<SharePostResponse> getAllposts(Pageable pageable) {
+    public Page<SharePostResponse> getAllPosts(Pageable pageable) {
         // 0보다 작은 페이지를 요청한 경우
         if (pageable.getPageNumber() < 0) {
             throw new BusinessException(ErrorCode.INVALID_PAGE_REQUEST);
         }
-        Page<SharePost> sharePosts = shareRepository.findAll(pageable);
+        Page<SharePost> sharePosts = shareRepository.findAllByIsActiveTrue(pageable);
         return sharePosts.map(SharePostResponse::new);
     }
 }

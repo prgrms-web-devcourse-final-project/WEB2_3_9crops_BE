@@ -2,7 +2,6 @@ package io.crops.warmletter.domain.letter.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
-import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.FontType;
 import io.crops.warmletter.domain.letter.enums.PaperType;
@@ -63,19 +62,22 @@ class LettersControllerTest {
                         .characterEncoding("UTF-8")
                 .content(json))
                 .andExpect(status().isOk())
-                .andExpect(content().string(""))
+                .andExpect(jsonPath("$.data.letterId").exists())
+                .andExpect(jsonPath("$.data.writerId").exists()) //todo 회원 넣어서 확인
+                .andExpect(jsonPath("$.data.receiverId").doesNotExist())
+                .andExpect(jsonPath("$.data.parentLetterId").doesNotExist())
+                .andExpect(jsonPath("$.data.title").value("제목입니다"))
+                .andExpect(jsonPath("$.data.content").value("편지 내용입니다"))
+                .andExpect(jsonPath("$.data.category").value("SAD"))
+                .andExpect(jsonPath("$.data.paperType").value("TYPE_A"))
+                .andExpect(jsonPath("$.data.font").value("BOLD"))
+                .andExpect(jsonPath("$.data.deliveryStatus").value("IN_DELIVERY"))
+                .andExpect(jsonPath("$.message").value("편지가 성공적으로 생성되었습니다."))
                 .andDo(print());
 
         //then
         assertEquals(1L, lettersRepository.count());
 
-//        Letter letter = lettersRepository.findAll().get(0);
-//        assertEquals("제목입니다", letter.getTitle());
-//        assertEquals("편지 내용입니다", letter.getContent());
-//        assertEquals(Category.SAD, letter.getCategory());
-//        assertEquals(PaperType.TYPE_A, letter.getPaperType());
-//        assertEquals(FontType.BOLD, letter.getFontType());
-        
     }
 
     @Test
@@ -100,18 +102,21 @@ class LettersControllerTest {
                         .characterEncoding("UTF-8")
                         .content(json))
                 .andExpect(status().isOk())
-                .andExpect(content().string(""))
+                .andExpect(jsonPath("$.data.letterId").exists())
+                .andExpect(jsonPath("$.data.writerId").exists())  //todo 회원 넣어서 확인
+                .andExpect(jsonPath("$.data.receiverId").value(1L))
+                .andExpect(jsonPath("$.data.parentLetterId").value(2L))
+                .andExpect(jsonPath("$.data.title").value("제목입니다"))
+                .andExpect(jsonPath("$.data.content").value("편지 내용입니다"))
+                .andExpect(jsonPath("$.data.category").value("SAD"))
+                .andExpect(jsonPath("$.data.paperType").value("TYPE_A"))
+                .andExpect(jsonPath("$.data.font").value("BOLD"))
+                .andExpect(jsonPath("$.data.deliveryStatus").value("IN_DELIVERY"))
+                .andExpect(jsonPath("$.message").value("편지가 성공적으로 생성되었습니다."))
                 .andDo(print());
 
         //then
         assertEquals(1L, lettersRepository.count());
-
-//        Letter letter = lettersRepository.findAll().get(0);
-//        assertEquals("제목입니다", letter.getTitle());
-//        assertEquals("편지 내용입니다", letter.getContent());
-//        assertEquals(Category.SAD, letter.getCategory());
-//        assertEquals(PaperType.TYPE_A, letter.getPaperType());
-//        assertEquals(FontType.BOLD, letter.getFontType());
     }
 
     @Test
@@ -127,7 +132,6 @@ class LettersControllerTest {
                 .paperType(PaperType.TYPE_A)
                 .font(FontType.BOLD)
                 .build();
-
 
         String json = objectMapper.writeValueAsString(request);
 
@@ -158,7 +162,6 @@ class LettersControllerTest {
                 .paperType(PaperType.TYPE_A)
                 .font(FontType.BOLD)
                 .build();
-
 
         String json = objectMapper.writeValueAsString(request);
 

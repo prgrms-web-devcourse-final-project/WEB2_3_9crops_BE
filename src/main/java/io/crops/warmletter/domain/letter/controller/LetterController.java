@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class LetterController {
 
-    private final LetterService lettersService;
+    private final LetterService letterService;
 
     /**
      * 편지를 처음 쓰는지
@@ -25,7 +25,7 @@ public class LetterController {
      */
     @PostMapping("/api/letters")
     public ResponseEntity<BaseResponse<CreateLetterResponse>> createLetter(@RequestBody @Valid CreateLetterRequest lettersCreate) {
-        CreateLetterResponse letterResponse = lettersService.createLetter(lettersCreate);
+        CreateLetterResponse letterResponse = letterService.createLetter(lettersCreate);
         BaseResponse<CreateLetterResponse> response = BaseResponse.of(letterResponse, "편지가 성공적으로 생성되었습니다.");
         return ResponseEntity.ok(response);
     }

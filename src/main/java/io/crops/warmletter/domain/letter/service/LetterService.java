@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class LetterService {
 
-    private final LetterRepository lettersRepository;
+    private final LetterRepository letterRepository;
 
     @Transactional
     public CreateLetterResponse createLetter(CreateLetterRequest request) {
@@ -44,7 +44,7 @@ public class LetterService {
         }
 
         Letter letter = builder.build();
-        Letter savedLetter = lettersRepository.save(letter);
+        Letter savedLetter = letterRepository.save(letter);
         return CreateLetterResponse.fromEntity(savedLetter);
     }
 }

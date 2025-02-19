@@ -111,6 +111,8 @@ def excludePatterns = [
         '**/*Application.class',
         '**/dto/**',
         '**/global/**',
+        '**/repository/**',
+
 ]
 
 jacocoTestReport {

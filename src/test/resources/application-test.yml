@@ -8,7 +8,7 @@ spring:
       enabled: true
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: create
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     show-sql: true
@@ -20,6 +20,9 @@ spring:
       port: 6379
       host: localhost
       password:
+
+jwt:
+  secret: aejkfhakjehfkajsdhfkjahsekufhasekuhfaksdjhfjksahfekuhskjdhf
 logging:
   level:
     root: INFO

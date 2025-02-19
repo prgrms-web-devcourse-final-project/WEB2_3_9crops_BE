@@ -51,6 +51,21 @@ class BadWordControllerTest {
                 .andExpect(jsonPath("$.message").value("검열단어 등록완료"));
     }
 
+
+    @Test
+    @DisplayName("검열 단어 등록 실패 - 빈값일 때")
+    void createBadWord_EmptyValue_Fail() throws Exception {
+        CreateBadWordRequest request = new CreateBadWordRequest("");
+
+        mockMvc.perform(post("/api/bad-words")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("단어는 필수 입력값입니다."));
+
+    }
+
+
     @Test
     @DisplayName("검열 단어 중복 등록 실패")
     void createBadWord_Duplicate() throws Exception {

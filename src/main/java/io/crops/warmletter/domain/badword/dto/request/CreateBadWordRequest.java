@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class BadWordRequest {
+public class CreateBadWordRequest {
     private String word;
 }

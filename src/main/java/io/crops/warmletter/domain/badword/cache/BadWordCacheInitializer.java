@@ -22,7 +22,7 @@ public class BadWordCacheInitializer {
 
 
     @PostConstruct //서버실행될 때 자동실행
-    public void loadBannedWordsRedis() {
+    public void loadBadWordsRedis() {
         List<String> words = badWordRepository.findAllWordsOnly();
         if(!words.isEmpty()) {
             redisTemplate.delete("banned_words");

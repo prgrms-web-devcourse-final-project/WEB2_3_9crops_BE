@@ -1,7 +1,7 @@
 package io.crops.warmletter.domain.letter.service;
 
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
-import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
+import io.crops.warmletter.domain.letter.dto.response.CreateLetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.*;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
@@ -51,7 +51,7 @@ class LetterServiceTest {
                 .build();
 
         // when
-        LetterResponse response = letterService.write(request);
+        CreateLetterResponse response = letterService.createLetter(request);
 
         // then
         // 응답 DTO 검증
@@ -101,7 +101,7 @@ class LetterServiceTest {
                 .build();
 
         // when
-        LetterResponse response = letterService.write(request);
+        CreateLetterResponse response = letterService.createLetter(request);
 
         // then
         // 응답 DTO 검증

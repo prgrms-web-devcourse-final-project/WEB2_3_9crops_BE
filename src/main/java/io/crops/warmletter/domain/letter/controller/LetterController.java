@@ -1,7 +1,7 @@
 package io.crops.warmletter.domain.letter.controller;
 
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
-import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
+import io.crops.warmletter.domain.letter.dto.response.CreateLetterResponse;
 import io.crops.warmletter.domain.letter.service.LetterService;
 import io.crops.warmletter.global.response.BaseResponse;
 import jakarta.validation.Valid;
@@ -24,9 +24,9 @@ public class LetterController {
      * 답장을 보내는지
      */
     @PostMapping("/api/letters")
-    public ResponseEntity<BaseResponse<LetterResponse>> createLetters(@RequestBody @Valid CreateLetterRequest lettersCreate) {
-        LetterResponse letterResponse = lettersService.write(lettersCreate);
-        BaseResponse<LetterResponse> response = BaseResponse.of(letterResponse, "편지가 성공적으로 생성되었습니다.");
+    public ResponseEntity<BaseResponse<CreateLetterResponse>> createLetter(@RequestBody @Valid CreateLetterRequest lettersCreate) {
+        CreateLetterResponse letterResponse = lettersService.createLetter(lettersCreate);
+        BaseResponse<CreateLetterResponse> response = BaseResponse.of(letterResponse, "편지가 성공적으로 생성되었습니다.");
         return ResponseEntity.ok(response);
     }
 }

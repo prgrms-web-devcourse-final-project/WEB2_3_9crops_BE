@@ -5,7 +5,6 @@ import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.DeliveryStatus;
 import io.crops.warmletter.domain.letter.enums.FontType;
 import io.crops.warmletter.domain.letter.enums.PaperType;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -30,7 +29,8 @@ import java.time.LocalDateTime;
  * }
  */
 @Getter
-public class LetterResponse {
+@Builder
+public class CreateLetterResponse {
 
     //편지 아이디
     private final Long letterId;
@@ -61,25 +61,9 @@ public class LetterResponse {
     private final LocalDateTime deliveryCompletedAt;
 
 
-    @Builder
-    public LetterResponse(Long letterId, Long writerId, Long receiverId, Long parentLetterId, String title, String content, Category category, PaperType paperType, FontType font, DeliveryStatus deliveryStatus, LocalDateTime deliveryStartedAt, LocalDateTime deliveryCompletedAt) {
-        this.letterId = letterId;
-        this.writerId = writerId;
-        this.receiverId = receiverId;
-        this.parentLetterId = parentLetterId;
-        this.title = title;
-        this.content = content;
-        this.category = category;
-        this.paperType = paperType;
-        this.font = font;
-        this.deliveryStatus = deliveryStatus;
-        this.deliveryStartedAt = deliveryStartedAt;
-        this.deliveryCompletedAt = deliveryCompletedAt;
-    }
 
-
-    public static LetterResponse fromEntity(Letter letter) {
-        return LetterResponse.builder()
+    public static CreateLetterResponse fromEntity(Letter letter) {
+        return CreateLetterResponse.builder()
                 .letterId(letter.getId())
                 .writerId(letter.getWriterId())
                 .receiverId(letter.getReceiverId())

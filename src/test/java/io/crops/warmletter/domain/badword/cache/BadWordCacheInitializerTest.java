@@ -37,50 +37,44 @@ class BadWordCacheInitializerTest {
 
     @Test
     @DisplayName("금칙어가 있을 때 Redis에 정상적으로 로드")
-    void loadBannedWordsRedis_hasWords() {
+    void loadBadWordsRedis_WithWords() {
         // given
         List<String> words = List.of("시발", "병신");
         when(badWordRepository.findAllWordsOnly()).thenReturn(words);
 
         // when
-        badWordCacheInitializer.loadBannedWordsRedis();
+        badWordCacheInitializer.loadBadWordsRedis();
 
         // then
         verify(redisTemplate).delete("banned_words");
         verify(setOperations).add(eq("banned_words"), eq("시발"), eq("병신"));
-
     }
-
 
     @Test
     @DisplayName("금칙어가 없을 때 Redis에 아무 일도 발생하지 않음")
-    void loadBannedWordsRedis_noWords() {
+    void loadBadWordsRedis_WithNoWords() {
         // given
         when(badWordRepository.findAllWordsOnly()).thenReturn(List.of());
 
         // when
-        badWordCacheInitializer.loadBannedWordsRedis();
+        badWordCacheInitializer.loadBadWordsRedis();
 
         // then
         verify(redisTemplate, never()).delete(any(String.class));
         verify(setOperations, never()).add(any(), any());
     }
-
 
     @Test
     @DisplayName("금칙어가 null일 때 Redis 작업 안 함")
-    void loadBannedWordsRedis_nullWords() {
+    void loadBadWordsRedis_WithNull() {
         // given
-        when(badWordRepository.findAllWordsOnly()).thenReturn(Collections.emptyList());
-
+        when(badWordRepository.findAllWordsOnly()).thenReturn(null);
 
         // when
-        badWordCacheInitializer.loadBannedWordsRedis();
+        badWordCacheInitializer.loadBadWordsRedis();
 
         // then
         verify(redisTemplate, never()).delete(any(String.class));
-
         verify(setOperations, never()).add(any(), any());
     }
-
 }

@@ -1,69 +1,76 @@
 package io.crops.warmletter.domain.badword.controller;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.crops.warmletter.domain.badword.dto.request.BadWordRequest;
+import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
+import io.crops.warmletter.domain.badword.entity.BadWord;
+import io.crops.warmletter.domain.badword.exception.DuplicateBadWordException;
+import io.crops.warmletter.domain.badword.repository.BadWordRepository;
 import io.crops.warmletter.domain.badword.service.BadWordService;
-import io.crops.warmletter.global.error.common.ErrorCode;
-import io.crops.warmletter.global.error.exception.BusinessException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.mockito.Mockito.doThrow;
-
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 
-@AutoConfigureMockMvc(addFilters = false)  // 이거 추가!!
-@WebMvcTest(BadWordController.class)
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc(addFilters = false)
 class BadWordControllerTest {
+
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Autowired
+    private BadWordRepository badWordRepository;
+
+    @Autowired
     private BadWordService badWordService;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Test
-    @DisplayName("금칙어 등록 API 성공 테스트")
-    void createModerationWord_success() throws Exception {
-        // given
-        BadWordRequest request = new BadWordRequest("금칙어");
+    @BeforeEach
+    void setUp() {
+        badWordRepository.deleteAll(); // 테스트 전 초기화
+    }
 
-        // when & then
-        mockMvc.perform(post("/api/moderations")
+    @Test
+    @DisplayName("검열 단어 등록 성공")
+    void createBadWord_Success() throws Exception {
+        CreateBadWordRequest request = new CreateBadWordRequest("badword");
+
+
+        mockMvc.perform(post("/api/bad-word")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").value("검열단어 등록완료"))
-                .andExpect(jsonPath("$.message").value("성공"));
-
-        Mockito.verify(badWordService).saveModerationWord(any(BadWordRequest.class));
+                .andExpect(jsonPath("$.message").value("검열단어 등록완료"));
     }
 
     @Test
-    @DisplayName("금칙어 등록 API 실패 테스트 - 중복 단어")
-    void createModerationWord_fail_duplicate() throws Exception {
-        // given
-        BadWordRequest request = new BadWordRequest("금칙어");
+    @DisplayName("검열 단어 중복 등록 실패")
+    void createBadWord_Duplicate() throws Exception {
+        // Given: 먼저 단어를 저장해놓고 중복 요청
+        badWordRepository.save(BadWord.builder()
+                .word("badword")
+                .isUsed(true)
+                .build());
 
-        doThrow(new BusinessException(ErrorCode.DUPLICATE_BANNED_WORD))
-                .when(badWordService).saveModerationWord(any(BadWordRequest.class));
+        CreateBadWordRequest request = new CreateBadWordRequest("badword");
 
-        // when & then
-        mockMvc.perform(post("/api/moderations")
+        mockMvc.perform(post("/api/bad-word")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value(ErrorCode.DUPLICATE_BANNED_WORD.getCode()))
-                .andExpect(jsonPath("$.message").value(ErrorCode.DUPLICATE_BANNED_WORD.getMessage()));
+                .andExpect(status().isConflict())  // 409 상태 코드로 수정
+                .andExpect(jsonPath("$.message").value("이미 등록된 금칙어입니다."));  // 메시지 검증
     }
+
 }

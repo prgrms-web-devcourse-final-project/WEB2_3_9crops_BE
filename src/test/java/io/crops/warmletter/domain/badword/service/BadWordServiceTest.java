@@ -1,8 +1,9 @@
 package io.crops.warmletter.domain.badword.service;
 
-import io.crops.warmletter.domain.badword.dto.request.BadWordRequest;
-import io.crops.warmletter.domain.badword.exception.DuplicateBannedWordException;
+import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
+import io.crops.warmletter.domain.badword.exception.DuplicateBadWordException;
 import io.crops.warmletter.domain.badword.repository.BadWordRepository;
+import io.crops.warmletter.global.error.common.ErrorCode;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 
 @SpringBootTest
 @Transactional // 테스트 끝나면 롤백 (DB 안 지저분해짐)
@@ -32,10 +34,10 @@ class BadWordServiceIntegrationTest {
     @DisplayName("금칙어 저장 성공")
     void saveModerationWord_success() {
         // given
-        BadWordRequest request = new BadWordRequest("십새끼");
+        CreateBadWordRequest request = new CreateBadWordRequest("십새끼");
 
         // when
-        badWordService.saveModerationWord(request);
+        badWordService.savebadWord(request);
 
         // then
         boolean exists = badWordRepository.existsByWord("십새끼");
@@ -44,12 +46,18 @@ class BadWordServiceIntegrationTest {
         assertTrue(isRedis);
     }
 
+
     @Test
     @DisplayName("이미 등록된 금칙어일 때 예외 발생")
     void saveModerationWord_duplicate() {
-        BadWordRequest request = new BadWordRequest("십새끼");
-        badWordService.saveModerationWord(request);
+        // given
+        CreateBadWordRequest request = new CreateBadWordRequest("십새끼");
+        badWordService.savebadWord(request);
 
-        assertThrows(DuplicateBannedWordException.class, () -> badWordService.saveModerationWord(request));
+        // when & then
+        assertThatThrownBy(() -> badWordService.savebadWord(request))
+                .isInstanceOf(DuplicateBadWordException.class)
+                .hasMessageContaining(ErrorCode.DUPLICATE_BANNED_WORD.getMessage());
     }
+
 }

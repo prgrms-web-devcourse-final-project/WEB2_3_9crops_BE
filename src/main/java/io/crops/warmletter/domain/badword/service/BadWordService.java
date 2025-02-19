@@ -16,7 +16,7 @@ public class BadWordService {
     private final BadWordRepository badWordRepository;
     private final RedisTemplate<String, String> redisTemplate; // Redis 추가
 
-    public void savebadWord(CreateBadWordRequest request) {
+    public void createBadWord(CreateBadWordRequest request) {
         String word = request.getWord();
 
         boolean exists = badWordRepository.existsByWord(word);
@@ -31,7 +31,7 @@ public class BadWordService {
 
         badWordRepository.save(badWord);
 
-        redisTemplate.opsForSet().add("banned_words", word);
+        redisTemplate.opsForSet().add("bad_word", word);
     }
 
 }

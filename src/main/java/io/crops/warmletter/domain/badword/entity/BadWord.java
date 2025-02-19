@@ -23,7 +23,7 @@ public class BadWord extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String word;
 
-    @Column(nullable = false, name = "is_used")
+    @Column(nullable = false)
     private Boolean isUsed;
 
 }

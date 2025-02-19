@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 @Transactional // 테스트 끝나면 롤백 (DB 안 지저분해짐)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD) // 각 테스트 끝날 때마다 컨텍스트 초기화 (DB 상태 초기화 효과)
-class BadWordServiceIntegrationTest {
+class BadWordServiceTest {
 
     @Autowired
     private BadWordService badWordService;
@@ -37,7 +37,7 @@ class BadWordServiceIntegrationTest {
         CreateBadWordRequest request = new CreateBadWordRequest("십새끼");
 
         // when
-        badWordService.savebadWord(request);
+        badWordService.createBadWord(request);
 
         // then
         boolean exists = badWordRepository.existsByWord("십새끼");
@@ -52,10 +52,10 @@ class BadWordServiceIntegrationTest {
     void saveModerationWord_duplicate() {
         // given
         CreateBadWordRequest request = new CreateBadWordRequest("십새끼");
-        badWordService.savebadWord(request);
+        badWordService.createBadWord(request);
 
         // when & then
-        assertThatThrownBy(() -> badWordService.savebadWord(request))
+        assertThatThrownBy(() -> badWordService.createBadWord(request))
                 .isInstanceOf(DuplicateBadWordException.class)
                 .hasMessageContaining(ErrorCode.DUPLICATE_BANNED_WORD.getMessage());
     }

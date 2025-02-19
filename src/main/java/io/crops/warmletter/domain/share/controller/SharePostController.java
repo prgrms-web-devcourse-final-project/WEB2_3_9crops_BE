@@ -24,6 +24,6 @@ public class SharePostController {
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
 //            @AuthenticationPrincipal UserDetails userDetails
     ) {
-        return ResponseEntity.ok(new PageResponse<>(sharePostService.getAllposts(pageable)));
+        return ResponseEntity.ok(new PageResponse<>(sharePostService.getAllPosts(pageable)));
     }
 }

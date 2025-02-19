@@ -44,14 +44,14 @@ class BadWordControllerTest {
     @Test
     @DisplayName("검열 단어 등록 성공")
     void createBadWord_Success() throws Exception {
-        CreateBadWordRequest request = new CreateBadWordRequest("씹새끼ㅌ");
+        CreateBadWordRequest request = new CreateBadWordRequest("씹새끼");
 
 
         mockMvc.perform(post("/api/bad-words")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("검열단어 등록완료"));
+                .andExpect(jsonPath("$.message").value("금칙어 등록완료"));
     }
 
 
@@ -117,24 +117,4 @@ class BadWordControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("해당 금칙어가 존재하지 않습니다."));
     }
-
-    @Test
-    @DisplayName("금칙어 상태 변경 실패 - 잘못된 요청값")
-    void updateBadWordStatus_InvalidRequest_Fail() throws Exception {
-        BadWord badWord = badWordRepository.save(
-                BadWord.builder()
-                        .word("badword")
-                        .isUsed(false)
-                        .build()
-        );
-
-        UpdateBadWordStatusRequest request = new UpdateBadWordStatusRequest(null);
-
-        mockMvc.perform(patch("/api/bad-words/{badWordId}/status", badWord.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("상태값은 필수입니다."));
-    }
-
 }

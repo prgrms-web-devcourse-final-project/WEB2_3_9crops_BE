@@ -21,7 +21,7 @@ public class BadWordController {
     @PostMapping
     public ResponseEntity<BaseResponse<Void>> createBadWord(@RequestBody @Valid CreateBadWordRequest request) {
         badWordService.createBadWord(request);
-        return ResponseEntity.ok(BaseResponse.of(null, "검열단어 등록완료"));
+        return ResponseEntity.ok(BaseResponse.of(null, "금칙어 등록완료"));
     }
 
     @PatchMapping("/{badWordId}/status")

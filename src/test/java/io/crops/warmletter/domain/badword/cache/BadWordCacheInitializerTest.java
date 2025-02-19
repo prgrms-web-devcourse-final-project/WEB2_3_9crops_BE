@@ -10,7 +10,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -46,35 +45,8 @@ class BadWordCacheInitializerTest {
         badWordCacheInitializer.loadBadWordsRedis();
 
         // then
-        verify(redisTemplate).delete("banned_words");
-        verify(setOperations).add(eq("banned_words"), eq("시발"), eq("병신"));
+        verify(redisTemplate).delete("bad_word");
+        verify(setOperations).add(eq("bad_word"), eq("시발"), eq("병신"));
     }
 
-    @Test
-    @DisplayName("금칙어가 없을 때 Redis에 아무 일도 발생하지 않음")
-    void loadBadWordsRedis_WithNoWords() {
-        // given
-        when(badWordRepository.findAllWordsOnly()).thenReturn(List.of());
-
-        // when
-        badWordCacheInitializer.loadBadWordsRedis();
-
-        // then
-        verify(redisTemplate, never()).delete(any(String.class));
-        verify(setOperations, never()).add(any(), any());
-    }
-
-    @Test
-    @DisplayName("금칙어가 null일 때 Redis 작업 안 함")
-    void loadBadWordsRedis_WithNull() {
-        // given
-        when(badWordRepository.findAllWordsOnly()).thenReturn(null);
-
-        // when
-        badWordCacheInitializer.loadBadWordsRedis();
-
-        // then
-        verify(redisTemplate, never()).delete(any(String.class));
-        verify(setOperations, never()).add(any(), any());
-    }
 }

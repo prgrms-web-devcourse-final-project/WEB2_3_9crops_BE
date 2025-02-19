@@ -25,8 +25,8 @@ public class BadWordCacheInitializer {
     public void loadBadWordsRedis() {
         List<String> words = badWordRepository.findAllWordsOnly();
         if(!words.isEmpty()) {
-            redisTemplate.delete("banned_words");
-            redisTemplate.opsForSet().add("banned_words", words.toArray(new String[0]));
+            redisTemplate.delete("bad_word");
+            redisTemplate.opsForSet().add("bad_word", words.toArray(new String[0]));
         }
         log.info("🚀 금칙어 Redis 로드 완료");
     }

@@ -3,17 +3,15 @@ package io.crops.warmletter.domain.badword.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
 import io.crops.warmletter.domain.badword.entity.BadWord;
-import io.crops.warmletter.domain.badword.exception.DuplicateBadWordException;
 import io.crops.warmletter.domain.badword.repository.BadWordRepository;
 import io.crops.warmletter.domain.badword.service.BadWordService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
+
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 
@@ -31,8 +29,6 @@ class BadWordControllerTest {
     @Autowired
     private BadWordRepository badWordRepository;
 
-    @Autowired
-    private BadWordService badWordService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -48,7 +44,7 @@ class BadWordControllerTest {
         CreateBadWordRequest request = new CreateBadWordRequest("badword");
 
 
-        mockMvc.perform(post("/api/bad-word")
+        mockMvc.perform(post("/api/bad-words")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -66,7 +62,7 @@ class BadWordControllerTest {
 
         CreateBadWordRequest request = new CreateBadWordRequest("badword");
 
-        mockMvc.perform(post("/api/bad-word")
+        mockMvc.perform(post("/api/bad-words")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())  // 409 상태 코드로 수정

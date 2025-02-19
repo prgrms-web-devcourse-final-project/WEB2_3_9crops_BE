@@ -4,10 +4,13 @@ import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.FontType;
 import io.crops.warmletter.domain.letter.enums.PaperType;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CreateLetterRequest {
 
     //받는사람 아이디 -> null이면 첫편지

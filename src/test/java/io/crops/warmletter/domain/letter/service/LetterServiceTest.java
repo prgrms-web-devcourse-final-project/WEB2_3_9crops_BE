@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.letter.service;
 
+import io.crops.warmletter.config.TestConfig;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.CreateLetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
@@ -11,7 +12,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.Optional;
 
@@ -21,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ActiveProfiles("test")
 @AutoConfigureMockMvc(addFilters = false)
+@Import(TestConfig.class)
 @SpringBootTest
 class LetterServiceTest {
 

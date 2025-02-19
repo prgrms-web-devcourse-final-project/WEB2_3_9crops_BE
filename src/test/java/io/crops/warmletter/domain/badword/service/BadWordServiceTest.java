@@ -26,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @ActiveProfiles("test")
 @Import(TestConfig.class)
 @SpringBootTest
-@ActiveProfiles("test")
 @Transactional // 테스트 끝나면 롤백 (DB 안 지저분해짐)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD) // 각 테스트 끝날 때마다 컨텍스트 초기화 (DB 상태 초기화 효과)
 class BadWordServiceTest {

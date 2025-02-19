@@ -82,7 +82,7 @@ class BadWordServiceTest {
 
         // then
         BadWord updatedBadWord = badWordRepository.findById(badWord.getId()).orElseThrow();
-        assertTrue(updatedBadWord.getIsUsed());
+        assertTrue(updatedBadWord.isUsed());
         assertTrue(redisTemplate.opsForSet().isMember("bad_word", "비속어"));
     }
 
@@ -105,7 +105,7 @@ class BadWordServiceTest {
 
         // then
         BadWord updatedBadWord = badWordRepository.findById(badWord.getId()).orElseThrow();
-        assertFalse(updatedBadWord.getIsUsed());
+        assertFalse(updatedBadWord.isUsed());
         assertFalse(redisTemplate.opsForSet().isMember("bad_word", "비속어"));
     }
 

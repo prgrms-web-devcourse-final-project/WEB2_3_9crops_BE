@@ -44,9 +44,10 @@ public class BadWordService {
         BadWord badWord = badWordRepository.findById(badWordId)
                 .orElseThrow(BadWordNotFoundException::new);
 
-        badWord.updateStatus(request.getIsUsed());
 
-        if (request.getIsUsed()) {
+        badWord.updateStatus(request.isUsed());
+
+        if (request.isUsed()) {
             redisTemplate.opsForSet().add("bad_word", badWord.getWord());
         } else {
             redisTemplate.opsForSet().remove("bad_word", badWord.getWord());

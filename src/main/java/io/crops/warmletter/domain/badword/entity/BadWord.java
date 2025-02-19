@@ -24,10 +24,10 @@ public class BadWord extends BaseEntity {
     private String word;
 
     @Column(nullable = false)
-    private Boolean isUsed;
+    private boolean isUsed;
 
 
-    public void updateStatus(Boolean isUsed) {
+    public void updateStatus(boolean isUsed) {
         this.isUsed = isUsed;
     }
 

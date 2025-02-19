@@ -9,6 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateBadWordStatusRequest {
-    @NotNull(message = "상태값은 필수입니다.")
-    private Boolean isUsed;
+    private boolean isUsed;
 }

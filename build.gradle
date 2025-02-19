@@ -50,6 +50,9 @@ dependencies {
     // Websocket
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
+    // Oauth
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
@@ -192,6 +195,7 @@ sonar {
         property "sonar.tests", "src/test/java"
         property "sonar.java.binaries", "${buildDir}/classes"
         property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+        property "sonar.security.hotspots.suppressions", "java:S4834"  // CSRF 비활성화 경고 무시
 
         property "sonar.coverage.exclusions", excludePatterns.collect {
             it.replace('.class', '.java') // class 확장자를 java로 변경

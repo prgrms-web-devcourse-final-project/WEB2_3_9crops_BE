@@ -26,22 +26,25 @@ public class SharePost extends BaseEntity {
     @Column(nullable = false)
     private Long shareProposalId;
 
-    private boolean isActive = false;
+    private boolean isActive;
 
     @Column(nullable = false)
-    private String title;
-
     private String content;
 
-    private String createdBy;
-
-    private String updatedBy;
-
     @Builder
-    public SharePost(Long shareProposalId, String title, String content) {
+    public SharePost(Long shareProposalId, String title, String content,boolean isActive) {
         this.shareProposalId = shareProposalId;
-        this.title = title;
         this.content = content;
+        this.isActive = isActive;
+    }
+
+    // 비즈니스 로직 메서드
+    public void activate() {
+        this.isActive = true;
+    }
+
+    public void deactivate() {
+        this.isActive = false;
     }
 
 }

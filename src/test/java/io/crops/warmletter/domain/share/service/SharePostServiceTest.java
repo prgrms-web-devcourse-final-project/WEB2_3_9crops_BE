@@ -2,7 +2,7 @@ package io.crops.warmletter.domain.share.service;
 
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.entity.SharePost;
-import io.crops.warmletter.domain.share.repository.ShareRepository;
+import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 class SharePostServiceTest {
 
     @Mock
-    private ShareRepository shareRepository;
+    private SharePostRepository sharePostRepository;
     @Mock
     private Pageable pageable;
 
@@ -51,7 +51,7 @@ class SharePostServiceTest {
         List<SharePost> posts = List.of(sharePost1, sharePost2);
         Page<SharePost> sharePostPage = new PageImpl<>(posts, pageable, posts.size());
 
-        when(shareRepository.findAllByIsActiveTrue(pageable)).thenReturn(sharePostPage);
+        when(sharePostRepository.findAllByIsActiveTrue(pageable)).thenReturn(sharePostPage);
 
         // when
         Page<SharePostResponse> result = sharePostService.getAllPosts(pageable);
@@ -65,7 +65,7 @@ class SharePostServiceTest {
                 () -> assertThat(result.getNumber()).isZero()
         );
 
-        verify(shareRepository).findAllByIsActiveTrue(pageable);
+        verify(sharePostRepository).findAllByIsActiveTrue(pageable);
     }
 
     @Test
@@ -75,7 +75,7 @@ class SharePostServiceTest {
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<SharePost> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
 
-        when(shareRepository.findAllByIsActiveTrue(pageable)).thenReturn(emptyPage);
+        when(sharePostRepository.findAllByIsActiveTrue(pageable)).thenReturn(emptyPage);
 
         // when
         Page<SharePostResponse> result = sharePostService.getAllPosts(pageable);
@@ -87,7 +87,7 @@ class SharePostServiceTest {
                 () -> assertThat(result.getTotalPages()).isZero()
         );
 
-        verify(shareRepository).findAllByIsActiveTrue(pageable);
+        verify(sharePostRepository).findAllByIsActiveTrue(pageable);
     }
     @Test
     @DisplayName("두 번째 페이지 조회 성공")
@@ -97,7 +97,7 @@ class SharePostServiceTest {
         List<SharePost> posts = List.of(sharePost1, sharePost2);
         Page<SharePost> sharePostPage = new PageImpl<>(posts, pageable, 25); // 총 25개 중 2번째 페이지
 
-        when(shareRepository.findAllByIsActiveTrue(pageable)).thenReturn(sharePostPage);
+        when(sharePostRepository.findAllByIsActiveTrue(pageable)).thenReturn(sharePostPage);
 
         // when
         Page<SharePostResponse> result = sharePostService.getAllPosts(pageable);
@@ -110,7 +110,7 @@ class SharePostServiceTest {
                 () -> assertThat(result.getTotalPages()).isEqualTo(3)
         );
 
-        verify(shareRepository).findAllByIsActiveTrue(pageable);
+        verify(sharePostRepository).findAllByIsActiveTrue(pageable);
     }
 
     @Test

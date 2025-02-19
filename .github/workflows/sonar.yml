@@ -11,6 +11,12 @@ jobs:
     name: 빌드 및 분석
     runs-on: ubuntu-latest
 
+    services:
+      redis:
+        image: redis:7.4.2  # Redis 컨테이너 추가
+        ports:
+          - 6379:6379
+
     steps:
       - uses: actions/checkout@v4
         with:

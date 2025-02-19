@@ -1,4 +1,4 @@
-package io.crops.warmletter.domain.share.entity.enums;
+package io.crops.warmletter.domain.share.enums;
 
 public enum ProposalStatus {
 

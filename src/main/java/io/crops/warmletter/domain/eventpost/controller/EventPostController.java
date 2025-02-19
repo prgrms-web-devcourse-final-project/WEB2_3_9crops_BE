@@ -4,6 +4,7 @@ import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.CreateEventPostResponse;
 import io.crops.warmletter.domain.eventpost.service.EventPostService;
 import io.crops.warmletter.global.response.BaseResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class EventPostController {
     private final EventPostService eventPostService;
 
     @PostMapping("/admin/event-posts")
-    public ResponseEntity<BaseResponse<CreateEventPostResponse>> createEventPost(@RequestBody CreateEventPostRequest createEventPostRequest){
+    public ResponseEntity<BaseResponse<CreateEventPostResponse>> createEventPost(@RequestBody @Valid CreateEventPostRequest createEventPostRequest){
         CreateEventPostResponse createEventPostResponse = eventPostService.createEventPost(createEventPostRequest);
         return ResponseEntity.ok(BaseResponse.of(createEventPostResponse,"게시판 생성 완료"));
     }

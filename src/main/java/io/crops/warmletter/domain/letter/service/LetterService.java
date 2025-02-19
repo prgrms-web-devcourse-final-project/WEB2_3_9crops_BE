@@ -10,6 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -46,5 +49,31 @@ public class LetterService {
         Letter letter = builder.build();
         Letter savedLetter = letterRepository.save(letter);
         return CreateLetterResponse.fromEntity(savedLetter);
+    }
+
+    public List<CreateLetterResponse> getPreviousLetters(Long letterId) {
+        List<Letter> previousLetters = new ArrayList<>();
+
+        // 현재 편지를 찾음
+        Letter currentLetter = letterRepository.findById(letterId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 편지를 찾을 수 없습니다."));
+
+        Long targetReceiverId = currentLetter.getReceiverId(); // 같은 작성자의 편지만 조회
+
+        while (currentLetter.getParentLetterId() != null) {
+            Letter parentLetter = letterRepository.findById(currentLetter.getParentLetterId())
+                    .orElse(null);
+
+            if (parentLetter == null || !parentLetter.getWriterId().equals(targetReceiverId)) {
+                break; // 같은 작성자가 아니면 중단
+            }
+
+            previousLetters.add(parentLetter);
+            currentLetter = parentLetter; // parentLetter를 계속 따라감
+        }
+
+        return previousLetters.stream()
+                .map(CreateLetterResponse::fromEntity)
+                .toList();
     }
 }

@@ -8,9 +8,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -27,6 +27,17 @@ public class LetterController {
     public ResponseEntity<BaseResponse<CreateLetterResponse>> createLetter(@RequestBody @Valid CreateLetterRequest lettersCreate) {
         CreateLetterResponse letterResponse = letterService.createLetter(lettersCreate);
         BaseResponse<CreateLetterResponse> response = BaseResponse.of(letterResponse, "편지가 성공적으로 생성되었습니다.");
+        return ResponseEntity.ok(response);
+    }
+
+
+    /**
+     * 지정된 letterId의 이전 편지를 조회합니다.
+     */
+    @GetMapping("/api/letters/{letterId}/previous")
+    public ResponseEntity<BaseResponse<List<CreateLetterResponse>>> getPreviousLetters(@PathVariable Long letterId) {
+        List<CreateLetterResponse> previousLetters = letterService.getPreviousLetters(letterId);
+        BaseResponse<List<CreateLetterResponse>> response = BaseResponse.of(previousLetters, "이전 편지가 성공적으로 조회되었습니다.");
         return ResponseEntity.ok(response);
     }
 }

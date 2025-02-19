@@ -1,13 +1,11 @@
 package io.crops.warmletter.domain.share.entity;
 
-import io.crops.warmletter.domain.share.entity.enums.ProposalStatus;
+import io.crops.warmletter.domain.share.enums.ProposalStatus;
 import io.crops.warmletter.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 

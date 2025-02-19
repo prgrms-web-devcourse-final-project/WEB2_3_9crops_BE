@@ -1,7 +1,7 @@
 package io.crops.warmletter.domain.badword.controller;
 
 
-import io.crops.warmletter.domain.badword.dto.request.BadWordRequest;
+import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
 import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.global.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +20,9 @@ public class BadWordController {
     private final BadWordService badWordService;
 
     @PostMapping
-    public ResponseEntity<BaseResponse<String>> createModerationWord(@RequestBody BadWordRequest request) {
-        badWordService.saveModerationWord(request);
-        return ResponseEntity.ok(BaseResponse.of(request.getWord(), "성공"));
+    public ResponseEntity<BaseResponse<Void>> createBadWord(@RequestBody CreateBadWordRequest request) {
+        badWordService.savebadWord(request);
+        return ResponseEntity.ok(BaseResponse.of(null, "검열단어 등록완료"));
     }
 
 }

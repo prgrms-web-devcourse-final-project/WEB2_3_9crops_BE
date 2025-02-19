@@ -1,7 +1,8 @@
 package io.crops.warmletter.global.config;
 
-import java.util.List;
-
+import io.crops.warmletter.global.jwt.JwtAuthenticationFilter;
+import io.crops.warmletter.global.jwt.JwtExceptionFilter;
+import io.crops.warmletter.global.jwt.JwtTokenProvider;
 import io.crops.warmletter.global.oauth.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -16,9 +17,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -28,6 +27,7 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CorsConfig corsConfig;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
@@ -73,7 +73,10 @@ public class SecurityConfig {
                         // 나중에 Handler 구현 후 추가될 부분
                         // .successHandler(oAuth2AuthenticationSuccessHandler)
                         // .failureHandler(oAuth2AuthenticationFailureHandler)
-                );
+                ).addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
+                        UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtExceptionFilter(),
+                        JwtAuthenticationFilter.class);
 
         return http.build();
     }

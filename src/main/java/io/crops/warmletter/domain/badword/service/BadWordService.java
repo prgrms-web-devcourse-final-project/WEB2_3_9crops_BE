@@ -2,9 +2,12 @@ package io.crops.warmletter.domain.badword.service;
 
 
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
+import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
 import io.crops.warmletter.domain.badword.entity.BadWord;
+import io.crops.warmletter.domain.badword.exception.BadWordNotFoundException;
 import io.crops.warmletter.domain.badword.exception.DuplicateBadWordException;
 import io.crops.warmletter.domain.badword.repository.BadWordRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -29,9 +32,27 @@ public class BadWordService {
                 .isUsed(true)
                 .build();
 
+
         badWordRepository.save(badWord);
 
         redisTemplate.opsForSet().add("bad_word", word);
     }
+
+
+    @Transactional
+    public void updateBadWordStatus(Long badWordId, UpdateBadWordStatusRequest request) {
+        BadWord badWord = badWordRepository.findById(badWordId)
+                .orElseThrow(BadWordNotFoundException::new);
+
+
+        badWord.updateStatus(request.isUsed());
+
+        if (request.isUsed()) {
+            redisTemplate.opsForSet().add("bad_word", badWord.getWord());
+        } else {
+            redisTemplate.opsForSet().remove("bad_word", badWord.getWord());
+        }
+    }
+
 
 }

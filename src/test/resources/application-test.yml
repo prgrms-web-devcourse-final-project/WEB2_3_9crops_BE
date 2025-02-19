@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testDB;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: create
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  data:
+    redis:
+      port: 6379
+      host: localhost
+      password:
+
+jwt:
+  secret: aejkfhakjehfkajsdhfkjahsekufhasekuhfaksdjhfjksahfekuhskjdhf
+logging:
+  level:
+    root: INFO
+    org.springframework.security: DEBUG
+    io.corps.warmletter: DEBUG
+    org.springframework.web: DEBUG

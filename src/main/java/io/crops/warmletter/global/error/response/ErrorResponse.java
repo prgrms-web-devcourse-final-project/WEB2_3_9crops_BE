@@ -1,6 +1,9 @@
 package io.crops.warmletter.global.error.response;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

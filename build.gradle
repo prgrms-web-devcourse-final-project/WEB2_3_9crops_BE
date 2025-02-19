@@ -136,14 +136,14 @@ jacocoTestCoverageVerification {
             limit {
                 counter = 'BRANCH'
                 value = 'COVEREDRATIO'
-                minimum = 0.80
+                minimum = 0.8
             }
 
             // 테스트 코드가 실제 프로덕션 코드의 각 라인을 얼마나 실행했는지를 측정
             limit {
                 counter = 'LINE'
                 value = 'COVEREDRATIO'
-                minimum = 0.60
+                minimum = 0.6
             }
 
             excludes = excludePatterns

@@ -53,6 +53,7 @@ public class SecurityConfig {
                                         .permitAll() // h2-console 접근 허용
                                         .requestMatchers("/swagger-ui/**")
                                         .permitAll() // Swagger UI 허용
+                                        .requestMatchers("/api/bad-words/**").permitAll()
                                         .requestMatchers("/v3/api-docs/**")
                                         .permitAll() // API Docs 허용
                                         .anyRequest()

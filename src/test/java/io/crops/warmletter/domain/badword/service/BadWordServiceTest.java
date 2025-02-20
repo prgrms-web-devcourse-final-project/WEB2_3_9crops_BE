@@ -13,13 +13,13 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import java.util.HashSet;
@@ -36,8 +36,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ActiveProfiles("test")
 @Import(TestConfig.class)
-@SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD) // 각 테스트 끝날 때마다 컨텍스트 초기화 (DB 상태 초기화 효과)
+@ExtendWith(MockitoExtension.class)
 class BadWordServiceTest {
 
     @InjectMocks
@@ -54,9 +53,9 @@ class BadWordServiceTest {
 
     @BeforeEach
     void setUp() {
-        // RedisTemplate의 opsForSet() 호출 시 미리 준비한 setOperations 반환하도록 설정
-        when(redisTemplate.opsForSet()).thenReturn(setOperations);
+        lenient().when(redisTemplate.opsForSet()).thenReturn(setOperations);
     }
+
 
     @Test
     @DisplayName("금칙어 저장 성공")
@@ -64,7 +63,7 @@ class BadWordServiceTest {
         // given
         CreateBadWordRequest request = new CreateBadWordRequest("십새끼");
         when(badWordRepository.existsByWord("십새끼")).thenReturn(false);
-        when(setOperations.isMember("bad_word", "십새끼")).thenReturn(false);
+        lenient().when(setOperations.isMember("bad_word", "십새끼")).thenReturn(false); //
 
         // when
         badWordService.createBadWord(request);
@@ -105,7 +104,8 @@ class BadWordServiceTest {
 
         when(badWordRepository.findById(1L)).thenReturn(Optional.of(badWord));
         when(redisTemplate.opsForSet()).thenReturn(setOperations);
-        when(setOperations.isMember("bad_word", "비속어")).thenReturn(false);
+        lenient().when(setOperations.isMember("bad_word", "비속어")).thenReturn(false);
+
 
         // when
         badWordService.updateBadWordStatus(1L, request);

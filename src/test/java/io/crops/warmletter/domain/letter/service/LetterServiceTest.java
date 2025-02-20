@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.letter.service;
 
+import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
@@ -31,8 +32,12 @@ class LetterServiceTest {
     @Mock
     private LetterRepository letterRepository;
 
+    @Mock
+    private BadWordService  badWordService;
+
     @InjectMocks
     private LetterService letterService;
+
 
     private CreateLetterRequest randomLetterRequest;
     private CreateLetterRequest directLetterRequest;

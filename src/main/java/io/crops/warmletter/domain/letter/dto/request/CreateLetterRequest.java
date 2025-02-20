@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CreateLetterRequest {
 
-    private Long writerId; // todo 테스트시에만 작성자 추가, 사용자 id 가져올때는 제거 해야 함.
+//    private Long writerId; // todo 테스트시에만 작성자 추가, 사용자 id 가져올때는 제거 해야 함.
 
     //받는사람 아이디 -> null이면 첫편지
     private Long receiverId;

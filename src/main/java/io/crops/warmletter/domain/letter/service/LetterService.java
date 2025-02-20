@@ -1,9 +1,10 @@
 package io.crops.warmletter.domain.letter.service;
 
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
-import io.crops.warmletter.domain.letter.dto.response.CreateLetterResponse;
+import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.LetterType;
+import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +23,10 @@ public class LetterService {
     private final LetterRepository letterRepository;
 
     @Transactional
-    public CreateLetterResponse createLetter(CreateLetterRequest request) {
-//        Long writerId = 1L; // TODO: 실제 인증 정보를 사용하도록 변경
+    public LetterResponse createLetter(CreateLetterRequest request) {
+        Long writerId = 1L; // TODO: 실제 인증 정보를 사용하도록 변경
         Letter.LetterBuilder builder = Letter.builder()
-                .writerId(request.getWriterId())
+                .writerId(writerId)
                 .category(request.getCategory())
                 .title(request.getTitle())
                 .content(request.getContent())
@@ -47,19 +48,19 @@ public class LetterService {
 
         Letter letter = builder.build();
         Letter savedLetter = letterRepository.save(letter);
-        return CreateLetterResponse.fromEntity(savedLetter);
+        return LetterResponse.fromEntity(savedLetter);
     }
 
-    public List<CreateLetterResponse> getPreviousLetters(Long letterId) {
+    public List<LetterResponse> getPreviousLetters(Long letterId) {
 
-        Letter letter = letterRepository.findById(letterId).orElseThrow(() -> new RuntimeException("해당 편지를 찾을 수 없습니다.")); //todo 에러처리
+        Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new); //todo 에러처리
         Long parentLetterId = letter.getParentLetterId(); //답장하는 편지의 부모 id
 
         List<Letter> lettersByParentId = letterRepository.findLettersByParentLetterId(parentLetterId); //부모아이디로 편지 찾기
 
-        List<CreateLetterResponse> responses = new ArrayList<>();
+        List<LetterResponse> responses = new ArrayList<>();
         for (Letter findLetter : lettersByParentId) {
-            CreateLetterResponse response = CreateLetterResponse.fromEntity(findLetter);
+            LetterResponse response = LetterResponse.fromEntity(findLetter);
             responses.add(response);
         }
         return responses;

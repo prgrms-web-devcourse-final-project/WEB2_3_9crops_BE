@@ -42,15 +42,16 @@ class EventPostControllerTest {
         //given
         CreateEventPostRequest createEventPostRequest = CreateEventPostRequest.builder()
                 .title("제목")
-                .content("내용")
+                .content("")
                 .build();
+
         //when
         mockMvc.perform(post("/api/admin/event-posts")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createEventPostRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.title").value("제목"))
-                .andExpect(jsonPath("$.data.content").value("내용"))
+                .andExpect(jsonPath("$.data.content").value(""))
                 .andExpect(jsonPath("$.message").value("게시판 생성 완료"));
         //then
     }

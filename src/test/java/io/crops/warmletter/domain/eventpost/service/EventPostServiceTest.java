@@ -2,33 +2,28 @@ package io.crops.warmletter.domain.eventpost.service;
 
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.CreateEventPostResponse;
+import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.repository.EventPostRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ActiveProfiles("test")
-@AutoConfigureMockMvc(addFilters = false)
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 class EventPostServiceTest {
-    @Autowired
-    private EventPostService eventPostService;
-
-    @Autowired
+    @Mock
     private EventPostRepository eventPostRepository;
 
-    @BeforeEach
-    void setUp() {
-        eventPostRepository.deleteAll();
-    }
-    
+    @InjectMocks
+    private EventPostService eventPostService;
+
     @Test
     @DisplayName("게시판 작성 성공")
     void createEventPost_success(){
@@ -36,6 +31,11 @@ class EventPostServiceTest {
         CreateEventPostRequest createEventPostRequest = CreateEventPostRequest.builder()
                 .title("제목")
                 .content("내용")
+                .build();
+
+        EventPost eventPost = EventPost.builder()
+                .title(createEventPostRequest.getTitle())
+                .content(createEventPostRequest.getContent())
                 .build();
 
         //when

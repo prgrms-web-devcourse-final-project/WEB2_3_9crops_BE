@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.letter.entity;
 
 
+import io.crops.warmletter.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,24 +13,17 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
 @Table(name = "letter_matchings")
-public class LetterMatching {
-
+public class LetterMatching extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id")
-    private Letter letter;
+    private Long letterId;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "id") //최초로 편지를 쓴 ID
-//    private Member firstMember;
-//
-//
-//    //내 아이디
-//    private Member secondMember;
+    private Long firstMemberId;
+
+    private Long secondMemberId;
 
     private boolean isActive;
 
@@ -40,6 +34,5 @@ public class LetterMatching {
     private LocalDateTime updatedAt;
 
     private LocalDateTime replyDeadLine;
-
 
 }

@@ -13,11 +13,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CreateLetterRequest {
 
+//    private Long writerId; // todo 테스트시에만 작성자 추가, 사용자 id 가져올때는 제거 해야 함.
+
     //받는사람 아이디 -> null이면 첫편지
     private Long receiverId;
 
     //상위 편지 id -> null이면 첫편지
-    private Long parentLetterId; //상위 편지 id
+    private Long parentLetterId; //상위 편지 id -> 프론트는 편지 아이디를 여기에 넣어주면 됨.
 
     @NotBlank(message = "제목을 입력해주세요.")
     private String title;

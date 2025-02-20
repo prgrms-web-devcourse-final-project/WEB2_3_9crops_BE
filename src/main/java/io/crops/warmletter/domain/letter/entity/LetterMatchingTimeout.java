@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
@@ -14,5 +16,9 @@ public class LetterMatchingTimeout {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private Long letterMatchingId;
+
+    private LocalDateTime MatchingTimedOutAt; //매칭 취소된 시간
 }
 

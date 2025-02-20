@@ -11,8 +11,9 @@ public enum ErrorCode {
     INVALID_INPUT_VALUE("COM-001", HttpStatus.BAD_REQUEST, "잘못된 입력값입니다."),
     INTERNAL_SERVER_ERROR("COM-002", HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다."),
 
-    // 페이징 관련 에러 코드
-    INVALID_PAGE_REQUEST("PAGE-001", HttpStatus.BAD_REQUEST, "요청페이지 번호가 0보다 작습니다."),
+    // 공유 관련 에러 코드
+    INVALID_PAGE_REQUEST("SHARE-001", HttpStatus.BAD_REQUEST, "요청페이지 번호가 0보다 작습니다."),
+    SHARE_POST_NOT_FOUND("SHARE-002",HttpStatus.NOT_FOUND,"해당 공유 게시글을 찾을 수 없습니다."),
 
     //금치어
     DUPLICATE_BANNED_WORD("MOD-001", HttpStatus.CONFLICT, "이미 등록된 금칙어입니다."),
@@ -25,6 +26,10 @@ public enum ErrorCode {
     OAUTH2_EMAIL_NOT_FOUND("AUTH-003", HttpStatus.BAD_REQUEST, "소셜 계정에서 이메일을 찾을 수 없습니다."),
     INVALID_REFRESH_TOKEN("AUTH-004", HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다."),
     INVALID_ACCESS_TOKEN("AUTH-005", HttpStatus.UNAUTHORIZED, "유효하지 않은 엑세스 토큰입니다."),
+    OAUTH2_EMAIL_NOT_FOUND("AUTH-003", HttpStatus.BAD_REQUEST, "소셜 계정에서 이메일을 찾을 수 없습니다."),
+
+    //Letter Error code
+    LETTER_NOT_FOUND("LET-001", HttpStatus.NOT_FOUND, "해당 편지를 찾을 수 없습니다.")
     ;
 
     private final String code;

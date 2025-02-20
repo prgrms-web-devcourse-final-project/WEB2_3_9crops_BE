@@ -2,6 +2,7 @@ package io.crops.warmletter.global.oauth.entity;
 
 import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.enums.Role;
+import io.jsonwebtoken.Claims;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -18,14 +19,16 @@ public class UserPrincipal implements OAuth2User {
     private Long id;
     private String email;
     private Role role;
+    private String zipCode;
     private Collection<? extends GrantedAuthority> authorities;
     private Map<String, Object> attributes;
 
     @Builder
-    public UserPrincipal(Long id, String email, Role role, Collection<? extends GrantedAuthority> authorities) {
+    public UserPrincipal(Long id, String email, Role role, String zipCode, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.email = email;
         this.role = role;
+        this.zipCode = zipCode;
         this.authorities = authorities;
     }
 
@@ -38,6 +41,7 @@ public class UserPrincipal implements OAuth2User {
                 .id(member.getId())
                 .email(member.getEmail())
                 .role(member.getRole())
+                .zipCode(member.getZipCode())
                 .authorities(authorities)
                 .build();
 

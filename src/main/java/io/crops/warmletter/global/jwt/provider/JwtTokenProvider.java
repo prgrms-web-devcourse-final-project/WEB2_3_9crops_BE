@@ -1,6 +1,7 @@
 package io.crops.warmletter.global.jwt.provider;
 
 import io.crops.warmletter.domain.member.enums.Role;
+import io.crops.warmletter.global.jwt.enums.TokenType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -37,9 +38,10 @@ public class JwtTokenProvider {
     }
 
     // Access Token 생성
-    public String createAccessToken(String email, Role role) {
+    public String createAccessToken(String email, Role role, String zipCode) {
         Claims claims = Jwts.claims().setSubject(email);
         claims.put("role", role);
+        claims.put("zipCode", zipCode);
         Date now = new Date();
 
         return Jwts.builder()
@@ -84,7 +86,7 @@ public class JwtTokenProvider {
     }
 
     // 토큰의 유효성 검증
-    public boolean validateToken(String token) {
+    public boolean validateToken(String token, TokenType tokenType) {
         try {
             // 토큰 파싱
             Jwts.parserBuilder()
@@ -93,8 +95,13 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
 
             // Redis에서 해당 토큰이 블랙리스트에 있는지 확인
-            String isLogout = (String)redisTemplate.opsForValue().get(token);
-            return isLogout == null;
+            if (tokenType == TokenType.ACCESS) {
+                String isLogout = redisTemplate.opsForValue().get("blacklist:access_token:" + token);
+                return isLogout == null;
+            } else {
+                String storedToken = redisTemplate.opsForValue().get("refresh_token:" + getEmail(token));
+                return token.equals(storedToken);
+            }
         } catch (SecurityException | MalformedJwtException e) {
             throw new JwtException("잘못된 JWT 서명입니다.");
         } catch (ExpiredJwtException e) {

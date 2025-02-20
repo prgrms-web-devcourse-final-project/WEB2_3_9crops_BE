@@ -34,7 +34,7 @@ public class LetterController {
     /**
      * 지정된 letterId의 이전 편지를 조회합니다.
      */
-    @GetMapping("/api/letters/{letterId}/previous")
+    @GetMapping("/api/v1/letters/{letterId}/previous")
     public ResponseEntity<BaseResponse<List<CreateLetterResponse>>> getPreviousLetters(@PathVariable Long letterId) {
         List<CreateLetterResponse> previousLetters = letterService.getPreviousLetters(letterId);
         BaseResponse<List<CreateLetterResponse>> response = BaseResponse.of(previousLetters, "이전 편지가 성공적으로 조회되었습니다.");

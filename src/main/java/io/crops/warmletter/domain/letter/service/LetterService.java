@@ -23,10 +23,9 @@ public class LetterService {
 
     @Transactional
     public CreateLetterResponse createLetter(CreateLetterRequest request) {
-
-        Long writerId = 1L; // TODO: 실제 인증 정보를 사용하도록 변경
+//        Long writerId = 1L; // TODO: 실제 인증 정보를 사용하도록 변경
         Letter.LetterBuilder builder = Letter.builder()
-                .writerId(writerId)
+                .writerId(request.getWriterId())
                 .category(request.getCategory())
                 .title(request.getTitle())
                 .content(request.getContent())
@@ -52,28 +51,17 @@ public class LetterService {
     }
 
     public List<CreateLetterResponse> getPreviousLetters(Long letterId) {
-        List<Letter> previousLetters = new ArrayList<>();
 
-        // 현재 편지를 찾음
-        Letter currentLetter = letterRepository.findById(letterId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 편지를 찾을 수 없습니다."));
+        Letter letter = letterRepository.findById(letterId).orElseThrow(() -> new RuntimeException("해당 편지를 찾을 수 없습니다.")); //todo 에러처리
+        Long parentLetterId = letter.getParentLetterId(); //답장하는 편지의 부모 id
 
-        Long targetReceiverId = currentLetter.getReceiverId(); // 같은 작성자의 편지만 조회
+        List<Letter> lettersByParentId = letterRepository.findLettersByParentLetterId(parentLetterId); //부모아이디로 편지 찾기
 
-        while (currentLetter.getParentLetterId() != null) {
-            Letter parentLetter = letterRepository.findById(currentLetter.getParentLetterId())
-                    .orElse(null);
-
-            if (parentLetter == null || !parentLetter.getWriterId().equals(targetReceiverId)) {
-                break; // 같은 작성자가 아니면 중단
-            }
-
-            previousLetters.add(parentLetter);
-            currentLetter = parentLetter; // parentLetter를 계속 따라감
+        List<CreateLetterResponse> responses = new ArrayList<>();
+        for (Letter findLetter : lettersByParentId) {
+            CreateLetterResponse response = CreateLetterResponse.fromEntity(findLetter);
+            responses.add(response);
         }
-
-        return previousLetters.stream()
-                .map(CreateLetterResponse::fromEntity)
-                .toList();
+        return responses;
     }
 }

@@ -1,8 +1,8 @@
 package io.crops.warmletter.global.config;
 
-import io.crops.warmletter.global.jwt.JwtAuthenticationFilter;
-import io.crops.warmletter.global.jwt.JwtExceptionFilter;
-import io.crops.warmletter.global.jwt.JwtTokenProvider;
+import io.crops.warmletter.global.jwt.filter.JwtAuthenticationFilter;
+import io.crops.warmletter.global.jwt.filter.JwtExceptionFilter;
+import io.crops.warmletter.global.jwt.provider.JwtTokenProvider;
 import io.crops.warmletter.global.oauth.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -56,12 +56,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         (authorizeRequests) ->
                                 authorizeRequests
-                                        .requestMatchers("/h2-console/**")
+                                        .requestMatchers("/api/auth/**")
                                         .permitAll() // h2-console 접근 허용
                                         .requestMatchers("/swagger-ui/**")
                                         .permitAll() // Swagger UI 허용
-                                        .requestMatchers("/api/admin/**").permitAll()
-                                        .requestMatchers("/api/bad-words/**").permitAll()
+                                        .requestMatchers("/api/**").permitAll()
                                         .requestMatchers("/v3/api-docs/**")
                                         .permitAll() // API Docs 허용
                                         .anyRequest()

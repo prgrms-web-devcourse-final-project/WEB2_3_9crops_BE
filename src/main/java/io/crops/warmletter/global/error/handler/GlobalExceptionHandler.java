@@ -2,6 +2,7 @@ package io.crops.warmletter.global.error.handler;
 
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
+import io.crops.warmletter.global.error.exception.JwtAuthenticationException;
 import io.crops.warmletter.global.error.response.ErrorResponse;
 import io.crops.warmletter.global.error.exception.OAuth2Exception;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +56,14 @@ public class GlobalExceptionHandler {
             OAuth2Exception e) {
         log.error("OAuth2 authentication error occurred: {}", e.getMessage(), e);
         return createErrorResponse(ErrorCode.OAUTH2_PROCESSING_ERROR, e.getMessage());
+    }
+
+    // Jwt 관련 에러
+    @ExceptionHandler(JwtAuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleJwtAuthenticationProcessingException(
+            JwtAuthenticationException e) {
+        log.error("JWT authentication error occurred: {}", e.getMessage(), e);
+        return createErrorResponse(e.getErrorCode());
     }
 
     @ExceptionHandler(Exception.class)

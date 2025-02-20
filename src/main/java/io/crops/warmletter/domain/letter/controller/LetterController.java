@@ -47,7 +47,7 @@ public class LetterController {
     @DeleteMapping("/api/letters/{letterId}")
     public ResponseEntity<BaseResponse> deleteLetter(@PathVariable Long letterId) {
         letterService.delete(letterId);
-        BaseResponse<Object> response = BaseResponse.of(null, "편지 삭제 완료");
+        BaseResponse<Void> response = BaseResponse.of(null, "편지 삭제 완료");
         return ResponseEntity.ok(response);
     }
 }

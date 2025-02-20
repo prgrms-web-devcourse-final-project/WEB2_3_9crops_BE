@@ -1,6 +1,7 @@
-package io.crops.warmletter.global.jwt;
+package io.crops.warmletter.global.jwt.filter;
 
 import io.crops.warmletter.domain.member.enums.Role;
+import io.crops.warmletter.global.jwt.provider.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

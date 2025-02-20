@@ -1,8 +1,8 @@
 package io.crops.warmletter.global.config;
 
-import io.crops.warmletter.global.jwt.JwtAuthenticationFilter;
-import io.crops.warmletter.global.jwt.JwtExceptionFilter;
-import io.crops.warmletter.global.jwt.JwtTokenProvider;
+import io.crops.warmletter.global.jwt.filter.JwtAuthenticationFilter;
+import io.crops.warmletter.global.jwt.filter.JwtExceptionFilter;
+import io.crops.warmletter.global.jwt.provider.JwtTokenProvider;
 import io.crops.warmletter.global.oauth.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

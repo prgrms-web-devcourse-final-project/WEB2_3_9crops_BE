@@ -1,4 +1,4 @@
-package io.crops.warmletter.global.jwt;
+package io.crops.warmletter.global.jwt.provider;
 
 import io.crops.warmletter.domain.member.enums.Role;
 import io.jsonwebtoken.*;
@@ -21,7 +21,7 @@ public class JwtTokenProvider {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     private final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 30; // 30분
     private final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 14; // 14일
@@ -119,15 +119,15 @@ public class JwtTokenProvider {
         }
     }
 
-    // Access Token 남은 유효시간
-    public Long getExpiration(String accessToken) {
+    // Token 남은 유효시간
+    public long getExpirationTime(String token) {
         Date expiration = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
-                .parseClaimsJws(accessToken)
+                .parseClaimsJws(token)
                 .getBody()
                 .getExpiration();
-        Long now = new Date().getTime();
+        long now = new Date().getTime();
         return (expiration.getTime() - now);
     }
 }

@@ -1,8 +1,5 @@
 package io.crops.warmletter.domain.share.dto.response;
 
-import io.crops.warmletter.domain.letter.entity.Letter;
-import io.crops.warmletter.domain.member.entity.Member;
-import io.crops.warmletter.domain.share.entity.SharePost;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;

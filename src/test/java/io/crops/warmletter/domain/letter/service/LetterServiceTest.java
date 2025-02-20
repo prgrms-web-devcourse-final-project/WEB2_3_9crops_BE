@@ -261,4 +261,36 @@ class LetterServiceTest {
         verify(letterRepository).findById(nonExistentLetterId);
     }
 
+    @Test
+    @DisplayName("소프트 딜리트 테스트 - 편지 삭제 후 isActive가 false로 변경되어야 한다.")
+    void delete_softDelete_success() {
+        // Given: 새로운 편지를 생성하여 저장 (단, 목 객체이므로 직접 ID를 주입)
+        Letter letter = Letter.builder()
+                .writerId(1L)
+                .receiverId(null)
+                .parentLetterId(null)
+                .letterType(LetterType.RANDOM)
+                .category(Category.CONSULT)
+                .title("테스트 편지 제목")
+                .content("테스트 편지 내용")
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .build();
+
+        // 테스트에서는 ID를 직접 설정합니다.
+        ReflectionTestUtils.setField(letter, "id", 1L);
+
+        // 또한, delete() 메서드에서 letterRepository.findById() 호출 시 해당 엔티티를 반환하도록 스텁합니다.
+        when(letterRepository.findById(1L)).thenReturn(Optional.of(letter));
+
+        // 검증: 기본적으로 편지는 활성 상태여야 함
+        assertTrue(letter.getIsActive(), "편지는 기본적으로 활성 상태여야 합니다.");
+
+        // When: delete 메서드를 호출하여 소프트 딜리트 수행
+        letterService.delete(1L);
+
+        // Then: 해당 편지를 다시 조회하면 isActive가 false로 변경되어 있어야 함
+        Letter deletedLetter = letterRepository.findById(1L).orElseThrow(LetterNotFoundException::new);
+        assertFalse(deletedLetter.getIsActive(), "편지 삭제 후 isActive는 false여야 합니다.");
+    }
 }

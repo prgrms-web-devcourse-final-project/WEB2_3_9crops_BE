@@ -1,5 +1,7 @@
 package io.crops.warmletter.domain.share.controller;
 
+import io.crops.warmletter.domain.share.dto.response.ShareLetterPostResponse;
+import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.entity.SharePost;
 import io.crops.warmletter.domain.share.service.SharePostService;
@@ -17,12 +19,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -39,6 +42,7 @@ class SharePostControllerTest {
     private SharePostService sharePostService;
 
 
+
     private SharePostResponse sharePostResponse1;
     private SharePostResponse sharePostResponse2;
     @BeforeEach
@@ -47,7 +51,6 @@ class SharePostControllerTest {
         SharePost sharePost1 = new SharePost(2L, "게시글2", "to share my post1",true);
         sharePostResponse1 = new SharePostResponse(sharePost);
         sharePostResponse2 = new SharePostResponse(sharePost1);
-
     }
 
     @Test
@@ -108,6 +111,64 @@ class SharePostControllerTest {
                 .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_PAGE_REQUEST.getCode()))
                 .andExpect(jsonPath("$.message").value(ErrorCode.INVALID_PAGE_REQUEST.getMessage()))
                 .andDo(print());
+    }
+
+    @DisplayName("공유 게시글 상세 조회")
+    @Test
+    void getPostDetailTest() throws Exception {
+        // given
+        ShareLetterPostResponse letterResponse = ShareLetterPostResponse.builder()
+                .id(10L)
+                .content("편지 내용입니다")
+                .writerZipCode("12345")
+                .receiverZipCode("11112345")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        SharePostDetailResponse sharePostDetailResponse = SharePostDetailResponse.builder()
+                .id(1L)                           // id -> sharePostId
+                .zipCode("10A32")
+                .sharePostContent("hello")                  // sharePostContent -> proposalMessage
+                .letters(Collections.singletonList(letterResponse))  // letters 추가
+                .build();
+
+        when(sharePostService.getPostDetail(sharePostDetailResponse.getSharePostId()))
+                .thenReturn(sharePostDetailResponse);
+
+        // when and then
+        mockMvc.perform(get("/api/share-posts/" + sharePostDetailResponse.getSharePostId())  // API 경로 수정
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.sharePostId").value(1L))
+                .andExpect(jsonPath("$.data.zipCode").value("10A32"))
+                .andExpect(jsonPath("$.data.sharePostContent").value("hello"))
+                .andExpect(jsonPath("$.data.letters[0].id").value(10L))
+                .andExpect(jsonPath("$.data.letters[0].content").value("편지 내용입니다"))
+                .andExpect(jsonPath("$.data.letters[0].writerZipCode").value("12345"))
+                .andExpect(jsonPath("$.data.letters[0].receiverZipCode").value("11112345"))
+                .andExpect(jsonPath("$.message").value("성공"))
+                .andDo(print());
+
+        verify(sharePostService).getPostDetail(sharePostDetailResponse.getSharePostId());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 게시글 조회 실패")
+    void getPostDetail_NotFound() throws Exception {
+        // Given
+        Long sharePostId = 999L;
+        doThrow(new BusinessException(ErrorCode.SHARE_POST_NOT_FOUND))
+                .when(sharePostService).getPostDetail(sharePostId);
+
+        // When & Then
+        mockMvc.perform(get("/api/share-posts/{sharePostId}", sharePostId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("SHARE-002"))
+                .andExpect(jsonPath("$.message").value("해당 공유 게시글을 찾을 수 없습니다."))
+                .andDo(print());
+
+        verify(sharePostService).getPostDetail(sharePostId);
     }
 
 }

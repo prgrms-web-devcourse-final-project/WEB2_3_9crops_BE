@@ -22,6 +22,9 @@ public class BadWordService {
     private final BadWordRepository badWordRepository;
     private final RedisTemplate<String, String> redisTemplate; // Redis 추가
 
+    private static final String BAD_WORD_KEY = "bad_word";
+    private static final String BAD_WORD_PATTERN = "[^가-힣a-zA-Z0-9]";
+
     public void createBadWord(CreateBadWordRequest request) {
         String word = request.getWord();
 
@@ -59,10 +62,10 @@ public class BadWordService {
 
     //필터링
     public void validateText(String text) {
-        Set<String> badWords = redisTemplate.opsForSet().members("bad_word");
+        Set<String> badWords = redisTemplate.opsForSet().members(BAD_WORD_KEY);
 
-        // 입력 문장에서 특수문자, 공백 제거
-        String sanitizedText = text.replaceAll("[^가-힣a-zA-Z0-9]", "");
+        String sanitizedText = text.replaceAll(BAD_WORD_PATTERN, "");
+
 
         for (String badWord : badWords) {
             // 금칙어도 혹시 특수문자 있을 수 있으니까 정제

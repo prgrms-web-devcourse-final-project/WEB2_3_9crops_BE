@@ -22,7 +22,7 @@ public class AuthController {
     private final AuthService authService;
 
     // Access 토큰이 만료되었을 때 호출
-    @PostMapping("/auth/reissue")
+    @PostMapping("/reissue")
     public ResponseEntity<BaseResponse<TokenResponse>> reissue(
             @CookieValue(name = "refresh_token", required = false) String refreshToken,
             HttpServletResponse response

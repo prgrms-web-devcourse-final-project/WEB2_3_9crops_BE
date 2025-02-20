@@ -50,7 +50,7 @@ class AuthControllerTest {
         when(authService.reissue(eq(refreshToken), any(HttpServletResponse.class)))
                 .thenReturn(tokenResponse);
 
-        mockMvc.perform(post("/api/auth/reissue")
+        mockMvc.perform(post("/api/reissue")
                         .cookie(new Cookie("refresh_token", refreshToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accessToken").value(newAccessToken))
@@ -64,7 +64,7 @@ class AuthControllerTest {
         when(authService.reissue(isNull(), any(HttpServletResponse.class)))
                 .thenThrow(new InvalidRefreshTokenException());
 
-        mockMvc.perform(post("/api/auth/reissue"))
+        mockMvc.perform(post("/api/reissue"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("AUTH-004"))
                 .andExpect(jsonPath("$.message").value("유효하지 않은 리프레시 토큰입니다."))
@@ -78,7 +78,7 @@ class AuthControllerTest {
         when(authService.reissue(eq(invalidRefreshToken), any(HttpServletResponse.class)))
                 .thenThrow(new InvalidRefreshTokenException());
 
-        mockMvc.perform(post("/api/auth/reissue")
+        mockMvc.perform(post("/api/reissue")
                         .cookie(new Cookie("refresh_token", invalidRefreshToken)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("AUTH-004"))

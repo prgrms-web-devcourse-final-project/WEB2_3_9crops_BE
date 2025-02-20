@@ -30,7 +30,7 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Builder
-public class CreateLetterResponse {
+public class LetterResponse {
 
     //편지 아이디
     private final Long letterId;
@@ -62,8 +62,8 @@ public class CreateLetterResponse {
 
 
 
-    public static CreateLetterResponse fromEntity(Letter letter) {
-        return CreateLetterResponse.builder()
+    public static LetterResponse fromEntity(Letter letter) {
+        return LetterResponse.builder()
                 .letterId(letter.getId())
                 .writerId(letter.getWriterId())
                 .receiverId(letter.getReceiverId())

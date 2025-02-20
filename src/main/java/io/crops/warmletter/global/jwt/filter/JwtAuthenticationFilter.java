@@ -1,6 +1,8 @@
-package io.crops.warmletter.global.jwt;
+package io.crops.warmletter.global.jwt.filter;
 
 import io.crops.warmletter.domain.member.enums.Role;
+import io.crops.warmletter.global.jwt.enums.TokenType;
+import io.crops.warmletter.global.jwt.provider.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -28,7 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = resolveToken(request);
 
         // 토큰이 유효하면 인증 정보 설정
-        if (token != null && jwtTokenProvider.validateToken(token)) {
+        if (token != null && jwtTokenProvider.validateToken(token, TokenType.ACCESS)) {
             String email = jwtTokenProvider.getEmail(token);
             Claims claims = jwtTokenProvider.getClaims(token);
             Role role = Role.valueOf(claims.get("role").toString());

@@ -1,4 +1,4 @@
-package io.crops.warmletter.global.jwt;
+package io.crops.warmletter.global.jwt.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.JwtException;

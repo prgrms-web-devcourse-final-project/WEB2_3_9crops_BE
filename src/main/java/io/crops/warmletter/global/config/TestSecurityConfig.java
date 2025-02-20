@@ -41,6 +41,7 @@ public class TestSecurityConfig {
                 // 요청에 대한 권한 설정
                 .authorizeHttpRequests(
                         auth -> auth
+                                .requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/h2-console/**").permitAll()
                                 .requestMatchers("/swagger-ui/**").permitAll()
                                 .requestMatchers("/v3/api-docs/**").permitAll()

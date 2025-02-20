@@ -19,11 +19,10 @@ public class SharePostController {
     private final SharePostService sharePostService;
 
     @GetMapping("/share-posts")
-//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PageResponse<SharePostResponse>> getAllPosts(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
-//            @AuthenticationPrincipal UserDetails userDetails
     ) {
-        return ResponseEntity.ok(new PageResponse<>(sharePostService.getAllPosts(pageable)));
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new PageResponse<>(sharePostService.getAllPosts(pageable)));
     }
 }

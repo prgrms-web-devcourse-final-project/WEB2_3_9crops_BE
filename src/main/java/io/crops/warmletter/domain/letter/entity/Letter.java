@@ -75,8 +75,11 @@ public class Letter extends BaseTimeEntity {
         this.isRead = false;
         this.fontType = fontType;
         this.paperType = paperType;
-        this.isActive = false;
+        this.isActive = true; // 기본값: 활성 상태
     }
 
+    public void softDelete() {
+        this.isActive = false; // 신고시 비활성 상태
+    }
 
 }

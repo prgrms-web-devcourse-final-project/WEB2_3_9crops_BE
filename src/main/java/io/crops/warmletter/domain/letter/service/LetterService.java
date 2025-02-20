@@ -65,4 +65,10 @@ public class LetterService {
         }
         return responses;
     }
+
+    @Transactional //더티채킹
+    public void delete(Long letterId) {
+        Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
+        letter.softDelete();
+    }
 }

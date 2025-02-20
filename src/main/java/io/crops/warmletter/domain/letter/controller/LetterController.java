@@ -41,4 +41,13 @@ public class LetterController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * 지정된 letterId 삭제 (softDelete)
+     */
+    @DeleteMapping("/api/letters/{letterId}")
+    public ResponseEntity<BaseResponse> deleteLetter(@PathVariable Long letterId) {
+        letterService.delete(letterId);
+        BaseResponse<Void> response = BaseResponse.of(null, "편지 삭제 완료");
+        return ResponseEntity.ok(response);
+    }
 }

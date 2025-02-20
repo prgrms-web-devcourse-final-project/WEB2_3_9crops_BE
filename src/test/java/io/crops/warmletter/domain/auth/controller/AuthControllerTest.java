@@ -18,8 +18,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -99,5 +98,17 @@ class AuthControllerTest {
                 .andExpect(status().isOk());
 
         verify(authService).logout(eq(accessToken), eq(refreshToken), any(HttpServletResponse.class));
+    }
+
+    @DisplayName("로그아웃 - 실패 (리프레시 토큰 없음)")
+    @Test
+    void logout_NoRefreshToken() throws Exception {
+        String accessToken = "access.token";
+
+        mockMvc.perform(post("/api/logout")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk());
+
+        verify(authService, never()).logout(any(), any(), any());
     }
 }

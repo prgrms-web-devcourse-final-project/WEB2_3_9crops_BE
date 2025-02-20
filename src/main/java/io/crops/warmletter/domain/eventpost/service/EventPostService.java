@@ -22,12 +22,11 @@ public class EventPostService {
                 .content(createEventPostRequest.getContent())
                 .build();
         EventPost saveEventPost = eventPostRepository.save(eventPost);
+
         return CreateEventPostResponse.builder()
                 .eventPostId(saveEventPost.getId())
                 .title(saveEventPost.getTitle())
                 .content(saveEventPost.getContent())
-                .createdBy(saveEventPost.getCreatedBy())
-                .createdAt(saveEventPost.getCreatedAt())
                 .build();
     }
 }

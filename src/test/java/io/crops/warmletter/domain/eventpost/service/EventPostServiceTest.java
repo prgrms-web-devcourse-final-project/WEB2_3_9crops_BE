@@ -12,8 +12,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
 
 @ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
@@ -38,12 +41,15 @@ class EventPostServiceTest {
                 .content(createEventPostRequest.getContent())
                 .build();
 
+        when(eventPostRepository.save(any(EventPost.class))).thenReturn(eventPost);
+
         //when
         CreateEventPostResponse createEventPostResponse = eventPostService.createEventPost(createEventPostRequest);
 
         //then
-        assertNotNull(createEventPostResponse);
-        assertEquals("제목",createEventPostResponse.getTitle());
-        assertEquals("내용",createEventPostResponse.getContent());
+        then(eventPostRepository).should(times(1)).save(any(EventPost.class));
+
+        assertEquals("제목", createEventPostResponse.getTitle());
+        assertEquals("내용", createEventPostResponse.getContent());
     }
 }

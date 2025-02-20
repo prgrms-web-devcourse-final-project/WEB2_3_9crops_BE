@@ -6,6 +6,7 @@ import io.crops.warmletter.global.jwt.enums.TokenType;
 import io.crops.warmletter.global.jwt.exception.InvalidRefreshTokenException;
 import io.crops.warmletter.global.jwt.provider.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +32,9 @@ class AuthServiceTest {
     private JwtTokenProvider jwtTokenProvider;
 
     @Mock
+    private HttpServletResponse response;
+
+    @Mock
     private RedisTemplate<String, String> redisTemplate;
 
     @DisplayName("리프레시 토큰 재발급 - 만료 임박하지 않은 경우")
@@ -51,7 +55,7 @@ class AuthServiceTest {
         when(jwtTokenProvider.getExpirationTime(refreshToken)).thenReturn(1000L * 60 * 60 * 24 * 10); // 10일
 
         // when
-        TokenResponse response = authService.reissue(refreshToken);
+        TokenResponse response = authService.reissue(refreshToken, this.response);
 
         // then
         assertThat(response.getAccessToken()).isEqualTo(newAccessToken);
@@ -78,7 +82,7 @@ class AuthServiceTest {
         when(jwtTokenProvider.createRefreshToken(email)).thenReturn(newRefreshToken);
 
         // when
-        TokenResponse response = authService.reissue(refreshToken);
+        TokenResponse response = authService.reissue(refreshToken, this.response);
 
         // then
         assertThat(response.getAccessToken()).isEqualTo(newAccessToken);
@@ -94,6 +98,6 @@ class AuthServiceTest {
 
         // when & then
         assertThrows(InvalidRefreshTokenException.class,
-                () -> authService.reissue(invalidRefreshToken));
+                () -> authService.reissue(invalidRefreshToken, this.response));
     }
 }

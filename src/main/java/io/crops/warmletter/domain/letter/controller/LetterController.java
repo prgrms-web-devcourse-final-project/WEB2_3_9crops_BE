@@ -24,8 +24,8 @@ public class LetterController {
      * 답장을 보내는지
      */
     @PostMapping("/api/letters")
-    public ResponseEntity<BaseResponse<LetterResponse>> createLetter(@RequestBody @Valid CreateLetterRequest lettersCreate) {
-        LetterResponse letterResponse = letterService.createLetter(lettersCreate);
+    public ResponseEntity<BaseResponse<LetterResponse>> createLetter(@RequestBody @Valid CreateLetterRequest request) {
+        LetterResponse letterResponse = letterService.createLetter(request);
         BaseResponse<LetterResponse> response = BaseResponse.of(letterResponse, "편지가 성공적으로 생성되었습니다.");
         return ResponseEntity.ok(response);
     }
@@ -37,7 +37,7 @@ public class LetterController {
     @GetMapping("/api/v1/letters/{letterId}/previous")
     public ResponseEntity<BaseResponse<List<LetterResponse>>> getPreviousLetters(@PathVariable Long letterId) {
         List<LetterResponse> previousLetters = letterService.getPreviousLetters(letterId);
-        BaseResponse<List<LetterResponse>> response = BaseResponse.of(previousLetters, "이전 편지가 성공적으로 조회되었습니다.");
+        BaseResponse<List<LetterResponse>> response = BaseResponse.of(previousLetters, "이전 편지가 전송 완료.");
         return ResponseEntity.ok(response);
     }
 

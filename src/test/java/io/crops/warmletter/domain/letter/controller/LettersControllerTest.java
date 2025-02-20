@@ -3,10 +3,12 @@ package io.crops.warmletter.domain.letter.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.config.TestConfig;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
+import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.FontType;
 import io.crops.warmletter.domain.letter.enums.PaperType;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
+import io.crops.warmletter.domain.letter.service.LetterService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,10 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,6 +39,9 @@ class LettersControllerTest {
 
     @Autowired
     private LetterRepository lettersRepository;
+
+    @Autowired
+    private LetterService letterService;
 
     @BeforeEach
     void clean() {
@@ -182,6 +185,38 @@ class LettersControllerTest {
                 .andDo(print());
 
         assertEquals(0L, lettersRepository.count());
+    }
+
+    @Test
+    @DisplayName("/api/v1/letters/{letterId}/previous 요청 시 성공 테스트 - 이전 편지 내용 확인 ")
+    void getPreviousLetters_success() throws Exception {
+            //given
+        CreateLetterRequest request = CreateLetterRequest.builder()
+                .receiverId(null)
+                .parentLetterId(null)
+                .title("제목입니다!")
+                .content("내용입니다!")
+                .category(Category.CONSULT)
+                .paperType(PaperType.COMFORT)
+                .font(FontType.HIMCHAN)
+                .build();
+
+        LetterResponse letter = letterService.createLetter(request);
+        Long letterId = letter.getLetterId(); //생성된 편지 ID
+
+        //expected -> 편지에 대한 답장
+        mockMvc.perform(get("/api/v1/letters/{letterId}/previous", letterId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding("UTF-8"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray())
+                // 여기서는 답장 편지 목록에 방금 생성한 답장 편지만 있으므로 크기는 1이어야 함
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].letterId").value(letterId))
+                .andExpect(jsonPath("$.data[0].title").value("제목입니다!"))
+                .andExpect(jsonPath("$.data[0].content").value("내용입니다!"))
+                .andDo(print());
+
     }
 
 }

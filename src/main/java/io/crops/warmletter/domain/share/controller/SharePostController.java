@@ -1,15 +1,18 @@
 package io.crops.warmletter.domain.share.controller;
 
+import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.service.SharePostService;
+import io.crops.warmletter.global.response.BaseResponse;
 import io.crops.warmletter.global.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/api")
@@ -25,4 +28,15 @@ public class SharePostController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new PageResponse<>(sharePostService.getAllPosts(pageable)));
     }
+
+    @GetMapping("/share-posts/{sharePostId}")
+    public ResponseEntity<BaseResponse<SharePostDetailResponse>> getPostDetail(@PathVariable(name = "sharePostId") Long sharePostId)
+    {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new BaseResponse<>(sharePostService.getPostDetail(sharePostId),"성공"));
+    }
+
+
+
 }
+

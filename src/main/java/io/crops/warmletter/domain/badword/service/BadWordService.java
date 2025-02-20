@@ -4,6 +4,7 @@ package io.crops.warmletter.domain.badword.service;
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
 import io.crops.warmletter.domain.badword.entity.BadWord;
+import io.crops.warmletter.domain.badword.exception.BadWordContainsException;
 import io.crops.warmletter.domain.badword.exception.BadWordNotFoundException;
 import io.crops.warmletter.domain.badword.exception.DuplicateBadWordException;
 import io.crops.warmletter.domain.badword.repository.BadWordRepository;
@@ -11,6 +12,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -53,6 +56,24 @@ public class BadWordService {
             redisTemplate.opsForSet().remove("bad_word", badWord.getWord());
         }
     }
+
+    //필터링
+    public void validateText(String text) {
+        Set<String> badWords = redisTemplate.opsForSet().members("bad_word");
+
+        // 입력 문장에서 특수문자, 공백 제거
+        String sanitizedText = text.replaceAll("[^가-힣a-zA-Z0-9]", "");
+
+        for (String badWord : badWords) {
+            // 금칙어도 혹시 특수문자 있을 수 있으니까 정제
+            String sanitizedBadWord = badWord.replaceAll("[^가-힣a-zA-Z0-9]", "");
+
+            if (sanitizedText.contains(sanitizedBadWord)) {
+                throw new BadWordContainsException();
+            }
+        }
+    }
+
 
 
 }

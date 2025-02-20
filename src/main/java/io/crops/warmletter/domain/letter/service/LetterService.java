@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.letter.service;
 
+import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.CreateLetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
@@ -17,10 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class LetterService {
 
     private final LetterRepository letterRepository;
+    private final BadWordService badWordService;
 
     @Transactional
     public CreateLetterResponse createLetter(CreateLetterRequest request) {
 
+        badWordService.validateText(request.getTitle());
+        badWordService.validateText(request.getContent());
         Long writerId = 1L; // TODO: 실제 인증 정보를 사용하도록 변경
         Letter.LetterBuilder builder = Letter.builder()
                 .writerId(writerId)

@@ -16,6 +16,8 @@ public enum ErrorCode {
 
     //금치어
     DUPLICATE_BANNED_WORD("MOD-001", HttpStatus.CONFLICT, "이미 등록된 금칙어입니다."),
+    BAD_WORD_NOT_FOUND("MOD-002", HttpStatus.NOT_FOUND, "해당 금칙어가 존재하지 않습니다."),
+
 
     // OAuth2 관련 에러 코드
     UNSUPPORTED_SOCIAL_LOGIN("AUTH-001", HttpStatus.BAD_REQUEST, "지원하지 않는 소셜 로그인입니다."),

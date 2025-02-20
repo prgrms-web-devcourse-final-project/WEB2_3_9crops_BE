@@ -2,6 +2,9 @@ package io.crops.warmletter.domain.badword.service;
 
 import io.crops.warmletter.config.TestConfig;
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
+import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
+import io.crops.warmletter.domain.badword.entity.BadWord;
+import io.crops.warmletter.domain.badword.exception.BadWordNotFoundException;
 import io.crops.warmletter.domain.badword.exception.DuplicateBadWordException;
 import io.crops.warmletter.domain.badword.repository.BadWordRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
@@ -14,6 +17,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -63,5 +68,65 @@ class BadWordServiceTest {
                 .isInstanceOf(DuplicateBadWordException.class)
                 .hasMessageContaining(ErrorCode.DUPLICATE_BANNED_WORD.getMessage());
     }
+
+    @Test
+    @DisplayName("금칙어 상태 업데이트 - 활성화 성공")
+    void updateBadWordStatus_activate_success() {
+        // given
+        BadWord badWord = BadWord.builder()
+                .word("비속어")
+                .isUsed(false)
+                .build();
+        badWordRepository.save(badWord);
+
+        UpdateBadWordStatusRequest request = new UpdateBadWordStatusRequest(true);
+
+        // when
+        badWordService.updateBadWordStatus(badWord.getId(), request);
+
+        // then
+        BadWord updatedBadWord = badWordRepository.findById(badWord.getId()).orElseThrow();
+        assertTrue(updatedBadWord.isUsed());
+        assertTrue(redisTemplate.opsForSet().isMember("bad_word", "비속어"));
+    }
+
+
+    @Test
+    @DisplayName("금칙어 상태 업데이트 - 비활성화 성공")
+    void updateBadWordStatus_deactivate_success() {
+        // given
+        BadWord badWord = BadWord.builder()
+                .word("비속어")
+                .isUsed(true)
+                .build();
+        badWordRepository.save(badWord);
+        redisTemplate.opsForSet().add("bad_word", "비속어");
+
+        UpdateBadWordStatusRequest request = new UpdateBadWordStatusRequest(false);
+
+        // when
+        badWordService.updateBadWordStatus(badWord.getId(), request);
+
+        // then
+        BadWord updatedBadWord = badWordRepository.findById(badWord.getId()).orElseThrow();
+        assertFalse(updatedBadWord.isUsed());
+        assertFalse(redisTemplate.opsForSet().isMember("bad_word", "비속어"));
+    }
+
+    @Test
+    @DisplayName("금칙어 상태 업데이트 - 금칙어가 없을 때 실패")
+    void updateBadWordStatus_notFound_fail() {
+        // given
+        Long invalidId = 999L;
+        UpdateBadWordStatusRequest request = new UpdateBadWordStatusRequest(true);
+
+        // when & then
+        assertThatThrownBy(() -> badWordService.updateBadWordStatus(invalidId, request))
+                .isInstanceOf(BadWordNotFoundException.class);
+    }
+
+
+
+
 
 }

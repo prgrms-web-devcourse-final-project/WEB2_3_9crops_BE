@@ -2,7 +2,9 @@ package io.crops.warmletter.domain.badword.service;
 
 import io.crops.warmletter.config.TestConfig;
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
+import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
+import io.crops.warmletter.domain.badword.dto.response.UpdateBadWordResponse;
 import io.crops.warmletter.domain.badword.entity.BadWord;
 import io.crops.warmletter.domain.badword.exception.BadWordContainsException;
 import io.crops.warmletter.domain.badword.exception.BadWordNotFoundException;
@@ -200,10 +202,85 @@ class BadWordServiceTest {
 
         List<Map<String, String>> badWords = badWordService.getBadWords();
         assertEquals(2, badWords.size());
-
-
     }
 
+    @Test
+    @DisplayName("금칙어 업데이트 성공 - 단어 변경, 캐시 업데이트")
+    void updateBadWord_success_withRedisUpdate() {
+        // given
+        Long id = 1L;
+        BadWord existingBadWord = BadWord.builder()
+                .id(id)
+                .word("oldWord")
+                .isUsed(true)
+                .build();
+        UpdateBadWordRequest request = new UpdateBadWordRequest("newWord");
 
+        when(badWordRepository.findById(id)).thenReturn(Optional.of(existingBadWord));
+        when(badWordRepository.existsByWord("newWord")).thenReturn(false);
+        // 저장 시, 반환된 객체는 id가 유지되는 것으로 가정
+        when(badWordRepository.save(any(BadWord.class))).thenAnswer(invocation -> {
+            return invocation.getArgument(0);
+        });
+        when(redisTemplate.opsForHash()).thenReturn(hashOperations);
+
+        // when
+        UpdateBadWordResponse response = badWordService.updateBadWord(id, request);
+
+        // then
+        verify(badWordRepository).save(existingBadWord);
+        verify(hashOperations).put(BAD_WORD_KEY, id.toString(), "newWord");
+        // 응답 확인 (현재 UpdateBadWordResponse는 단어만 반환)
+        assertEquals("newWord", response.getWord());
+    }
+
+    // 중복 체크: 기존 단어와 다르지만 새 단어가 DB에 존재하는 경우 DuplicateBadWordException 발생
+    @Test
+    @DisplayName("금칙어 업데이트 실패 - 중복 단어")
+    void updateBadWord_failure_duplicate() {
+        // given
+        Long id = 1L;
+        BadWord existingBadWord = BadWord.builder()
+                .id(id)
+                .word("oldWord")
+                .isUsed(true)
+                .build();
+        UpdateBadWordRequest request = new UpdateBadWordRequest("duplicateWord");
+
+        when(badWordRepository.findById(id)).thenReturn(Optional.of(existingBadWord));
+        when(badWordRepository.existsByWord("duplicateWord")).thenReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> badWordService.updateBadWord(id, request))
+                .isInstanceOf(DuplicateBadWordException.class);
+    }
+
+    // 업데이트 성공: 단어 변경, 중복 없음, isUsed가 false인 경우 Redis 캐시 업데이트 없이 DB만 업데이트
+    @Test
+    @DisplayName("금칙어 업데이트 성공 - 단어 변경, 캐시 미업데이트(isUsed=false)")
+    void updateBadWord_success_withoutRedisUpdate() {
+        // given
+        Long id = 1L;
+        BadWord existingBadWord = BadWord.builder()
+                .id(id)
+                .word("oldWord")
+                .isUsed(false)
+                .build();
+        UpdateBadWordRequest request = new UpdateBadWordRequest("newWord");
+
+        when(badWordRepository.findById(id)).thenReturn(Optional.of(existingBadWord));
+        when(badWordRepository.existsByWord("newWord")).thenReturn(false);
+        when(badWordRepository.save(any(BadWord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // when
+        UpdateBadWordResponse response = badWordService.updateBadWord(id, request);
+
+        // then
+        verify(badWordRepository).save(existingBadWord);
+        // Redis 캐시 업데이트가 호출되지 않아야 함
+        verify(redisTemplate.opsForHash(), never()).put(anyString(), anyString(), anyString());
+        // 응답 확인
+        assertEquals("newWord", response.getWord());
+    }
 
 }

@@ -30,6 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 
 
@@ -116,6 +118,25 @@ class BadWordControllerTest {
                 .andExpect(jsonPath("$.data[1].id").value("2"))
                 .andExpect(jsonPath("$.data[1].word").value("병신"))
                 .andExpect(jsonPath("$.message").value("금칙어 조회"));
+    }
+
+    @Test
+    @DisplayName("금칙어 변경 API 정상 응답 확인")
+    void updateBadWord_ReturnsCorrectResponse() throws Exception {
+        // given: 목 서비스의 반환값 설정 (응답값은 "엿"을 포함)
+        Long badWordId = 1L;
+        UpdateBadWordResponse mockResponse = new UpdateBadWordResponse("엿");
+
+        when(badWordService.updateBadWord(eq(badWordId), any(UpdateBadWordRequest.class)))
+                .thenReturn(mockResponse);
+
+        // when & then: PATCH 요청 후 응답 JSON 구조 및 값 검증
+        mockMvc.perform(patch("/api/bad-words/{badWordId}", badWordId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"word\":\"엿\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.word").value("엿"))
+                .andExpect(jsonPath("$.message").value("금칙어 변경 성공"));
     }
 
 }

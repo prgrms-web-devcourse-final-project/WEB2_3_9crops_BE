@@ -8,7 +8,6 @@ import lombok.*;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Table(name = "event_posts")
 public class EventPost extends BaseEntity {
     @Id

@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Map;
 import java.util.Optional;
@@ -59,7 +60,8 @@ class EventPostServiceTest {
         //given
         long eventPostId = 1L;
 
-        EventPost eventPost = new EventPost(1L,"제목",false);
+        EventPost eventPost = EventPost.builder().title("제목").build();
+        ReflectionTestUtils.setField(eventPost, "id", eventPostId);
 
         when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.of(eventPost));
 

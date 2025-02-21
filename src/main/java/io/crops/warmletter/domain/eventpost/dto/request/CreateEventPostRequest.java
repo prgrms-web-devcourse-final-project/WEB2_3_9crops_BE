@@ -13,7 +13,7 @@ public class CreateEventPostRequest {
     private String title;
 
     @Builder
-    public CreateEventPostRequest(String title, String content) {
+    public CreateEventPostRequest(String title) {
         this.title = title;
     }
 }

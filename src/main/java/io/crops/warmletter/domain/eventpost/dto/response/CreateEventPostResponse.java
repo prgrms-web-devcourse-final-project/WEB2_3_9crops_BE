@@ -14,7 +14,7 @@ public class CreateEventPostResponse {
     private String title;
 
     @Builder
-    public CreateEventPostResponse(Long eventPostId, String title, String content) {
+    public CreateEventPostResponse(Long eventPostId, String title) {
         this.eventPostId = eventPostId;
         this.title = title;
     }

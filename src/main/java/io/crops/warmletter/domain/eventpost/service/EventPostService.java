@@ -15,6 +15,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class EventPostService {
     private final EventPostRepository eventPostRepository;
 
@@ -30,9 +31,9 @@ public class EventPostService {
                 .build();
     }
 
-    @Transactional
     public Map<String, Long> deleteEventPost(long eventPostId) {
         EventPost eventPost = eventPostRepository.findById(eventPostId).orElseThrow(EventPostNotFoundException::new);
+        eventPost.softDelete();
         return Map.of("eventPostId", eventPost.getId());
     }
 }

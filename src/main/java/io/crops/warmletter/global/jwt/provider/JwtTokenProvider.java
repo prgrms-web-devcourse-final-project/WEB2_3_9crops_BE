@@ -1,6 +1,8 @@
-package io.crops.warmletter.global.jwt;
+package io.crops.warmletter.global.jwt.provider;
 
 import io.crops.warmletter.domain.member.enums.Role;
+import io.crops.warmletter.global.jwt.enums.TokenType;
+import io.crops.warmletter.global.jwt.exception.InvalidTokenException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -21,7 +23,7 @@ public class JwtTokenProvider {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     private final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 30; // 30분
     private final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 14; // 14일
@@ -37,9 +39,10 @@ public class JwtTokenProvider {
     }
 
     // Access Token 생성
-    public String createAccessToken(String email, Role role) {
+    public String createAccessToken(String email, Role role, String zipCode) {
         Claims claims = Jwts.claims().setSubject(email);
         claims.put("role", role);
+        claims.put("zipCode", zipCode);
         Date now = new Date();
 
         return Jwts.builder()
@@ -51,8 +54,8 @@ public class JwtTokenProvider {
     }
 
     // Refresh Token 생성
-    public String createRefreshToken(String email) {
-        Claims claims = Jwts.claims().setSubject(email);
+    public String createRefreshToken(String socialUniqueId) {
+        Claims claims = Jwts.claims().setSubject(socialUniqueId);
         Date now = new Date();
 
         String refreshToken = Jwts.builder()
@@ -64,7 +67,7 @@ public class JwtTokenProvider {
 
         // Redis에 저장 - key: refresh_token:{email}, value: refreshToken
         redisTemplate.opsForValue().set(
-                "refresh_token:" + email,
+                "refresh_token:" + socialUniqueId,
                 refreshToken,
                 REFRESH_TOKEN_EXPIRE_TIME,
                 TimeUnit.MILLISECONDS
@@ -73,18 +76,43 @@ public class JwtTokenProvider {
         return refreshToken;
     }
 
+    public String getSocialUniqueId(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            return claims.getSubject();
+        } catch (ExpiredJwtException e) {
+            // 만료된 토큰이어도 socialUniqueId는 추출
+            return e.getClaims().getSubject();
+        } catch (JwtException e) {
+            throw new InvalidTokenException();
+        }
+    }
+
     // 토큰에서 이메일 추출
     public String getEmail(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            return claims.getSubject();
+        } catch (ExpiredJwtException e) {
+            // 만료된 토큰이어도 subject는 추출
+            return e.getClaims().getSubject();
+        } catch (JwtException e) {
+            throw new InvalidTokenException();
+        }
     }
 
     // 토큰의 유효성 검증
-    public boolean validateToken(String token) {
+    public boolean validateToken(String token, TokenType tokenType) {
         try {
             // 토큰 파싱
             Jwts.parserBuilder()
@@ -93,8 +121,13 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
 
             // Redis에서 해당 토큰이 블랙리스트에 있는지 확인
-            String isLogout = (String)redisTemplate.opsForValue().get(token);
-            return isLogout == null;
+            if (tokenType == TokenType.ACCESS) {
+                String isLogout = redisTemplate.opsForValue().get("blacklist:access_token:" + token);
+                return isLogout == null;
+            } else {
+                String storedToken = redisTemplate.opsForValue().get("refresh_token:" + getEmail(token));
+                return token.equals(storedToken);
+            }
         } catch (SecurityException | MalformedJwtException e) {
             throw new JwtException("잘못된 JWT 서명입니다.");
         } catch (ExpiredJwtException e) {
@@ -119,15 +152,15 @@ public class JwtTokenProvider {
         }
     }
 
-    // Access Token 남은 유효시간
-    public Long getExpiration(String accessToken) {
+    // Token 남은 유효시간
+    public long getExpirationTime(String token) {
         Date expiration = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
-                .parseClaimsJws(accessToken)
+                .parseClaimsJws(token)
                 .getBody()
                 .getExpiration();
-        Long now = new Date().getTime();
+        long now = new Date().getTime();
         return (expiration.getTime() - now);
     }
 }

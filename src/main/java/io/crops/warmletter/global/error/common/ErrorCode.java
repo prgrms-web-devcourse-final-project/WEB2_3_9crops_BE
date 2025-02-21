@@ -21,12 +21,19 @@ public enum ErrorCode {
     //금치어
     DUPLICATE_BANNED_WORD("MOD-001", HttpStatus.CONFLICT, "이미 등록된 금칙어입니다."),
     BAD_WORD_NOT_FOUND("MOD-002", HttpStatus.NOT_FOUND, "해당 금칙어가 존재하지 않습니다."),
+    BAD_WORD_CONTAINS("MOD-003", HttpStatus.BAD_REQUEST, "금칙어가 포함되어 있습니다."),
 
 
     // OAuth2 관련 에러 코드
     UNSUPPORTED_SOCIAL_LOGIN("AUTH-001", HttpStatus.BAD_REQUEST, "지원하지 않는 소셜 로그인입니다."),
     OAUTH2_PROCESSING_ERROR("AUTH-002", HttpStatus.INTERNAL_SERVER_ERROR, "소셜 로그인 처리 중 오류가 발생했습니다."),
-    OAUTH2_EMAIL_NOT_FOUND("AUTH-003", HttpStatus.BAD_REQUEST, "소셜 계정에서 이메일을 찾을 수 없습니다.")
+    OAUTH2_EMAIL_NOT_FOUND("AUTH-003", HttpStatus.BAD_REQUEST, "소셜 계정에서 이메일을 찾을 수 없습니다."),
+    INVALID_REFRESH_TOKEN("AUTH-004", HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다."),
+    INVALID_ACCESS_TOKEN("AUTH-005", HttpStatus.UNAUTHORIZED, "유효하지 않은 엑세스 토큰입니다."),
+    INVALID_TOKEN("AUTH-006", HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
+
+    //Letter Error code
+    LETTER_NOT_FOUND("LET-001", HttpStatus.NOT_FOUND, "해당 편지를 찾을 수 없습니다.")
     ;
 
     private final String code;

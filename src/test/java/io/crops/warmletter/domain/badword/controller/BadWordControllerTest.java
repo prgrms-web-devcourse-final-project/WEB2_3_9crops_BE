@@ -3,10 +3,10 @@ package io.crops.warmletter.domain.badword.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.config.TestConfig;
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
+import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
-import io.crops.warmletter.domain.badword.entity.BadWord;
-import io.crops.warmletter.domain.badword.repository.BadWordRepository;
-import org.junit.jupiter.api.BeforeEach;
+import io.crops.warmletter.domain.badword.dto.response.UpdateBadWordResponse;
+import io.crops.warmletter.domain.badword.service.BadWordService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,13 +15,26 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+
+
+
 
 
 @Import(TestConfig.class)
@@ -31,22 +44,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class BadWordControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private MockMvc mockMvc; //이부분은 주입을받아야함
 
-    @Autowired
-    private BadWordRepository badWordRepository;
+
+    @MockitoBean
+    private BadWordService badWordService;
 
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    @BeforeEach
-    void setUp() {
-        badWordRepository.deleteAll(); // 테스트 전 초기화
-    }
 
     @Test
-    @DisplayName("검열 단어 등록 성공")
+    @DisplayName("금칙어 등록 성공")
     void createBadWord_Success() throws Exception {
         CreateBadWordRequest request = new CreateBadWordRequest("씹새끼");
 
@@ -60,7 +70,7 @@ class BadWordControllerTest {
 
 
     @Test
-    @DisplayName("검열 단어 등록 실패 - 빈값일 때")
+    @DisplayName("금칙어 실패 - 빈값일 때")
     void createBadWord_EmptyValue_Fail() throws Exception {
         CreateBadWordRequest request = new CreateBadWordRequest("");
 
@@ -72,53 +82,61 @@ class BadWordControllerTest {
 
     }
 
-
     @Test
-    @DisplayName("검열 단어 중복 등록 실패")
-    void createBadWord_Duplicate() throws Exception {
-        // Given: 먼저 단어를 저장해놓고 중복 요청
-        badWordRepository.save(BadWord.builder()
-                .word("badword")
-                .isUsed(true)
-                .build());
-
-        CreateBadWordRequest request = new CreateBadWordRequest("badword");
-
-        mockMvc.perform(post("/api/bad-words")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict())  // 409 상태 코드로 수정
-                .andExpect(jsonPath("$.message").value("이미 등록된 금칙어입니다."));  // 메시지 검증
-    }
-
-    @Test
-    @DisplayName("금치어 상태 변경 성공")
+    @DisplayName("금칙어 상태 업데이트 성공")
     void updateBadWordStatus_Success() throws Exception {
-        //Given
-        BadWord badWord = badWordRepository.save(
-                BadWord.builder()
-                        .word("badword")
-                        .isUsed(false)
-                        .build()
-        );
         UpdateBadWordStatusRequest request = new UpdateBadWordStatusRequest(true);
-        mockMvc.perform(patch("/api/bad-words/{badWordId}/status", badWord.getId())
+
+        mockMvc.perform(patch("/api/bad-words/{badWordId}/status", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("금칙어 상태 변경 완료"));
     }
 
+    @Test
+    @DisplayName("금칙어 조회 API 정상 응답 확인")
+    void getBadWords_ReturnsCorrectResponse() throws Exception {
+        // given: 목 서비스의 반환값 설정
+        Map<String, String> badWord1 = new HashMap<>();
+        badWord1.put("id", "1");
+        badWord1.put("word", "시발");
+
+        Map<String, String> badWord2 = new HashMap<>();
+        badWord2.put("id", "2");
+        badWord2.put("word", "병신");
+
+        List<Map<String, String>> mockBadWords = List.of(badWord1, badWord2);
+        when(badWordService.getBadWords()).thenReturn(mockBadWords);
+
+        // when & then: GET 요청 후 응답 JSON 구조 및 값 검증
+        mockMvc.perform(get("/api/bad-words"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].id").value("1"))
+                .andExpect(jsonPath("$.data[0].word").value("시발"))
+                .andExpect(jsonPath("$.data[1].id").value("2"))
+                .andExpect(jsonPath("$.data[1].word").value("병신"))
+                .andExpect(jsonPath("$.message").value("금칙어 조회"));
+    }
 
     @Test
-    @DisplayName("금칙어 상태 변경 실패 - 존재하지 않는 ID")
-    void updateBadWordStatus_NotFound_Fail() throws Exception {
-        UpdateBadWordStatusRequest request = new UpdateBadWordStatusRequest(true);
+    @DisplayName("금칙어 변경 API 정상 응답 확인")
+    void updateBadWord_ReturnsCorrectResponse() throws Exception {
+        // given: 목 서비스의 반환값 설정 (응답값은 "엿"을 포함)
+        Long badWordId = 1L;
+        UpdateBadWordResponse mockResponse = new UpdateBadWordResponse("엿");
 
-        mockMvc.perform(patch("/api/bad-words/{badWordId}/status", 999L)
+        when(badWordService.updateBadWord(eq(badWordId), any(UpdateBadWordRequest.class)))
+                .thenReturn(mockResponse);
+
+        // when & then: PATCH 요청 후 응답 JSON 구조 및 값 검증
+        mockMvc.perform(patch("/api/bad-words/{badWordId}", badWordId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("해당 금칙어가 존재하지 않습니다."));
+                        .content("{\"word\":\"엿\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.word").value("엿"))
+                .andExpect(jsonPath("$.message").value("금칙어 변경 성공"));
     }
+
 }

@@ -18,7 +18,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ../config/redis.conf:/usr/local/etc/redis/redis.conf # Redis conf 파일 지정
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf # Redis conf 파일 지정
     command: redis-server /usr/local/etc/redis/redis.conf # 실행할 Command 명령어
     user: root  # root 권한으로 실행
     restart: always # Redis 컨테이너가 종료되면 자동으로 재시작

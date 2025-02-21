@@ -54,6 +54,8 @@ public class Letter extends BaseTimeEntity {
 
     private Boolean isActive;        // 활성화 여부
 
+
+    //빌더에 receiverId, parentLetterId가 있으면 편지 아이디 받고, 이걸 parentLetterId 에 넣자  / 상위편지아이디가 현재 편지아이디로 넣어짐
     @Builder
     public Letter(Long writerId, Long receiverId,
                    Long parentLetterId, LetterType letterType,
@@ -73,8 +75,11 @@ public class Letter extends BaseTimeEntity {
         this.isRead = false;
         this.fontType = fontType;
         this.paperType = paperType;
-        this.isActive = false;
+        this.isActive = true; // 기본값: 활성 상태
     }
 
+    public void softDelete() {
+        this.isActive = false; // 신고시 비활성 상태
+    }
 
 }

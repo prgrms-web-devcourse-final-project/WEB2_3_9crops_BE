@@ -1,8 +1,10 @@
 package io.crops.warmletter.global.config;
 
-import io.crops.warmletter.global.jwt.JwtAuthenticationFilter;
-import io.crops.warmletter.global.jwt.JwtExceptionFilter;
-import io.crops.warmletter.global.jwt.JwtTokenProvider;
+import io.crops.warmletter.global.jwt.filter.JwtAuthenticationFilter;
+import io.crops.warmletter.global.jwt.filter.JwtExceptionFilter;
+import io.crops.warmletter.global.jwt.provider.JwtTokenProvider;
+import io.crops.warmletter.global.oauth.handler.CustomOAuth2AuthenticationSuccessHandler;
+import io.crops.warmletter.global.oauth.handler.OAuth2AuthenticationFailureHandler;
 import io.crops.warmletter.global.oauth.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +30,8 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CorsConfig corsConfig;
     private final JwtTokenProvider jwtTokenProvider;
+    private final CustomOAuth2AuthenticationSuccessHandler customOAuth2AuthenticationSuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
@@ -56,14 +60,15 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         (authorizeRequests) ->
                                 authorizeRequests
-                                        .requestMatchers("/h2-console/**")
+                                        .requestMatchers("/api/auth/**")
                                         .permitAll() // h2-console 접근 허용
                                         .requestMatchers("/swagger-ui/**")
                                         .permitAll() // Swagger UI 허용
-                                        .requestMatchers("/api/admin/**").permitAll()
-                                        .requestMatchers("/api/bad-words/**").permitAll()
+                                        .requestMatchers("/api/**").permitAll()
                                         .requestMatchers("/v3/api-docs/**")
                                         .permitAll() // API Docs 허용
+                                        .requestMatchers("/login/**")
+                                        .permitAll()
                                         .anyRequest()
                                         .authenticated() // 그 외 요청은 인증 필요
                         )
@@ -72,8 +77,8 @@ public class SecurityConfig {
                                 .userInfoEndpoint(userInfo -> userInfo
                                         .userService(customOAuth2UserService))
                         // 나중에 Handler 구현 후 추가될 부분
-                        // .successHandler(oAuth2AuthenticationSuccessHandler)
-                        // .failureHandler(oAuth2AuthenticationFailureHandler)
+                        .successHandler(customOAuth2AuthenticationSuccessHandler)
+                        .failureHandler(oAuth2AuthenticationFailureHandler)
                 ).addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new JwtExceptionFilter(),

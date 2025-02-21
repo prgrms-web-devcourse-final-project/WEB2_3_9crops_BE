@@ -31,5 +31,9 @@ public class BadWord extends BaseEntity {
         this.isUsed = isUsed;
     }
 
+    public void updateWord(String word) {
+        this.word = word;
+    }
+
 
 }

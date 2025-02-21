@@ -1,10 +1,7 @@
  package io.crops.warmletter.domain.share.dto.request;
 
  import io.crops.warmletter.domain.share.entity.ShareProposal;
- import lombok.AccessLevel;
- import lombok.Builder;
- import lombok.Getter;
- import lombok.NoArgsConstructor;
+ import lombok.*;
 
  import java.util.List;
 
@@ -16,7 +13,7 @@ public class ShareProposalRequest {
      private Long recipientId;        // 수신자 ID
      private String message;          // 공유 요청 메시지
 
-     @Builder
+     // testcode
      public ShareProposalRequest(List<Long> letters, Long requesterId, Long recipientId, String message) {
          this.letters = letters;
          this.requesterId = requesterId;

@@ -33,12 +33,10 @@ class EventPostServiceTest {
         //given
         CreateEventPostRequest createEventPostRequest = CreateEventPostRequest.builder()
                 .title("제목")
-                .content("내용")
                 .build();
 
         EventPost eventPost = EventPost.builder()
                 .title(createEventPostRequest.getTitle())
-                .content(createEventPostRequest.getContent())
                 .build();
 
         when(eventPostRepository.save(any(EventPost.class))).thenReturn(eventPost);
@@ -50,6 +48,5 @@ class EventPostServiceTest {
         then(eventPostRepository).should(times(1)).save(any(EventPost.class));
 
         assertEquals("제목", createEventPostResponse.getTitle());
-        assertEquals("내용", createEventPostResponse.getContent());
     }
 }

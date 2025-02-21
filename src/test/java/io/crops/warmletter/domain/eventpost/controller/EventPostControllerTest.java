@@ -42,13 +42,11 @@ class EventPostControllerTest {
         //given
         CreateEventPostRequest createEventPostRequest = CreateEventPostRequest.builder()
                 .title("제목")
-                .content("")
                 .build();
 
         CreateEventPostResponse createEventPostResponse = CreateEventPostResponse.builder()
                 .eventPostId(1L)
                 .title("제목")
-                .content("")
                 .build();
 
         when(eventPostService.createEventPost(any(CreateEventPostRequest.class))).thenReturn(createEventPostResponse);
@@ -60,7 +58,6 @@ class EventPostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.eventPostId").value(createEventPostResponse.getEventPostId()))
                 .andExpect(jsonPath("$.data.title").value("제목"))
-                .andExpect(jsonPath("$.data.content").value(""))
                 .andExpect(jsonPath("$.message").value("게시판 생성 완료"))
                 .andDo(print());
     }
@@ -71,7 +68,6 @@ class EventPostControllerTest {
         //given
         CreateEventPostRequest createEventPostRequest = CreateEventPostRequest.builder()
                 .title("")
-                .content("내용")
                 .build();
 
         //when & then

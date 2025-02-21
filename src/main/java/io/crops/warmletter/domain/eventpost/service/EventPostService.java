@@ -15,21 +15,18 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class EventPostService {
     private final EventPostRepository eventPostRepository;
 
     public CreateEventPostResponse createEventPost(CreateEventPostRequest createEventPostRequest) {
         EventPost eventPost = EventPost.builder()
                 .title(createEventPostRequest.getTitle())
-                .content(createEventPostRequest.getContent())
                 .build();
         EventPost saveEventPost = eventPostRepository.save(eventPost);
 
         return CreateEventPostResponse.builder()
                 .eventPostId(saveEventPost.getId())
                 .title(saveEventPost.getTitle())
-                .content(saveEventPost.getContent())
                 .build();
     }
 

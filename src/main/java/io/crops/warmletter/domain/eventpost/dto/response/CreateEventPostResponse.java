@@ -12,12 +12,10 @@ import java.time.LocalDateTime;
 public class CreateEventPostResponse {
     private long eventPostId;
     private String title;
-    private String content;
 
     @Builder
-    public CreateEventPostResponse(Long eventPostId, String title, String content) {
+    public CreateEventPostResponse(Long eventPostId, String title) {
         this.eventPostId = eventPostId;
         this.title = title;
-        this.content = content;
     }
 }

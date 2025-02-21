@@ -12,11 +12,8 @@ public class CreateEventPostRequest {
     @NotBlank(message = "제목을 입력해주세요.")
     private String title;
 
-    private String content;
-
     @Builder
-    public CreateEventPostRequest(String title, String content) {
+    public CreateEventPostRequest(String title) {
         this.title = title;
-        this.content = content;
     }
 }

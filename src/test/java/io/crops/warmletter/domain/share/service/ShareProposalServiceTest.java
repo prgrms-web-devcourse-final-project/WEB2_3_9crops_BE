@@ -2,7 +2,11 @@ package io.crops.warmletter.domain.share.service;
 
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
+import io.crops.warmletter.domain.share.dto.response.ShareProposalStatusResponse;
+import io.crops.warmletter.domain.share.entity.SharePost;
 import io.crops.warmletter.domain.share.entity.ShareProposal;
+import io.crops.warmletter.domain.share.enums.ProposalStatus;
+import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalLetterRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
@@ -17,7 +21,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -30,6 +37,9 @@ class ShareProposalServiceTest {
 
     @Mock
     private ShareProposalLetterRepository shareProposalLetterRepository;
+
+    @Mock
+    private SharePostRepository sharePostRepository;
 
     @InjectMocks
     private ShareProposalService shareProposalService;
@@ -157,6 +167,55 @@ class ShareProposalServiceTest {
         verify(shareProposalRepository).save(any(ShareProposal.class));
     }
 
+    @Test
+    @DisplayName("존재하지 않는 공유 제안 승인 실패")
+    void approveShareProposal_NotFound() {
+        // given
+        Long shareProposalId = 999L;
+
+        // when
+        when(shareProposalRepository.findById(shareProposalId))
+                .thenReturn(Optional.empty());
+
+        // then
+        assertThatThrownBy(() -> shareProposalService.approveShareProposal(shareProposalId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.SHARE_PROPOSAL_NOTFOUND);
+
+        verify(shareProposalRepository).findById(shareProposalId);
+        verify(sharePostRepository, never()).save(any(SharePost.class));
+    }
 
 
+    @Test
+    @DisplayName(" 공유 제안 승인 성공")
+    void approveShareProposal_Success() {
+        // given
+        Long shareProposalId = 1L;
+
+        ShareProposal shareProposal = ShareProposal.builder()
+                .requesterId(1L)
+                .recipientId(2L)
+                .message("test")
+                .build();
+        ReflectionTestUtils.setField(shareProposal, "id", shareProposalId);
+
+        SharePost sharePost = SharePost.builder()
+                .shareProposalId(shareProposalId)
+                .content("test")
+                .isActive(true)
+                .build();
+        ReflectionTestUtils.setField(sharePost, "id", 1L);
+
+        when(shareProposalRepository.findById(shareProposalId))
+                .thenReturn(Optional.of(shareProposal));
+        when(sharePostRepository.save(any(SharePost.class)))
+                .thenReturn(sharePost);
+
+        // when
+        ShareProposalStatusResponse response = shareProposalService.approveShareProposal(shareProposalId);
+
+        // then
+        assertThat(response.getShareProposalId()).isEqualTo(shareProposalId);
+    }
 }

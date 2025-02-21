@@ -48,8 +48,8 @@ class SharePostControllerTest {
     private SharePostResponse sharePostResponse2;
     @BeforeEach
     void createSharePost() {
-        SharePost sharePost = new SharePost(1L, "게시글1", "to share my post",true);
-        SharePost sharePost1 = new SharePost(2L, "게시글2", "to share my post1",true);
+        SharePost sharePost = new SharePost(1L,  "to share my post",true);
+        SharePost sharePost1 = new SharePost(2L, "to share my post1",true);
         sharePostResponse1 = new SharePostResponse(sharePost);
         sharePostResponse2 = new SharePostResponse(sharePost1);
     }

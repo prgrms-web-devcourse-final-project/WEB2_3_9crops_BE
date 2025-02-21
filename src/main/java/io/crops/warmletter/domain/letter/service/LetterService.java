@@ -64,7 +64,7 @@ public class LetterService {
 
         List<LetterResponse> responses = new ArrayList<>();
         for (Letter findLetter : lettersByParentId) {
-            LetterResponse response = LetterResponse.fromEntity(findLetter);
+            LetterResponse response = LetterResponse.fromEntityForPreviousLetters(findLetter);
             responses.add(response);
         }
         return responses;
@@ -76,7 +76,9 @@ public class LetterService {
         letter.softDelete();
     }
 
-    public void getLetterById() {
 
+    public LetterResponse getLetterById(Long letterId) {
+        Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
+        return LetterResponse.fromEntityForDetailView(letter);
     }
 }

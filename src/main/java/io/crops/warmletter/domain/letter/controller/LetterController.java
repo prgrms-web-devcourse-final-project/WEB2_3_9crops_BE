@@ -46,8 +46,19 @@ public class LetterController {
      */
     @DeleteMapping("/api/letters/{letterId}")
     public ResponseEntity<BaseResponse> deleteLetter(@PathVariable Long letterId) {
-        letterService.delete(letterId);
+        letterService.deleteLetter(letterId);
         BaseResponse<Void> response = BaseResponse.of(null, "편지 삭제 완료");
+        return ResponseEntity.ok(response);
+    }
+
+
+    /**
+     * 지정된 letterId로 편지 단건 조회
+     */
+    @GetMapping("/api/letters/{letterId}")
+    public ResponseEntity<BaseResponse> getLetterById(@PathVariable Long letterId) {
+        LetterResponse letterResponse = letterService.getLetterById(letterId);
+        BaseResponse<LetterResponse> response = BaseResponse.of(letterResponse, "편지 조회 완료");
         return ResponseEntity.ok(response);
     }
 }

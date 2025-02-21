@@ -81,7 +81,7 @@ class LettersControllerTest {
                 .andExpect(jsonPath("$.data.content").value("편지 내용입니다"))
                 .andExpect(jsonPath("$.data.category").value("CONSOLATION"))
                 .andExpect(jsonPath("$.data.paperType").value("BASIC"))
-                .andExpect(jsonPath("$.data.font").value("KYOBO"))
+                .andExpect(jsonPath("$.data.fontType").value("KYOBO"))
                 .andExpect(jsonPath("$.data.deliveryStatus").value("IN_DELIVERY"))
                 .andExpect(jsonPath("$.message").value("편지가 성공적으로 생성되었습니다."))
                 .andDo(print());
@@ -121,7 +121,7 @@ class LettersControllerTest {
                 .andExpect(jsonPath("$.data.content").value("편지 내용입니다"))
                 .andExpect(jsonPath("$.data.category").value("CONSULT"))
                 .andExpect(jsonPath("$.data.paperType").value("COMFORT"))
-                .andExpect(jsonPath("$.data.font").value("HIMCHAN"))
+                .andExpect(jsonPath("$.data.fontType").value("HIMCHAN"))
                 .andExpect(jsonPath("$.data.deliveryStatus").value("IN_DELIVERY"))
                 .andExpect(jsonPath("$.message").value("편지가 성공적으로 생성되었습니다."))
                 .andDo(print());

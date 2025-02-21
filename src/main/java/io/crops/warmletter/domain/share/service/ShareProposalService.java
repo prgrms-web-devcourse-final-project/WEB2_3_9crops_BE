@@ -1,16 +1,13 @@
 package io.crops.warmletter.domain.share.service;
 
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
-import io.crops.warmletter.domain.share.dto.request.UpdateProposalStatusRequest;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalStatusResponse;
 import io.crops.warmletter.domain.share.entity.SharePost;
 import io.crops.warmletter.domain.share.entity.ShareProposal;
 import io.crops.warmletter.domain.share.entity.ShareProposalLetter;
 import io.crops.warmletter.domain.share.enums.ProposalStatus;
-import io.crops.warmletter.domain.share.repository.SharePostRepository;
-import io.crops.warmletter.domain.share.repository.ShareProposalLetterRepository;
-import io.crops.warmletter.domain.share.repository.ShareProposalRepository;
+import io.crops.warmletter.domain.share.repository.*;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -30,12 +27,10 @@ public class ShareProposalService {
 
     @Transactional
     public ShareProposalResponse requestShareProposal(ShareProposalRequest request) {
-
         if (request.getRequesterId() == null || request.getRecipientId() == null ||
                 request.getLetters() == null || request.getLetters().isEmpty()) {
             throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
-
         ShareProposal shareProposal = shareProposalRepository.save(request.toEntity());
 
         List<ShareProposalLetter> letters = request.getLetters().stream()
@@ -47,7 +42,6 @@ public class ShareProposalService {
         if (response == null) {
             throw new BusinessException(ErrorCode.SHARE_POST_NOT_FOUND);
         }
-
         return response;
 
     }
@@ -57,7 +51,8 @@ public class ShareProposalService {
         ShareProposal shareProposal = shareProposalRepository.findById(shareProposalId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SHARE_PROPOSAL_NOTFOUND));
 
-        shareProposal.updateStatus(ProposalStatus.APPROVED);
+        shareProposal.updateStatus(ProposalStatus.APPROVED);  // 직접 APPROVED로 설정
+
         SharePost sharePost = SharePost.builder()
                 .shareProposalId(shareProposal.getId())
                 .content(shareProposal.getMessage())

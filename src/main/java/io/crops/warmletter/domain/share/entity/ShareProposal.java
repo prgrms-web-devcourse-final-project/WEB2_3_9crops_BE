@@ -43,4 +43,8 @@ public class ShareProposal extends BaseEntity {
         this.message = message;
     }
 
+    public void updateStatus(ProposalStatus status) {
+        this.status = status;
+    }
+
 }

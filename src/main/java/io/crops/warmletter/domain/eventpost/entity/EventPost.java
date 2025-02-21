@@ -1,7 +1,6 @@
 package io.crops.warmletter.domain.eventpost.entity;
 
 import io.crops.warmletter.global.entity.BaseEntity;
-import io.crops.warmletter.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 

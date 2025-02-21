@@ -31,7 +31,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         // JWT 토큰 생성
         String accessToken = jwtTokenProvider.createAccessToken(userPrincipal.getEmail(), userPrincipal.getRole(), userPrincipal.getZipCode());
-        String refreshToken = jwtTokenProvider.createRefreshToken(userPrincipal.getEmail());
+        String refreshToken = jwtTokenProvider.createRefreshToken(userPrincipal.getSocialUniqueId());
 
         // Access Token을 Authorization 헤더에 추가
         response.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);

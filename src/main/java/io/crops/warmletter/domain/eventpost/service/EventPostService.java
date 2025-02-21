@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.eventpost.service;
 
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
+import io.crops.warmletter.domain.eventpost.dto.response.EventPostDetailResponse;
 import io.crops.warmletter.domain.eventpost.dto.response.EventPostResponse;
 import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException;
@@ -38,11 +39,15 @@ public class EventPostService {
     }
 
     @Transactional(readOnly = true)
-    public EventPostResponse getEventPost() {
-        EventPost eventPost = eventPostRepository.findFirstByIsUsedTrue(true);
+    public EventPostResponse getUsedEventPost() {
+        EventPost eventPost = eventPostRepository.findFirstByIsUsed(true);
         return EventPostResponse.builder()
                 .eventPostId(eventPost.getId())
                 .title(eventPost.getTitle())
                 .build();
+    }
+
+    public EventPostDetailResponse getEventPostDetail(long eventPostId) {
+        return eventPostRepository.findEventPostDetailById(eventPostId);
     }
 }

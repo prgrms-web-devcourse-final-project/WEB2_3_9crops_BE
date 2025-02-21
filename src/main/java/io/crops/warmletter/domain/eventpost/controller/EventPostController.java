@@ -32,7 +32,12 @@ public class EventPostController {
     }
 
     @GetMapping("/event-posts")
-    public ResponseEntity<BaseResponse<EventPostResponse>> getEventPost(){
-        return ResponseEntity.ok(BaseResponse.of(eventPostService.getEventPost(),"사용중인 이벤트 게시판 조회 완료"));
+    public ResponseEntity<BaseResponse<EventPostResponse>> getUsedEventPost(){
+        return ResponseEntity.ok(BaseResponse.of(eventPostService.getUsedEventPost(),"이벤트 게시판 조회(사용중) 완료"));
+    }
+
+    @GetMapping("/event-posts/{eventPostId}")
+    public ResponseEntity<BaseResponse<?>> getEventPostDetail(@PathVariable Long eventPostId){
+        return ResponseEntity.ok(BaseResponse.of(eventPostService.getEventPostDetail(eventPostId),"이벤트 게시판 조회(개별) 완료"));
     }
 }

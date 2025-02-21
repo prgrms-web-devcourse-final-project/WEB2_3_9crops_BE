@@ -298,4 +298,26 @@ class LetterServiceTest {
         Letter deletedLetter = letterRepository.findById(1L).orElseThrow(LetterNotFoundException::new);
         assertFalse(deletedLetter.getIsActive(), "편지 삭제 후 isActive는 false여야 합니다.");
     }
+
+    @Test
+    @DisplayName("letterId로 편지 단건 조회 ")
+    void getLetter_success() {
+        ReflectionTestUtils.setField(savedRandomLetter, "id", 1L);
+
+        when(letterRepository.findById(savedRandomLetter.getId())).thenReturn(Optional.of(savedRandomLetter));
+
+        LetterResponse response = letterService.getLetterById(savedRandomLetter.getId());
+
+        // then: 반환된 응답 DTO 검증
+        assertAll("답장 조회 응답 검증",
+                () -> assertNotNull(response),
+                () -> assertNotNull(response.getLetterId()),
+                () -> assertEquals("랜덤 편지 제목", response.getTitle()),
+                () -> assertEquals("랜덤 편지 내용", response.getContent()),
+                () -> assertEquals(PaperType.COMFORT, response.getPaperType()),
+                () -> assertEquals(FontType.HIMCHAN, response.getFontType())
+        );
+        //verify 메서드로 letterRepository.save() 메서드가 정확히 1번 호출되었는지 확인
+        verify(letterRepository).findById(savedRandomLetter.getId());
+    }
 }

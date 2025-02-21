@@ -8,9 +8,11 @@ import io.crops.warmletter.global.error.response.ErrorResponse;
 import io.crops.warmletter.global.error.exception.OAuth2Exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -71,8 +73,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthException.class)
     public ResponseEntity<ErrorResponse> handleAuthException(
             JwtAuthenticationException e) {
-        log.error("JWT authentication error occurred: {}", e.getMessage(), e);
+        log.error("Auth error occurred: {}", e.getMessage(), e);
         return createErrorResponse(e.getErrorCode());
+    }
+
+    // 쿠키가 필수인데 없을 때
+    @ExceptionHandler(MissingRequestCookieException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestCookieException(MissingRequestCookieException e) {
+        log.error("Cookie error occurred: {}", e.getMessage(), e);
+        return createErrorResponse(ErrorCode.INVALID_TOKEN);
     }
 
     @ExceptionHandler(Exception.class)

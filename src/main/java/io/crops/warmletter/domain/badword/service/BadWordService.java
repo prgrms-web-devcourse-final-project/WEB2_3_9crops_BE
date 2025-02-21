@@ -53,13 +53,8 @@ public class BadWordService {
     public void updateBadWordStatus(Long badWordId, UpdateBadWordStatusRequest request) {
         BadWord badWord = badWordRepository.findById(badWordId)
                 .orElseThrow(BadWordNotFoundException::new);
-        System.out.println(badWordId + "id값");
-        System.out.println(request + "상태값");
-
         badWord.updateStatus(request.isUsed());
-        System.out.println(request + "상태값");
-
-
+        
         if (request.isUsed()) {
             redisTemplate.opsForHash().put(BAD_WORD_KEY,badWordId.toString(), badWord.getWord());
         } else {

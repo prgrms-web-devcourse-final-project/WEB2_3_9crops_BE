@@ -30,7 +30,10 @@ public enum ErrorCode {
     INVALID_TOKEN("AUTH-006", HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
 
     //Letter Error code
-    LETTER_NOT_FOUND("LET-001", HttpStatus.NOT_FOUND, "해당 편지를 찾을 수 없습니다.")
+    LETTER_NOT_FOUND("LET-001", HttpStatus.NOT_FOUND, "해당 편지를 찾을 수 없습니다."),
+
+    // Member 관련
+    MEMBER_NOT_FOUND("MEM-001", HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."),
     ;
 
     private final String code;

@@ -42,16 +42,16 @@ class AuthServiceTest {
     void reissueToken_NotNearExpiration() {
         // given
         String refreshToken = "valid.refresh.token";
-        String email = "test@example.com";
+        String socialUniqueId = "GOOGLE_12345";
         String newAccessToken = "new.access.token";
         Claims claims = Mockito.mock(Claims.class);
 
         when(jwtTokenProvider.validateToken(refreshToken, TokenType.REFRESH)).thenReturn(true);
-        when(jwtTokenProvider.getEmail(refreshToken)).thenReturn(email);
+        when(jwtTokenProvider.getSocialUniqueId(refreshToken)).thenReturn(socialUniqueId);
         when(jwtTokenProvider.getClaims(refreshToken)).thenReturn(claims);
         when(claims.get("role")).thenReturn("USER");
         when(claims.get("zipCode", String.class)).thenReturn("12345");
-        when(jwtTokenProvider.createAccessToken(email, Role.USER, "12345")).thenReturn(newAccessToken);
+        when(jwtTokenProvider.createAccessToken(socialUniqueId, Role.USER, "12345")).thenReturn(newAccessToken);
         when(jwtTokenProvider.getExpirationTime(refreshToken)).thenReturn(1000L * 60 * 60 * 24 * 10); // 10일
 
         // when
@@ -67,19 +67,19 @@ class AuthServiceTest {
     void reissueToken_NearExpiration() {
         // given
         String refreshToken = "valid.refresh.token";
-        String email = "test@example.com";
+        String socialUniqueId = "GOOGLE_12345";
         String newAccessToken = "new.access.token";
         String newRefreshToken = "new.refresh.token";
         Claims claims = Mockito.mock(Claims.class);
 
         when(jwtTokenProvider.validateToken(refreshToken, TokenType.REFRESH)).thenReturn(true);
-        when(jwtTokenProvider.getEmail(refreshToken)).thenReturn(email);
+        when(jwtTokenProvider.getSocialUniqueId(refreshToken)).thenReturn(socialUniqueId);
         when(jwtTokenProvider.getClaims(refreshToken)).thenReturn(claims);
         when(claims.get("role")).thenReturn("USER");
         when(claims.get("zipCode", String.class)).thenReturn("12345");
-        when(jwtTokenProvider.createAccessToken(email, Role.USER, "12345")).thenReturn(newAccessToken);
+        when(jwtTokenProvider.createAccessToken(socialUniqueId, Role.USER, "12345")).thenReturn(newAccessToken);
         when(jwtTokenProvider.getExpirationTime(refreshToken)).thenReturn(1000L * 60 * 60 * 24 * 5); // 5일
-        when(jwtTokenProvider.createRefreshToken(email)).thenReturn(newRefreshToken);
+        when(jwtTokenProvider.createRefreshToken(socialUniqueId)).thenReturn(newRefreshToken);
 
         // when
         TokenResponse response = authService.reissue(refreshToken, this.response);

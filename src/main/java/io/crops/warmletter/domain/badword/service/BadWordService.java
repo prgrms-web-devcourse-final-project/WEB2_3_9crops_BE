@@ -93,11 +93,6 @@ public class BadWordService {
         return new UpdateBadWordResponse(badWord.getWord());
     }
 
-
-
-
-
-
     //필터링
     public void validateText(String text) {
         Map<Object, Object> entries = redisTemplate.opsForHash().entries(BAD_WORD_KEY);

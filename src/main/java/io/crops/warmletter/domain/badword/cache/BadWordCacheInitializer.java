@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.badword.cache;
 
+import io.crops.warmletter.domain.badword.dto.response.BadWordResponse;
 import io.crops.warmletter.domain.badword.repository.BadWordRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -25,13 +26,11 @@ public class BadWordCacheInitializer {
 
     @PostConstruct //서버실행될 때 자동실행
     public void loadBadWordsRedis() {
-        List<Object[]> badWords = badWordRepository.findAllWordsOnly();
+        List<BadWordResponse> badWords = badWordRepository.findAllBadWords();
         if(!badWords.isEmpty()) {
             redisTemplate.delete(BAD_WORD_KEY);
-            for (Object[] row : badWords) {
-                String id = row[0].toString();
-                String word = row[1].toString();
-                redisTemplate.opsForHash().put(BAD_WORD_KEY, id, word);
+            for (BadWordResponse badWord : badWords) {
+                redisTemplate.opsForHash().put(BAD_WORD_KEY, badWord.getId().toString(), badWord.getWord());
             }
         }
         log.info("🚀 금칙어 Redis 로드 완료");

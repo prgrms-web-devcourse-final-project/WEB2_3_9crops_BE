@@ -1,6 +1,7 @@
 package io.crops.warmletter.global.error.handler;
 
 import io.crops.warmletter.global.error.common.ErrorCode;
+import io.crops.warmletter.global.error.exception.AuthException;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import io.crops.warmletter.global.error.exception.JwtAuthenticationException;
 import io.crops.warmletter.global.error.response.ErrorResponse;
@@ -19,7 +20,7 @@ public class GlobalExceptionHandler {
 
     // validation 관련
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException e) {
         log.error("Validation error occurred: {}", e.getMessage(), e);
         String message = e.getBindingResult().getAllErrors().get(0).getDefaultMessage();
@@ -44,7 +45,7 @@ public class GlobalExceptionHandler {
     // enum 값이 잘못된 경우
     // 날짜 형식이 잘못된 경우
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(
             HttpMessageNotReadableException e) {
         log.error("JSON parsing error occurred: {}", e.getMessage(), e);
         return createErrorResponse(ErrorCode.INVALID_INPUT_VALUE);
@@ -52,7 +53,7 @@ public class GlobalExceptionHandler {
 
     // oauth 관련 에러
     @ExceptionHandler(OAuth2Exception.class)
-    public ResponseEntity<ErrorResponse> handleOAuth2AuthenticationProcessingException(
+    public ResponseEntity<ErrorResponse> handleOAuth2Exception(
             OAuth2Exception e) {
         log.error("OAuth2 authentication error occurred: {}", e.getMessage(), e);
         return createErrorResponse(ErrorCode.OAUTH2_PROCESSING_ERROR, e.getMessage());
@@ -60,7 +61,15 @@ public class GlobalExceptionHandler {
 
     // Jwt 관련 에러
     @ExceptionHandler(JwtAuthenticationException.class)
-    public ResponseEntity<ErrorResponse> handleJwtAuthenticationProcessingException(
+    public ResponseEntity<ErrorResponse> handleJwtAuthenticationException(
+            JwtAuthenticationException e) {
+        log.error("JWT authentication error occurred: {}", e.getMessage(), e);
+        return createErrorResponse(e.getErrorCode());
+    }
+
+    // Auth 관련 에러
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<ErrorResponse> handleAuthException(
             JwtAuthenticationException e) {
         log.error("JWT authentication error occurred: {}", e.getMessage(), e);
         return createErrorResponse(e.getErrorCode());

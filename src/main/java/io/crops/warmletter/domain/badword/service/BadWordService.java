@@ -3,6 +3,7 @@ package io.crops.warmletter.domain.badword.service;
 
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
+import io.crops.warmletter.domain.badword.dto.response.BadWordResponse;
 import io.crops.warmletter.domain.badword.entity.BadWord;
 import io.crops.warmletter.domain.badword.exception.BadWordContainsException;
 import io.crops.warmletter.domain.badword.exception.BadWordNotFoundException;
@@ -13,7 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +43,7 @@ public class BadWordService {
 
         badWordRepository.save(badWord);
 
-        redisTemplate.opsForSet().add("bad_word", word);
+        redisTemplate.opsForHash().put(BAD_WORD_KEY, badWord.getId().toString(), word);
     }
 
 
@@ -49,20 +51,42 @@ public class BadWordService {
     public void updateBadWordStatus(Long badWordId, UpdateBadWordStatusRequest request) {
         BadWord badWord = badWordRepository.findById(badWordId)
                 .orElseThrow(BadWordNotFoundException::new);
-
+        System.out.println(badWordId + "id값");
+        System.out.println(request + "상태값");
 
         badWord.updateStatus(request.isUsed());
+        System.out.println(request + "상태값");
+
 
         if (request.isUsed()) {
-            redisTemplate.opsForSet().add("bad_word", badWord.getWord());
+            redisTemplate.opsForHash().put(BAD_WORD_KEY,badWordId.toString(), badWord.getWord());
         } else {
-            redisTemplate.opsForSet().remove("bad_word", badWord.getWord());
+            redisTemplate.opsForHash().delete(BAD_WORD_KEY,badWordId.toString(), badWord.getWord());
         }
     }
 
+    public List<Map<String, String>> getBadWords() {
+        Map<Object, Object> entries = redisTemplate.opsForHash().entries(BAD_WORD_KEY);
+        return entries.entrySet().stream()
+                .map(e -> {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("id", e.getKey().toString());
+                    map.put("word", e.getValue().toString());
+                    return map;
+                })
+                .collect(Collectors.toList());
+    }
+
+
+
+
     //필터링
     public void validateText(String text) {
-        Set<String> badWords = redisTemplate.opsForSet().members(BAD_WORD_KEY);
+        Map<Object, Object> entries = redisTemplate.opsForHash().entries(BAD_WORD_KEY);
+
+        Set<String> badWords = entries.values().stream()
+                .map(Object::toString)
+                .collect(Collectors.toSet());
 
         String sanitizedText = text.replaceAll(BAD_WORD_PATTERN, "");
 
@@ -76,7 +100,4 @@ public class BadWordService {
             }
         }
     }
-
-
-
 }

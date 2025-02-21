@@ -20,14 +20,19 @@ public class BadWordCacheInitializer {
     private final BadWordRepository badWordRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
+    private static final String BAD_WORD_KEY = "bad_word";
 
 
     @PostConstruct //서버실행될 때 자동실행
     public void loadBadWordsRedis() {
-        List<String> words = badWordRepository.findAllWordsOnly();
-        if(!words.isEmpty()) {
-            redisTemplate.delete("bad_word");
-            redisTemplate.opsForSet().add("bad_word", words.toArray(new String[0]));
+        List<Object[]> badWords = badWordRepository.findAllWordsOnly();
+        if(!badWords.isEmpty()) {
+            redisTemplate.delete(BAD_WORD_KEY);
+            for (Object[] row : badWords) {
+                String id = row[0].toString();
+                String word = row[1].toString();
+                redisTemplate.opsForHash().put(BAD_WORD_KEY, id, word);
+            }
         }
         log.info("🚀 금칙어 Redis 로드 완료");
     }

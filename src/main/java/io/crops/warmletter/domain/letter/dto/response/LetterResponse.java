@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.letter.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.DeliveryStatus;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class LetterResponse {
 
     //편지 아이디
@@ -30,7 +32,7 @@ public class LetterResponse {
 
     private final String content;
 
-    private final Category category; //null이면 주고받는 답장 편지
+    private final Category category;
 
     private final PaperType paperType;
 

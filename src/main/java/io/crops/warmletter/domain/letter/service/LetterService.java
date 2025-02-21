@@ -71,8 +71,12 @@ public class LetterService {
     }
 
     @Transactional //더티채킹
-    public void delete(Long letterId) {
+    public void deleteLetter(Long letterId) {
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
         letter.softDelete();
+    }
+
+    public void getLetterById() {
+
     }
 }

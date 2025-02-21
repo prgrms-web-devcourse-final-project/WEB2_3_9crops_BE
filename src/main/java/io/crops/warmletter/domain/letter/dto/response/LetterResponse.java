@@ -10,24 +10,6 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 
-/**
- * {
- *   "data": {
- *     "letterId": 12345,
- *     "title": "저 요즘 슬퍼요..",
- *     "content": "블라블라",
- *     "category": "위로와 공감",
- *     "paperType": "편지지1번",
- *     "font": "3번글꼴",
- *     "deliveryStatus": "IN_DELIVERY",
- *     "deliveryStartedAt": "2025-02-17T15:30:00Z", //필요할까?
- *     "isRead": false, //필요할까?
- *     "isActive": true
- *   },
- *   "message": "편지가 성공적으로 생성되었습니다.",
- *   "timestamp": "2025-02-17T15:29:50Z"
- * }
- */
 @Getter
 @Builder
 public class LetterResponse {
@@ -52,7 +34,7 @@ public class LetterResponse {
 
     private final PaperType paperType;
 
-    private final FontType font;
+    private final FontType fontType;
 
     private final DeliveryStatus deliveryStatus;
 
@@ -61,7 +43,7 @@ public class LetterResponse {
     private final LocalDateTime deliveryCompletedAt;
 
 
-
+    //공통 변환
     public static LetterResponse fromEntity(Letter letter) {
         return LetterResponse.builder()
                 .letterId(letter.getId())
@@ -72,10 +54,32 @@ public class LetterResponse {
                 .content(letter.getContent())
                 .category(letter.getCategory())
                 .paperType(letter.getPaperType())
-                .font(letter.getFontType())
+                .fontType(letter.getFontType())
                 .deliveryStatus(letter.getDeliveryStatus())
                 .deliveryStartedAt(letter.getDeliveryStartedAt())
                 .deliveryCompletedAt(letter.getDeliveryCompletedAt())
+                .build();
+    }
+
+    //이전편지 변환
+    public static LetterResponse fromEntityForPreviousLetters(Letter letter) {
+        return LetterResponse.builder()
+                .letterId(letter.getId())
+                .title(letter.getTitle())
+                .content(letter.getContent())
+                .paperType(letter.getPaperType())
+                .fontType(letter.getFontType())
+                .build();
+    }
+
+    //단건조회에 사용
+    public static LetterResponse fromEntityForDetailView(Letter letter) {
+        return LetterResponse.builder()
+                .letterId(letter.getId())
+                .title(letter.getTitle())
+                .content(letter.getContent())
+                .paperType(letter.getPaperType())
+                .fontType(letter.getFontType())
                 .build();
     }
 }

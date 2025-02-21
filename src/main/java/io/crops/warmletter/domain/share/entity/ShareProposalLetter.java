@@ -3,6 +3,7 @@ package io.crops.warmletter.domain.share.entity;
 import io.crops.warmletter.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -23,11 +24,13 @@ public class ShareProposalLetter extends BaseEntity {
     @Column(nullable = false)
     private long letterId;
 
-    @Column(nullable = false)
-    private int displayOrder;
-
     private LocalDateTime createdAt;
 
+    @Builder
+    public ShareProposalLetter(Long proposalId, long letterId) {
+        this.proposalId = proposalId;
+        this.letterId = letterId;
+    }
 
 
 

@@ -4,6 +4,7 @@ import io.crops.warmletter.domain.share.enums.ProposalStatus;
 import io.crops.warmletter.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -34,5 +35,12 @@ public class ShareProposal extends BaseEntity {
 
     private LocalDateTime updatedAt;
 
+    @Builder
+    public ShareProposal(Long requesterId, Long recipientId, ProposalStatus status, String message) {
+        this.requesterId = requesterId;
+        this.recipientId = recipientId;
+        this.status = ProposalStatus.PENDING;
+        this.message = message;
+    }
 
 }

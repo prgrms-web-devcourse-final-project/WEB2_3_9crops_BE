@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.member.entity;
 
+import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.global.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -23,6 +24,9 @@ public class Member extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, unique = true)
+    private String socialUniqueId;
+
+    @Column(nullable = false)
     private String email;
 
     @Column(unique = true)
@@ -33,8 +37,8 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private float temperature;
 
-    // @Enumerated(EnumType.STRING)
-    // private Category preferredLetterCategory
+    @Enumerated(EnumType.STRING)
+    private Category preferredLetterCategory;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -46,12 +50,18 @@ public class Member extends BaseEntity {
     private List<SocialAccount> socialAccounts = new ArrayList<>();
 
     @Builder
-    public Member(String email, String zipCode, String password, float temperature, Role role, LocalDateTime lastMatchedAt) {
+    public Member(String socialUniqueId, String email, String zipCode, String password, float temperature, Category preferredLetterCategory, Role role, LocalDateTime lastMatchedAt) {
+        this.socialUniqueId = socialUniqueId;
         this.email = email;
         this.zipCode = zipCode;
         this.password = password;
         this.temperature = temperature;
+        this.preferredLetterCategory = preferredLetterCategory;
         this.role = role;
         this.lastMatchedAt = lastMatchedAt;
+    }
+
+    public void updateEmail(String newEmail) {
+        this.email = newEmail;
     }
 }

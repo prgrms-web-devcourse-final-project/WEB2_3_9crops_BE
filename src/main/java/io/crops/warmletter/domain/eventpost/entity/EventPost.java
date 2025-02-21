@@ -21,9 +21,15 @@ public class EventPost extends BaseEntity {
 
     private String content;
 
+    private Boolean isUsed;
+
     @Builder
     public EventPost(String title, String content) {
         this.title = title;
         this.content = content;
+    }
+
+    public void softDelete(){
+        this.isUsed = false;
     }
 }

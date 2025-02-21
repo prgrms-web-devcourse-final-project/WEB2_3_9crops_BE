@@ -2,7 +2,13 @@ package io.crops.warmletter.domain.letter.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
+import io.crops.warmletter.domain.letter.entity.Letter;
+import io.crops.warmletter.domain.letter.enums.Category;
+import io.crops.warmletter.domain.letter.enums.FontType;
+import io.crops.warmletter.domain.letter.enums.LetterType;
+import io.crops.warmletter.domain.letter.enums.PaperType;
 import io.crops.warmletter.domain.letter.service.LetterService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -32,6 +39,24 @@ class LettersControllerUnitTest {
 
     @MockitoBean
     private LetterService letterService;
+
+    private Letter letter;
+
+    @BeforeEach
+    void setUp() {
+        letter = Letter.builder()
+                .writerId(1L)
+                .letterType(LetterType.RANDOM)
+                .title("편지 제목")
+                .content("편지 답장")
+                .category(Category.ETC)
+                .paperType(PaperType.PAPER)
+                .fontType(FontType.KYOBO)
+                .receiverId(2L)
+                .parentLetterId(1L)
+                .build();
+        ReflectionTestUtils.setField(letter, "id", 1L);
+    }
 
     @Test
     @DisplayName("GET /api/v1/letters/{letterId}/previous 단위 테스트 - 성공")
@@ -69,6 +94,24 @@ class LettersControllerUnitTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("편지 삭제 완료"))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("GET /api/letters/{letterId} - 편지 조회 성공 테스트")
+    void getLetter_success() throws Exception {
+        LetterResponse letterResponse = LetterResponse.fromEntityForDetailView(letter);
+
+        when(letterService.getLetterById(letter.getId())).thenReturn(letterResponse);
+
+        mockMvc.perform(get("/api/letters/{letterId}", letter.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.letterId").value(1L))
+                .andExpect(jsonPath("$.data.title").value("편지 제목"))
+                .andExpect(jsonPath("$.data.content").value("편지 답장"))
+                .andExpect(jsonPath("$.data.paperType").value("PAPER"))
+                .andExpect(jsonPath("$.data.fontType").value("KYOBO"))
                 .andDo(print());
     }
 }

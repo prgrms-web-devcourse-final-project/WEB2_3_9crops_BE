@@ -114,7 +114,7 @@ class LetterServiceTest {
                 () -> assertEquals("랜덤 편지 내용", response.getContent()),
                 () -> assertEquals(Category.CONSULT, response.getCategory()),
                 () -> assertEquals(PaperType.COMFORT, response.getPaperType()),
-                () -> assertEquals(FontType.HIMCHAN, response.getFont()),
+                () -> assertEquals(FontType.HIMCHAN, response.getFontType()),
                 () -> assertEquals(1L, response.getWriterId()),
                 () -> assertNull(response.getReceiverId()),
                 () -> assertNull(response.getParentLetterId()),
@@ -142,7 +142,7 @@ class LetterServiceTest {
                 () -> assertEquals("답장 편지 내용", response.getContent()),
                 () -> assertEquals(Category.ETC, response.getCategory()),
                 () -> assertEquals(PaperType.PAPER, response.getPaperType()),
-                () -> assertEquals(FontType.GYEONGGI, response.getFont()),
+                () -> assertEquals(FontType.GYEONGGI, response.getFontType()),
                 () -> assertEquals(1L, response.getWriterId()),
                 () -> assertEquals(3L, response.getReceiverId()),
                 () -> assertEquals(5L, response.getParentLetterId()),
@@ -292,10 +292,32 @@ class LetterServiceTest {
         assertTrue(letter.getIsActive(), "편지는 기본적으로 활성 상태여야 합니다.");
 
         // When: delete 메서드를 호출하여 소프트 딜리트 수행
-        letterService.delete(1L);
+        letterService.deleteLetter(1L);
 
         // Then: 해당 편지를 다시 조회하면 isActive가 false로 변경되어 있어야 함
         Letter deletedLetter = letterRepository.findById(1L).orElseThrow(LetterNotFoundException::new);
         assertFalse(deletedLetter.getIsActive(), "편지 삭제 후 isActive는 false여야 합니다.");
+    }
+
+    @Test
+    @DisplayName("letterId로 편지 단건 조회 ")
+    void getLetter_success() {
+        ReflectionTestUtils.setField(savedRandomLetter, "id", 1L);
+
+        when(letterRepository.findById(savedRandomLetter.getId())).thenReturn(Optional.of(savedRandomLetter));
+
+        LetterResponse response = letterService.getLetterById(savedRandomLetter.getId());
+
+        // then: 반환된 응답 DTO 검증
+        assertAll("답장 조회 응답 검증",
+                () -> assertNotNull(response),
+                () -> assertNotNull(response.getLetterId()),
+                () -> assertEquals("랜덤 편지 제목", response.getTitle()),
+                () -> assertEquals("랜덤 편지 내용", response.getContent()),
+                () -> assertEquals(PaperType.COMFORT, response.getPaperType()),
+                () -> assertEquals(FontType.HIMCHAN, response.getFontType())
+        );
+        //verify 메서드로 letterRepository.save() 메서드가 정확히 1번 호출되었는지 확인
+        verify(letterRepository).findById(savedRandomLetter.getId());
     }
 }

@@ -76,7 +76,7 @@ public class BadWordService {
                     map.put("word", e.getValue().toString());
                     return map;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional

@@ -30,6 +30,11 @@ spring:
       port: ${REDIS_PORT}
       host: ${REDIS_HOST}
       password: ${REDIS_PASSWORD}
+jwt:
+  secret: ${JWT_SECRET}
+redirect:
+  base:
+    uri: ${PROD_REDIRECT_BASE_URI}
 ---
 spring:
   config:
@@ -95,9 +100,13 @@ spring:
             user-name-attribute: response
 jwt:
   secret: ${JWT_SECRET}
+redirect:
+  base:
+    uri: ${REDIRECT_BASE_URI}
 logging:
   level:
     root: INFO
     org.springframework.security: DEBUG
     io.corps.warmletter: DEBUG
     org.springframework.web: DEBUG
+    org.springframework.data.redis: DEBUG  # 레디스 로깅 추가

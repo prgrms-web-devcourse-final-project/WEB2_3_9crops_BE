@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.badword.cache;
 
+import io.crops.warmletter.domain.badword.dto.response.BadWordResponse;
 import io.crops.warmletter.domain.badword.repository.BadWordRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,19 +42,22 @@ class BadWordCacheInitializerTest {
     @Test
     @DisplayName("금칙어가 있을 때 Redis에 정상적으로 로드")
     void loadBadWordsRedis_WithWords() {
+        Long id1 = 1L;
+        Long id2 = 2L;
         // given
-        List<Object[]> badWords = List.of(
-                new Object[]{1L, "시발"},
-                new Object[]{2L, "병신"}
+        List<BadWordResponse> badWords = List.of(
+                new BadWordResponse(id1, "시발"),
+                new BadWordResponse(id2, "병신")
         );
-        when(badWordRepository.findAllWordsOnly()).thenReturn(badWords);
+        when(badWordRepository.findAllBadWords()).thenReturn(badWords);
+
 
         // when
         badWordCacheInitializer.loadBadWordsRedis();
 
         // then
         verify(redisTemplate).delete(BAD_WORD_KEY);
-        verify(hashOperations).put(BAD_WORD_KEY, "1", "시발");
-        verify(hashOperations).put(BAD_WORD_KEY, "2", "병신");
+        verify(hashOperations).put(BAD_WORD_KEY, id1.toString(), "시발");
+        verify(hashOperations).put(BAD_WORD_KEY, id2.toString(), "병신");
     }
 }

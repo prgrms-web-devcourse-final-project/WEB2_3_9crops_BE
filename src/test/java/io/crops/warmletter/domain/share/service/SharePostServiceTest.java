@@ -15,7 +15,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
-
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -42,8 +41,8 @@ class SharePostServiceTest {
     @BeforeEach
     void setUp() {
         // 테스트에서 사용할 객체만 생성
-        sharePost1 = new SharePost(1L, "게시글1", "to share my post",true);
-        sharePost2 = new SharePost(2L, "게시글2", "to share my post1",true);
+        sharePost1 = new SharePost(1L,  "to share my post",true);
+        sharePost2 = new SharePost(2L,  "to share my post1",true);
 
     }
 

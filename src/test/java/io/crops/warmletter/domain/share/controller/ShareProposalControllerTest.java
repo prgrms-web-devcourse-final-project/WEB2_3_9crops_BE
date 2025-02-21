@@ -2,6 +2,7 @@ package io.crops.warmletter.domain.share.controller;
 
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
+import io.crops.warmletter.domain.share.dto.response.ShareProposalStatusResponse;
 import io.crops.warmletter.domain.share.enums.ProposalStatus;
 import io.crops.warmletter.domain.share.service.ShareProposalService;
 import io.crops.warmletter.global.error.common.ErrorCode;
@@ -70,7 +71,7 @@ class ShareProposalControllerTest {
 
     @Test
     @DisplayName("필수 파라미터 누락시 예외 발생")
-    void requestShareProposal_ValidationFail() {
+    void requestShareProposal_Failure() {
         // Given
         ShareProposalRequest request = new ShareProposalRequest(
                 List.of(1L, 2L),
@@ -88,4 +89,71 @@ class ShareProposalControllerTest {
 
         verify(shareProposalService).requestShareProposal(request);
     }
+
+    @Test
+    @DisplayName("공유 요청 승인 - 성공")
+    void approveShareProposal_Success() {
+        // given
+        Long shareProposalId = 1L;
+        ShareProposalStatusResponse serviceResponse = ShareProposalStatusResponse.builder()
+                .shareProposalId(shareProposalId)
+                .status(ProposalStatus.APPROVED)
+                .sharePostId(1L)
+                .build();
+
+        when(shareProposalService.approveShareProposal(shareProposalId))
+                .thenReturn(serviceResponse);
+
+        // when
+        ResponseEntity<BaseResponse<ShareProposalStatusResponse>> response =
+                shareProposalController.approveShareProposal(shareProposalId);
+
+        // then
+        assertAll(
+                () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
+                () -> assertNotNull(response.getBody()),
+                () -> assertEquals(serviceResponse, response.getBody().getData()),
+                () -> assertEquals("공유 요청이 승인되었습니다.", response.getBody().getMessage()),
+                () -> verify(shareProposalService).approveShareProposal(shareProposalId)
+        );
+    }
+
+    @Test
+    @DisplayName("공유 요청 승인 - 실패")
+    void approveShareProposal_Fail() {
+        // given
+        Long shareProposalId = 1L;
+        when(shareProposalService.approveShareProposal(shareProposalId))
+                .thenThrow(new BusinessException(ErrorCode.SHARE_PROPOSAL_NOTFOUND));
+
+        // when & then
+        assertThrows(BusinessException.class,
+                () -> shareProposalController.approveShareProposal(shareProposalId));
+        verify(shareProposalService).approveShareProposal(shareProposalId);
+    }
+
+    @Test
+    @DisplayName("공유 요청 승인 - 존재하지 않는 요청시 예외가 발생한다")
+    void approveShareProposal_NotFound() {
+        // given
+        Long shareProposalId = 999L;
+        when(shareProposalService.approveShareProposal(shareProposalId))
+                .thenThrow(new BusinessException(ErrorCode.SHARE_PROPOSAL_NOTFOUND));
+
+        // when & then
+        assertThrows(BusinessException.class,
+                () -> shareProposalController.approveShareProposal(shareProposalId),
+                "존재하지 않는 공유 요청에 대해 BusinessException이 발생해야 합니다"
+        );
+    }
+
+    private ShareProposalStatusResponse createMockResponse(Long shareProposalId) {
+        return ShareProposalStatusResponse.builder()
+                .shareProposalId(shareProposalId)
+                .status(ProposalStatus.APPROVED)
+                .sharePostId(1L)
+                .build();
+    }
+
+
 }

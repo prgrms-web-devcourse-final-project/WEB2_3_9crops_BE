@@ -69,6 +69,7 @@ public class LetterResponse {
                 .letterId(letter.getId())
                 .title(letter.getTitle())
                 .content(letter.getContent())
+                .category(letter.getCategory())
                 .paperType(letter.getPaperType())
                 .fontType(letter.getFontType())
                 .build();
@@ -80,6 +81,7 @@ public class LetterResponse {
                 .letterId(letter.getId())
                 .title(letter.getTitle())
                 .content(letter.getContent())
+                .category(letter.getCategory())
                 .paperType(letter.getPaperType())
                 .fontType(letter.getFontType())
                 .build();

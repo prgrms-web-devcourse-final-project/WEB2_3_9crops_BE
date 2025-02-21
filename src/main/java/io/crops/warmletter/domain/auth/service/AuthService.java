@@ -33,11 +33,11 @@ public class AuthService {
             throw new InvalidRefreshTokenException();
         }
 
-        String email = jwtTokenProvider.getEmail(refreshToken);
+        String socialUniqueId = jwtTokenProvider.getSocialUniqueId(refreshToken);
         Claims claims = jwtTokenProvider.getClaims(refreshToken);
 
         String newAccessToken = jwtTokenProvider.createAccessToken(
-                email,
+                socialUniqueId,
                 Role.valueOf(claims.get("role").toString()),
                 claims.get("zipCode", String.class)
         );
@@ -47,7 +47,7 @@ public class AuthService {
 
         // 리프레시 토큰 만료가 임박한 경우 재발급
         if (jwtTokenProvider.getExpirationTime(refreshToken) < REFRESH_TOKEN_REISSUE_TIME) {
-            String newRefreshToken = jwtTokenProvider.createRefreshToken(email);
+            String newRefreshToken = jwtTokenProvider.createRefreshToken(socialUniqueId);
 
             // Refresh Token을 쿠키에 저장
             ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", newRefreshToken)

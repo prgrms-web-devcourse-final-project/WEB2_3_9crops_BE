@@ -81,7 +81,7 @@ class LettersControllerTest {
                 .andExpect(jsonPath("$.data.content").value("편지 내용입니다"))
                 .andExpect(jsonPath("$.data.category").value("CONSOLATION"))
                 .andExpect(jsonPath("$.data.paperType").value("BASIC"))
-                .andExpect(jsonPath("$.data.font").value("KYOBO"))
+                .andExpect(jsonPath("$.data.fontType").value("KYOBO"))
                 .andExpect(jsonPath("$.data.deliveryStatus").value("IN_DELIVERY"))
                 .andExpect(jsonPath("$.message").value("편지가 성공적으로 생성되었습니다."))
                 .andDo(print());
@@ -121,7 +121,7 @@ class LettersControllerTest {
                 .andExpect(jsonPath("$.data.content").value("편지 내용입니다"))
                 .andExpect(jsonPath("$.data.category").value("CONSULT"))
                 .andExpect(jsonPath("$.data.paperType").value("COMFORT"))
-                .andExpect(jsonPath("$.data.font").value("HIMCHAN"))
+                .andExpect(jsonPath("$.data.fontType").value("HIMCHAN"))
                 .andExpect(jsonPath("$.data.deliveryStatus").value("IN_DELIVERY"))
                 .andExpect(jsonPath("$.message").value("편지가 성공적으로 생성되었습니다."))
                 .andDo(print());
@@ -246,7 +246,7 @@ class LettersControllerTest {
         assertTrue(letter.getIsActive(), "편지는 기본적으로 활성 상태여야 함.");
 
         // When: delete 메서드를 호출하여 소프트 딜리트 수행
-        letterService.delete(letterId);
+        letterService.deleteLetter(letterId);
 
         // Then: 해당 편지를 다시 조회하면 isActive가 false로 변경되어 있어야 함
         Letter deletedLetter = lettersRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);

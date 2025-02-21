@@ -3,32 +3,23 @@ package io.crops.warmletter.domain.eventpost.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.config.TestConfig;
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
-import io.crops.warmletter.domain.eventpost.dto.response.CreateEventPostResponse;
-import io.crops.warmletter.domain.eventpost.entity.EventPost;
+import io.crops.warmletter.domain.eventpost.dto.response.EventPostResponse;
 import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException;
 import io.crops.warmletter.domain.eventpost.service.EventPostService;
-import io.crops.warmletter.global.response.BaseResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -56,13 +47,13 @@ class EventPostControllerTest {
                 .title("제목")
                 .build();
 
-        CreateEventPostResponse createEventPostResponse = CreateEventPostResponse.builder()
+        EventPostResponse eventPostResponse = EventPostResponse.builder()
                 .eventPostId(1L)
                 .title("제목")
                 .build();
 
         when(eventPostService.createEventPost(any(CreateEventPostRequest.class)))
-                .thenReturn(createEventPostResponse);
+                .thenReturn(eventPostResponse);
 
         // when & then
         mockMvc.perform(post("/api/admin/event-posts")
@@ -71,7 +62,7 @@ class EventPostControllerTest {
                 .andExpect(status().isOk()) // 상태 코드 검증
                 .andExpect(jsonPath("$.data.eventPostId").value(1L)) // 반환된 eventPostId 검증
                 .andExpect(jsonPath("$.data.title").value("제목")) // 반환된 title 검증
-                .andExpect(jsonPath("$.message").value("게시판 생성 완료")) // 반환된 message 검증
+                .andExpect(jsonPath("$.message").value("이벤트 게시판 생성 완료")) // 반환된 message 검증
                 .andDo(print()); // 응답 출력
     }
 
@@ -103,7 +94,7 @@ class EventPostControllerTest {
         // when & then
         mockMvc.perform(delete("/api/admin/event-posts/{eventPostId}", eventPostId))
                 .andExpect(status().isOk()) // 상태 코드 200 OK 검증
-                .andExpect(jsonPath("$.message").value("게시판 삭제 완료")) // 성공 메시지 검증
+                .andExpect(jsonPath("$.message").value("이벤트 게시판 삭제 완료")) // 성공 메시지 검증
                 .andExpect(jsonPath("$.data.eventPostId").value(eventPostId)) // 삭제된 eventPostId 검증
                 .andDo(print()); // 응답 출력
     }

@@ -1,7 +1,7 @@
 package io.crops.warmletter.domain.eventpost.service;
 
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
-import io.crops.warmletter.domain.eventpost.dto.response.CreateEventPostResponse;
+import io.crops.warmletter.domain.eventpost.dto.response.EventPostResponse;
 import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException;
 import io.crops.warmletter.domain.eventpost.repository.EventPostRepository;
@@ -19,13 +19,13 @@ import java.util.Map;
 public class EventPostService {
     private final EventPostRepository eventPostRepository;
 
-    public CreateEventPostResponse createEventPost(CreateEventPostRequest createEventPostRequest) {
+    public EventPostResponse createEventPost(CreateEventPostRequest createEventPostRequest) {
         EventPost eventPost = EventPost.builder()
                 .title(createEventPostRequest.getTitle())
                 .build();
         EventPost saveEventPost = eventPostRepository.save(eventPost);
 
-        return CreateEventPostResponse.builder()
+        return EventPostResponse.builder()
                 .eventPostId(saveEventPost.getId())
                 .title(saveEventPost.getTitle())
                 .build();
@@ -35,5 +35,14 @@ public class EventPostService {
         EventPost eventPost = eventPostRepository.findById(eventPostId).orElseThrow(EventPostNotFoundException::new);
         eventPost.softDelete();
         return Map.of("eventPostId", eventPost.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public EventPostResponse getEventPost() {
+        EventPost eventPost = eventPostRepository.findFirstByIsUsedTrue(true);
+        return EventPostResponse.builder()
+                .eventPostId(eventPost.getId())
+                .title(eventPost.getTitle())
+                .build();
     }
 }

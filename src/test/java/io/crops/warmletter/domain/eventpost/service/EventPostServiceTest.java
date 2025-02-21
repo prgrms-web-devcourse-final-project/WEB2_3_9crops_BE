@@ -1,7 +1,7 @@
 package io.crops.warmletter.domain.eventpost.service;
 
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
-import io.crops.warmletter.domain.eventpost.dto.response.CreateEventPostResponse;
+import io.crops.warmletter.domain.eventpost.dto.response.EventPostResponse;
 import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.repository.EventPostRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -46,12 +46,12 @@ class EventPostServiceTest {
         when(eventPostRepository.save(any(EventPost.class))).thenReturn(eventPost);
 
         //when
-        CreateEventPostResponse createEventPostResponse = eventPostService.createEventPost(createEventPostRequest);
+        EventPostResponse eventPostResponse = eventPostService.createEventPost(createEventPostRequest);
 
         //then
         then(eventPostRepository).should(times(1)).save(any(EventPost.class));
 
-        assertEquals("제목", createEventPostResponse.getTitle());
+        assertEquals("제목", eventPostResponse.getTitle());
     }
 
     @Test

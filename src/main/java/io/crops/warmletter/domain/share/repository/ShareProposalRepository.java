@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ShareProposalRepository extends JpaRepository<ShareProposal,Long >, ShareProposalRepositoryCustom {
+public interface ShareProposalRepository extends JpaRepository<ShareProposal,Long >{
 
 }

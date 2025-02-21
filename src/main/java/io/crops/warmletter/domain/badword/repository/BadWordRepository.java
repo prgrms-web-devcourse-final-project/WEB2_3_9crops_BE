@@ -12,7 +12,7 @@ import java.util.List;
 public interface BadWordRepository extends JpaRepository<BadWord, Long> {
     boolean existsByWord(String word);
 
-    @Query("SELECT new io.crops.warmletter.domain.badword.dto.response.BadWordResponse(b.id, b.word) FROM BadWord b")
+    @Query("SELECT new io.crops.warmletter.domain.badword.dto.response.BadWordResponse(b.id, b.word) FROM BadWord b WHERE b.isUsed = true")
     List<BadWordResponse> findAllBadWords();
 
 }

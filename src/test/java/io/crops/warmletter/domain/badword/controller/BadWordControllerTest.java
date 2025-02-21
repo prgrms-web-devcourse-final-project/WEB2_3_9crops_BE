@@ -3,7 +3,9 @@ package io.crops.warmletter.domain.badword.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.config.TestConfig;
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
+import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
+import io.crops.warmletter.domain.badword.dto.response.UpdateBadWordResponse;
 import io.crops.warmletter.domain.badword.service.BadWordService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -91,7 +93,7 @@ class BadWordControllerTest {
     }
 
     @Test
-    @DisplayName("GET /badwords - 금칙어 조회 API 정상 응답 확인")
+    @DisplayName("금칙어 조회 API 정상 응답 확인")
     void getBadWords_ReturnsCorrectResponse() throws Exception {
         // given: 목 서비스의 반환값 설정
         Map<String, String> badWord1 = new HashMap<>();
@@ -115,6 +117,5 @@ class BadWordControllerTest {
                 .andExpect(jsonPath("$.data[1].word").value("병신"))
                 .andExpect(jsonPath("$.message").value("금칙어 조회"));
     }
-
 
 }

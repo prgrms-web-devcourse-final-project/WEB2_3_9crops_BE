@@ -2,8 +2,10 @@ package io.crops.warmletter.domain.badword.service;
 
 
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
+import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
 import io.crops.warmletter.domain.badword.dto.response.BadWordResponse;
+import io.crops.warmletter.domain.badword.dto.response.UpdateBadWordResponse;
 import io.crops.warmletter.domain.badword.entity.BadWord;
 import io.crops.warmletter.domain.badword.exception.BadWordContainsException;
 import io.crops.warmletter.domain.badword.exception.BadWordNotFoundException;
@@ -76,6 +78,28 @@ public class BadWordService {
                 })
                 .collect(Collectors.toList());
     }
+
+    @Transactional
+    public UpdateBadWordResponse updateBadWord(Long id, UpdateBadWordRequest request) {
+        BadWord badWord = badWordRepository.findById(id)
+                .orElseThrow(BadWordNotFoundException::new);
+
+        String newWord = request.getWord();
+
+        if (!badWord.getWord().equals(newWord) && badWordRepository.existsByWord(newWord)) {
+            throw new DuplicateBadWordException();
+        }
+
+        badWord.updateWord(newWord);
+        badWordRepository.save(badWord);
+
+        if (badWord.isUsed()) {
+            redisTemplate.opsForHash().put(BAD_WORD_KEY, badWord.getId().toString(), badWord.getWord());
+        }
+        return new UpdateBadWordResponse(badWord.getWord());
+    }
+
+
 
 
 

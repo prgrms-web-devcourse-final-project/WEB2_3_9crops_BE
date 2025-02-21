@@ -2,8 +2,10 @@ package io.crops.warmletter.domain.badword.controller;
 
 
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
+import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
 import io.crops.warmletter.domain.badword.dto.response.BadWordResponse;
+import io.crops.warmletter.domain.badword.dto.response.UpdateBadWordResponse;
 import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.global.response.BaseResponse;
 import jakarta.validation.Valid;
@@ -42,4 +44,13 @@ public class BadWordController {
         List<Map<String, String>> response = badWordService.getBadWords();
         return ResponseEntity.ok(BaseResponse.of(response, "금칙어 조회"));
     }
+
+    @PatchMapping("/{badWordId}")
+    public ResponseEntity<BaseResponse<UpdateBadWordResponse>> updateBadWord(
+            @PathVariable Long badWordId,
+            @RequestBody @Valid UpdateBadWordRequest request) {
+        UpdateBadWordResponse response = badWordService.updateBadWord(badWordId, request);
+        return ResponseEntity.ok(BaseResponse.of(response, "금칙어 변경 성공"));
+    }
+
 }

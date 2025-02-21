@@ -42,11 +42,8 @@ class ShareProposalControllerTest {
                 "공유 요청"
         );
 
-        ShareProposalResponse serviceResponse = ShareProposalResponse.builder()
-                .shareProposalId(1L)
-                .zipCode("12345")
-                .status(ProposalStatus.PENDING.name())
-                .build();
+        ShareProposalResponse serviceResponse = new ShareProposalResponse(1L, "12345");
+
 
         when(shareProposalService.requestShareProposal(any(ShareProposalRequest.class)))
                 .thenReturn(serviceResponse);

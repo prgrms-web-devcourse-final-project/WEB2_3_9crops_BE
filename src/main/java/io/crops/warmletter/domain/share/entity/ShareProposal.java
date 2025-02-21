@@ -36,7 +36,7 @@ public class ShareProposal extends BaseEntity {
     private LocalDateTime updatedAt;
 
     @Builder
-    public ShareProposal(Long requesterId, Long recipientId, ProposalStatus status, String message) {
+    public ShareProposal(Long requesterId, Long recipientId, String message) {
         this.requesterId = requesterId;
         this.recipientId = recipientId;
         this.status = ProposalStatus.PENDING;

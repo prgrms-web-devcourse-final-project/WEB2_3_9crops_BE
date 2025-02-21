@@ -13,12 +13,13 @@ public class ShareProposalResponse {
     private String zipCode;        // 요청자의 우편번호(식별자)
     private ProposalStatus status;
 
-    @Builder
-    public ShareProposalResponse(Long shareProposalId, String zipCode,String status) {
-        this.shareProposalId = shareProposalId;
-        this.zipCode = zipCode;
-        this.status = ProposalStatus.PENDING;
-    }
+//    //테스트용
+//    @Builder
+//    public ShareProposalResponse(Long shareProposalId, String zipCode) {
+//        this.shareProposalId = shareProposalId;
+//        this.zipCode = zipCode;
+//        this.status = ProposalStatus.PENDING;
+//    }
 
     public ShareProposalResponse(Long shareProposalId, String zipCode) {
         this.shareProposalId = shareProposalId;

@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class BadWordResponse {
+public class BadWordsResponse {
     private List<String> words;
 
 }

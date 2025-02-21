@@ -3,14 +3,12 @@ package io.crops.warmletter.domain.eventpost.entity;
 import io.crops.warmletter.global.entity.BaseEntity;
 import io.crops.warmletter.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 @Table(name = "event_posts")
 public class EventPost extends BaseEntity {
     @Id
@@ -24,6 +22,7 @@ public class EventPost extends BaseEntity {
     @Builder
     public EventPost(String title) {
         this.title = title;
+        this.isUsed = false;    // 기본 값 비활성화
     }
 
     public void softDelete(){

@@ -12,6 +12,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.Map;
+import java.util.Optional;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.then;
@@ -48,5 +51,25 @@ class EventPostServiceTest {
         then(eventPostRepository).should(times(1)).save(any(EventPost.class));
 
         assertEquals("제목", createEventPostResponse.getTitle());
+    }
+
+    @Test
+    @DisplayName("게시판 삭제 성공")
+    void deleteEventPost_success(){
+        //given
+        long eventPostId = 1L;
+
+        EventPost eventPost = new EventPost(1L,"제목",false);
+
+        when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.of(eventPost));
+
+        //when
+        Map<String,Long> deleteEventPostResponse = eventPostService.deleteEventPost(eventPostId);
+
+
+        //then
+        then(eventPostRepository).should(times(1)).findById(any(Long.class));
+
+        assertEquals(1, deleteEventPostResponse.get("eventPostId"));
     }
 }

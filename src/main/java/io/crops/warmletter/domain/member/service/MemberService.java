@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.member.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.member.dto.response.MeResponse;
 import io.crops.warmletter.domain.member.dto.response.ZipCodeResponse;
 import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.exception.DuplicateZipCodeException;
@@ -75,5 +76,12 @@ public class MemberService {
         }
 
         return result.toString();
+    }
+
+    public MeResponse getMe() {
+        Long currentUserId = authFacade.getCurrentUserId();
+
+        return memberRepository.findMeById(currentUserId)
+                .orElseThrow(MemberNotFoundException::new);
     }
 }

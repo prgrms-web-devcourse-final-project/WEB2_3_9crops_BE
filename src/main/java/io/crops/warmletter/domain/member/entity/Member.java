@@ -46,7 +46,7 @@ public class Member extends BaseEntity {
 
     private LocalDateTime lastMatchedAt;
 
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SocialAccount> socialAccounts = new ArrayList<>();
 
     @Builder

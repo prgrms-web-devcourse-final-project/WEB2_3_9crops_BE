@@ -64,4 +64,8 @@ public class Member extends BaseEntity {
     public void updateEmail(String newEmail) {
         this.email = newEmail;
     }
+
+    public void updateZipCode(String zipCode) {
+        this.zipCode = zipCode;
+    }
 }

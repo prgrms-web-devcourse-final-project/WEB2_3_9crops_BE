@@ -7,8 +7,10 @@ import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.entity.Member;
-import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
+import io.crops.warmletter.global.error.common.ErrorCode;
+import io.crops.warmletter.global.error.exception.BusinessException;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,10 +31,6 @@ public class MailBoxService {
     private final MemberRepository memberRepository;
 
 
-    /**
-     * 창문의 색상에 따라서 상대방이 다 읽었나 안읽었나에 대해서 표현한다고 하셔서
-     * 상대방이 편지를 다 읽었는지 여부를 나타내는 변수입니다!(true이면 다읽음)
-     */
     public List<MailboxResponse> getMailbox(){
         Long myId = 3L; //todo 내 아이디 나중에 시큐리티 메서드에서 뽑아옴
         List<Long> matchedMembers = letterMatchingRepository.findMatchedMembers(myId); //매칭되고 나 말고 상대방 id 2,3 중복은 제거
@@ -41,7 +39,7 @@ public class MailBoxService {
 
 
         for (Long matchedMemberId : matchedMembers) {
-            Member otherPerson= memberRepository.findById(matchedMemberId).orElseThrow(MemberNotFoundException::new);
+            Member otherPerson= memberRepository.findById(matchedMemberId).orElseThrow(); //todo 병합시 member Exception 추가
             Long id = otherPerson.getId(); //상대방 A을 찾고
             log.info("Matched member id: {}", id);
             String zipCode = otherPerson.getZipCode(); //상대방 A의 zipcode
@@ -55,13 +53,13 @@ public class MailBoxService {
                 //매칭된 최초의 편지 id
                 Letter letter = letterRepository.findById(letterMatching.getLetterId()).orElseThrow(LetterNotFoundException::new);
                 Boolean isActive = letterMatching.isActive(); //매칭이 계속적으로 주고 받을 수 있는지
-                Boolean isRead = letter.getIsRead(); //편지가 읽어졌는지
+                Boolean isRead = letter.getIsRead(); //편지가 읽어졌는지 todo 내 편지함 상세 조회 로직으로 다 찾아서 확인 해야 함. -> 전부 다 읽으면 true , 아니면 false로 반환
 
                 MailboxResponse response = MailboxResponse.builder()
                         .letterMatchingId(letterMatchingId) //매칭id
                         .oppositeZipCode(zipCode) //상대방의 id
                         .isActive(isActive) // 방이 활성화인지
-                        .isOppositeRead(isRead) //첫편지가 읽어졌는지..?
+                        .isOppositeRead(isRead)
                         .build();
                 responses.add(response);
             }

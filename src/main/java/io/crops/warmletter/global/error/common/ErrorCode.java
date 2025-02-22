@@ -29,6 +29,9 @@ public enum ErrorCode {
     INVALID_ACCESS_TOKEN("AUTH-005", HttpStatus.UNAUTHORIZED, "유효하지 않은 엑세스 토큰입니다."),
     INVALID_TOKEN("AUTH-006", HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
 
+    //MEM-001
+    xMEMBER_NOT_FOUND("MEM-001", HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."),
+
     //Letter Error code
     LETTER_NOT_FOUND("LET-001", HttpStatus.NOT_FOUND, "해당 편지를 찾을 수 없습니다.")
     ;

@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface LetterMatchingRepository extends JpaRepository<LetterMatching, Long> {
 
+    //firstMemberId 1이고 secondMemberId: 2면 만약 memberId가 1이면 2반환 아니면 1반환
     @Query("SELECT DISTINCT CASE " +
             "WHEN lm.firstMemberId = :memberId THEN lm.secondMemberId " +
             "ELSE lm.firstMemberId END " +

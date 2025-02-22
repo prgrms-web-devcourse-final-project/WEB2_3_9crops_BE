@@ -12,10 +12,10 @@ import java.util.List;
 public class EventPostDetailResponse {
     private long eventPostId;
     private String title;
-    private List<EventPostCommentsResponse> eventPostComments;
+    private List<EventCommentsResponse> eventPostComments;
 
     @Builder
-    public EventPostDetailResponse(long eventPostId, String title, List<EventPostCommentsResponse> eventPostComments) {
+    public EventPostDetailResponse(long eventPostId, String title, List<EventCommentsResponse> eventPostComments) {
         this.eventPostId = eventPostId;
         this.title = title;
         this.eventPostComments = eventPostComments;

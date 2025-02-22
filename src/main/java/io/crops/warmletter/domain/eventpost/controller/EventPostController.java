@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.eventpost.controller;
 
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
+import io.crops.warmletter.domain.eventpost.dto.response.EventPostDetailResponse;
 import io.crops.warmletter.domain.eventpost.dto.response.EventPostResponse;
 import io.crops.warmletter.domain.eventpost.service.EventPostService;
 import io.crops.warmletter.global.response.BaseResponse;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
@@ -37,7 +37,7 @@ public class EventPostController {
     }
 
     @GetMapping("/event-posts/{eventPostId}")
-    public ResponseEntity<BaseResponse<?>> getEventPostDetail(@PathVariable Long eventPostId){
+    public ResponseEntity<BaseResponse<EventPostDetailResponse>> getEventPostDetail(@PathVariable Long eventPostId){
         return ResponseEntity.ok(BaseResponse.of(eventPostService.getEventPostDetail(eventPostId),"이벤트 게시판 조회(개별) 완료"));
     }
 }

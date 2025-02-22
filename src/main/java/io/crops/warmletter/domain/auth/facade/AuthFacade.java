@@ -2,7 +2,6 @@ package io.crops.warmletter.domain.auth.facade;
 
 import io.crops.warmletter.domain.auth.service.AuthService;
 import io.crops.warmletter.global.oauth.entity.UserPrincipal;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

@@ -84,4 +84,15 @@ public class MemberService {
         return memberRepository.findMeById(currentUserId)
                 .orElseThrow(MemberNotFoundException::new);
     }
+
+    @Transactional
+    public void deleteMe(String accessToken, String refreshToken, HttpServletResponse response) {
+        Long currentUserId = authFacade.getCurrentUserId();
+        Member member = memberRepository.findById(currentUserId)
+                .orElseThrow(MemberNotFoundException::new);
+
+        member.inactive();
+
+        authFacade.logout(accessToken, refreshToken, response);
+    }
 }

@@ -1,9 +1,12 @@
 package io.crops.warmletter.domain.member.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.member.dto.response.MeResponse;
 import io.crops.warmletter.domain.member.dto.response.ZipCodeResponse;
 import io.crops.warmletter.domain.member.entity.Member;
+import io.crops.warmletter.domain.member.entity.SocialAccount;
 import io.crops.warmletter.domain.member.enums.Role;
+import io.crops.warmletter.domain.member.enums.SocialProvider;
 import io.crops.warmletter.domain.member.exception.DuplicateZipCodeException;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
@@ -152,5 +155,68 @@ class MemberServiceTest {
                 eq(memberId)
         );
         verify(response).addHeader(eq(HttpHeaders.AUTHORIZATION), eq("Bearer " + expectedToken));
+    }
+
+    @DisplayName("마이페이지 조회 오류 - 해당 사용자 존재하지 않음")
+    @Test
+    void getMe_WithInvalidMemberId_ShouldThrowException() throws Exception {
+        // given
+        Long invalidMemberId = 999L;
+        when(authFacade.getCurrentUserId()).thenReturn(invalidMemberId);
+        when(memberRepository.findMeById(invalidMemberId))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(MemberNotFoundException.class,
+                () -> memberService.getMe());
+
+        verify(authFacade).getCurrentUserId();
+        verify(memberRepository).findMeById(invalidMemberId);
+    }
+
+    @DisplayName("마이페이지 조회 성공")
+    @Test
+    void getMe_Success() throws Exception {
+        //given
+        Long memberId = 1L;
+        Member member = Member.builder()
+                .socialUniqueId("GOOGLE_12345")
+                .zipCode("1A2AC")
+                .email("test@test.com")
+                .temperature(36.5f)
+                .role(Role.USER)
+                .build();
+
+        SocialAccount socialAccount = SocialAccount.builder()
+                .socialId("12345")
+                .provider(SocialProvider.GOOGLE)
+                .build();
+
+        socialAccount.setMember(member);
+
+        // Reflection으로 id 설정
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, memberId);
+
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+        when(memberRepository.findMeById(memberId))
+                .thenReturn(Optional.of(new MeResponse(
+                        member.getZipCode(),
+                        member.getTemperature(),
+                        socialAccount.getProvider(),
+                        member.getEmail()
+                )));
+        //when
+        MeResponse meResponse = memberService.getMe();
+
+        //then
+        assertThat(member.getZipCode()).isEqualTo(meResponse.getZipCode());
+        assertThat(member.getTemperature()).isEqualTo(meResponse.getTemperature());
+        assertThat(socialAccount.getProvider()).isEqualTo(meResponse.getSocial());
+        assertThat(member.getEmail()).isEqualTo(meResponse.getEmail());
+
+        verify(authFacade).getCurrentUserId();
+        verify(memberRepository).findMeById(memberId);
     }
 }

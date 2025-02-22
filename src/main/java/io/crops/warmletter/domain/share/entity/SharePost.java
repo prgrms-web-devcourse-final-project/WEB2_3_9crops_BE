@@ -32,7 +32,7 @@ public class SharePost extends BaseEntity {
     private String content;
 
     @Builder
-    public SharePost(Long shareProposalId, String title, String content,boolean isActive) {
+    public SharePost(Long shareProposalId, String content,boolean isActive) {
         this.shareProposalId = shareProposalId;
         this.content = content;
         this.isActive = isActive;

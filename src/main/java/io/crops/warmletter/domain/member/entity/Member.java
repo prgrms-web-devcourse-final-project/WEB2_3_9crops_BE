@@ -46,6 +46,8 @@ public class Member extends BaseEntity {
 
     private LocalDateTime lastMatchedAt;
 
+    private boolean isActive;
+
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SocialAccount> socialAccounts = new ArrayList<>();
 
@@ -59,6 +61,7 @@ public class Member extends BaseEntity {
         this.preferredLetterCategory = preferredLetterCategory;
         this.role = role;
         this.lastMatchedAt = lastMatchedAt;
+        this.isActive = true;
     }
 
     public void updateEmail(String newEmail) {
@@ -67,5 +70,9 @@ public class Member extends BaseEntity {
 
     public void updateZipCode(String zipCode) {
         this.zipCode = zipCode;
+    }
+
+    public void inactive() {
+        this.isActive = false;
     }
 }

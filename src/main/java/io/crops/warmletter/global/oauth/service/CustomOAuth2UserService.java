@@ -4,6 +4,7 @@ import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.entity.SocialAccount;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.domain.member.enums.SocialProvider;
+import io.crops.warmletter.domain.member.exception.DeletedMemberException;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import io.crops.warmletter.global.oauth.entity.UserPrincipal;
@@ -86,6 +87,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             log.info("새로운 소셜 계정으로 회원가입이 완료되었습니다. email: {}, provider: {}", email, registrationId);
         } else {
             member = memberOptional.get();
+
+            // 탈퇴한 회원인지 확인
+            if (!member.isActive()) {
+                throw new DeletedMemberException();
+            }
+
             // 이메일이 변경되었을 경우 업데이트
             if (!member.getEmail().equals(email)) {
                 String oldEmail = member.getEmail();

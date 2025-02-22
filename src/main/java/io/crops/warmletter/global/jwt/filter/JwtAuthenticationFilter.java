@@ -3,6 +3,7 @@ package io.crops.warmletter.global.jwt.filter;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.global.jwt.enums.TokenType;
 import io.crops.warmletter.global.jwt.provider.JwtTokenProvider;
+import io.crops.warmletter.global.oauth.entity.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -11,13 +12,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -31,12 +32,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 토큰이 유효하면 인증 정보 설정
         if (token != null && jwtTokenProvider.validateToken(token, TokenType.ACCESS)) {
-            String email = jwtTokenProvider.getEmail(token);
             Claims claims = jwtTokenProvider.getClaims(token);
-            Role role = Role.valueOf(claims.get("role").toString());
+
+            UserPrincipal userPrincipal = UserPrincipal.builder()
+                    .id(claims.get("memberId", Long.class))
+                    .socialUniqueId(claims.getSubject())  // socialUniqueId는 subject에서
+                    .role(Role.valueOf(claims.get("role", String.class)))
+                    .zipCode(claims.get("zipCode", String.class))
+                    .authorities(Collections.singletonList(
+                            new SimpleGrantedAuthority("ROLE_" + claims.get("role", String.class))
+                    ))
+                    .build();
+
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    userPrincipal,
+                    null,
+                    userPrincipal.getAuthorities()
+            );
 
             // SecurityContext에 인증 정보 저장
-            Authentication authentication = createAuthentication(email, role);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
@@ -50,16 +64,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(7);
         }
         return null;
-    }
-
-    // 인증 정보 생성
-    private Authentication createAuthentication(String email, Role role) {
-        UserDetails userDetails = User.builder()
-                .username(email)
-                .password("")  // 토큰 인증이므로 비밀번호는 빈 문자열
-                .roles(role.name())
-                .build();
-
-        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 }

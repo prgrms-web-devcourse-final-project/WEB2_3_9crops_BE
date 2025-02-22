@@ -43,17 +43,21 @@ class ShareProposalControllerTest {
                 "공유 요청"
         );
 
-        ShareProposalResponse serviceResponse = new ShareProposalResponse(1L, "12345");
-
+        // Controller 테스트에서 서비스를 mocking할 때 필요한 모든 값을 설정
+        ShareProposalResponse serviceResponse = ShareProposalResponse.builder()
+                .shareProposalId(1L)
+                .zipCode("12345")
+                .status(ProposalStatus.PENDING)  // 이 값이 누락되어 있었음
+                .build();
 
         when(shareProposalService.requestShareProposal(any(ShareProposalRequest.class)))
                 .thenReturn(serviceResponse);
 
-        // when Controller의 메서드를 호출 후 응답 값이 들어올 때
+        // when
         ResponseEntity<BaseResponse<ShareProposalResponse>> response =
                 shareProposalController.requestShareProposal(request);
 
-        // then 해당 값 검증
+        // then
         assertAll(
                 () -> assertNotNull(response),
                 () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
@@ -110,7 +114,7 @@ class ShareProposalControllerTest {
                 () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
                 () -> assertNotNull(response.getBody()),
                 () -> assertEquals(serviceResponse, response.getBody().getData()),
-                () -> assertEquals("공유 요청이 승인되었습니다.", response.getBody().getMessage()),
+                () -> assertEquals("공유 요청 성공", response.getBody().getMessage()),
                 () -> verify(shareProposalService).approveShareProposal(shareProposalId)
         );
     }
@@ -152,5 +156,44 @@ class ShareProposalControllerTest {
                 .build();
     }
 
+    @Test
+    @DisplayName("공유 요청 거절 - 성공")
+    void rejectShareProposal_Success() {
+        // given
+        Long shareProposalId = 1L;
+        ShareProposalStatusResponse serviceResponse = ShareProposalStatusResponse.builder()
+                .shareProposalId(shareProposalId)
+                .status(ProposalStatus.REJECTED)
+                .build();
 
+        when(shareProposalService.rejectShareProposal(shareProposalId))
+                .thenReturn(serviceResponse);
+
+        // when
+        ResponseEntity<BaseResponse<ShareProposalStatusResponse>> response =
+                shareProposalController.rejectShareProposal(shareProposalId);
+
+        // then
+        assertAll(
+                () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
+                () -> assertNotNull(response.getBody()),
+                () -> assertEquals(serviceResponse, response.getBody().getData()),
+                () -> assertEquals("공유 요청 거절", response.getBody().getMessage()),
+                () -> verify(shareProposalService).rejectShareProposal(shareProposalId)
+        );
+    }
+
+    @Test
+    @DisplayName("공유 요청 거절 - 실패")
+    void rejectShareProposal_Fail() {
+        // given
+        Long shareProposalId = 1L;
+        when(shareProposalService.rejectShareProposal(shareProposalId))
+                .thenThrow(new BusinessException(ErrorCode.SHARE_PROPOSAL_NOTFOUND));
+
+        // when & then
+        assertThrows(BusinessException.class,
+                () -> shareProposalController.rejectShareProposal(shareProposalId));
+        verify(shareProposalService).rejectShareProposal(shareProposalId);
+    }
 }

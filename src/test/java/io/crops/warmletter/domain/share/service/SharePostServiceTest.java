@@ -134,7 +134,7 @@ class SharePostServiceTest {
     void getPostDetail_Success() {
         Long sharePostId = 1L;
         SharePostDetailResponse expectedResponse = SharePostDetailResponse.builder()
-                .id(sharePostId)
+                .sharePostId(sharePostId)
                 .zipCode("10A34")
                 .sharePostContent("테스트 내용")
                 .build();
@@ -177,7 +177,7 @@ class SharePostServiceTest {
         );
 
         SharePostDetailResponse expectedResponse = SharePostDetailResponse.builder()
-                .id(postId)
+                .sharePostId(postId)
                 .zipCode("10A34")
                 .sharePostContent("테스트 내용")
                 .letters(letters)
@@ -202,7 +202,7 @@ class SharePostServiceTest {
         // Given
         Long sharePostId = 1L;
         SharePostDetailResponse response = SharePostDetailResponse.builder()
-                .id(sharePostId)
+                .sharePostId(sharePostId)
                 .zipCode("12345")
                 .sharePostContent("test message")
                 .letters(Collections.emptyList())

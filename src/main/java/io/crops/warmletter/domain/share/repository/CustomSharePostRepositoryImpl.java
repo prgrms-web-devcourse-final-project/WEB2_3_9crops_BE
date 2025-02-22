@@ -56,7 +56,7 @@ public class CustomSharePostRepositoryImpl implements CustomSharePostRepository 
         }
 
         SharePostDetailResponse response = SharePostDetailResponse.builder()
-                .id(results.get(0).get(SHARE_POST.id))
+                .sharePostId(results.get(0).get(SHARE_POST.id))
                 .zipCode(results.get(0).get(WRITER.zipCode))
                 .sharePostContent(results.get(0).get(PROPOSAL.message))
                 .letters(results.stream()

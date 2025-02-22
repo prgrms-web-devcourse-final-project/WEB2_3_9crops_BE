@@ -6,6 +6,7 @@ import io.crops.warmletter.domain.eventpost.dto.response.EventPostDetailResponse
 import io.crops.warmletter.domain.eventpost.dto.response.EventPostResponse;
 import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException;
+import io.crops.warmletter.domain.eventpost.exception.UsedEventPostNotFoundException;
 import io.crops.warmletter.domain.eventpost.repository.EventCommentRepository;
 import io.crops.warmletter.domain.eventpost.repository.EventPostRepository;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,9 @@ public class EventPostService {
     @Transactional(readOnly = true)
     public EventPostResponse getUsedEventPost() {
         EventPost eventPost = eventPostRepository.findFirstByIsUsed(true);
+        if(eventPost == null) {
+            throw new UsedEventPostNotFoundException();
+        }
         return EventPostResponse.builder()
                 .eventPostId(eventPost.getId())
                 .title(eventPost.getTitle())
@@ -54,7 +58,7 @@ public class EventPostService {
     public EventPostDetailResponse getEventPostDetail(long eventPostId) {
 
         EventPost eventPost = eventPostRepository.findById(eventPostId)
-                .orElseThrow(() -> new RuntimeException("EventPost not found"));
+                .orElseThrow(() -> new EventPostNotFoundException());
 
         List<Object[]> result = eventCommentRepository.findEventCommentsWithZipCode(eventPostId);
 

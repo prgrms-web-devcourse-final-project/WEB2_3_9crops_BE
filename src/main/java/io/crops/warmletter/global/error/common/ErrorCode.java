@@ -17,6 +17,7 @@ public enum ErrorCode {
 
     // 이벤트 게시판 관련 에러 코드
     EVENT_POST_NOT_FOUND("EVENT-001",HttpStatus.NOT_FOUND,"해당 이벤트 게시글을 찾을 수 없습니다."),
+    USED_EVENT_POST_NOT_FOUND("EVENT-002",HttpStatus.NOT_FOUND,"사용중인 이벤트 게시글을 찾을 수 없습니다."),
 
     //금치어
     DUPLICATE_BANNED_WORD("MOD-001", HttpStatus.CONFLICT, "이미 등록된 금칙어입니다."),

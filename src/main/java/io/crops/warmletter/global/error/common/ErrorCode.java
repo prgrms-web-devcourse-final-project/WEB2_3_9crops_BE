@@ -14,6 +14,10 @@ public enum ErrorCode {
     // 공유 관련 에러 코드
     INVALID_PAGE_REQUEST("SHARE-001", HttpStatus.BAD_REQUEST, "요청페이지 번호가 0보다 작습니다."),
     SHARE_POST_NOT_FOUND("SHARE-002",HttpStatus.NOT_FOUND,"해당 공유 게시글을 찾을 수 없습니다."),
+    SHARE_PROPOSAL_NOTFOUND("SHARE-003",HttpStatus.NOT_FOUND,"해당 공유 제안을 찾을 수 없습니다."),
+
+    // 이벤트 게시판 관련 에러 코드
+    EVENT_POST_NOT_FOUND("EVENT-001",HttpStatus.NOT_FOUND,"해당 이벤트 게시글을 찾을 수 없습니다."),
 
     //금치어
     DUPLICATE_BANNED_WORD("MOD-001", HttpStatus.CONFLICT, "이미 등록된 금칙어입니다."),

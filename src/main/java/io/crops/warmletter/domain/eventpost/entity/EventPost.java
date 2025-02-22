@@ -3,10 +3,7 @@ package io.crops.warmletter.domain.eventpost.entity;
 import io.crops.warmletter.global.entity.BaseEntity;
 import io.crops.warmletter.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
@@ -19,11 +16,15 @@ public class EventPost extends BaseEntity {
 
     private String title;
 
-    private String content;
+    private Boolean isUsed;
 
     @Builder
-    public EventPost(String title, String content) {
+    public EventPost(String title) {
         this.title = title;
-        this.content = content;
+        this.isUsed = false;    // 기본 값 비활성화
+    }
+
+    public void softDelete(){
+        this.isUsed = false;
     }
 }

@@ -36,7 +36,6 @@ class SharePostTest {
         // given
         SharePost sharePost = SharePost.builder()
                 .shareProposalId(1L)
-                .title("제목")
                 .content("내용")
                 .isActive(true)
                 .build();

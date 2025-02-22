@@ -11,6 +11,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.Map;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,12 +37,10 @@ class EventPostServiceTest {
         //given
         CreateEventPostRequest createEventPostRequest = CreateEventPostRequest.builder()
                 .title("제목")
-                .content("내용")
                 .build();
 
         EventPost eventPost = EventPost.builder()
                 .title(createEventPostRequest.getTitle())
-                .content(createEventPostRequest.getContent())
                 .build();
 
         when(eventPostRepository.save(any(EventPost.class))).thenReturn(eventPost);
@@ -50,6 +52,26 @@ class EventPostServiceTest {
         then(eventPostRepository).should(times(1)).save(any(EventPost.class));
 
         assertEquals("제목", createEventPostResponse.getTitle());
-        assertEquals("내용", createEventPostResponse.getContent());
+    }
+
+    @Test
+    @DisplayName("게시판 삭제 성공")
+    void deleteEventPost_success(){
+        //given
+        long eventPostId = 1L;
+
+        EventPost eventPost = EventPost.builder().title("제목").build();
+        ReflectionTestUtils.setField(eventPost, "id", eventPostId);
+
+        when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.of(eventPost));
+
+        //when
+        Map<String,Long> deleteEventPostResponse = eventPostService.deleteEventPost(eventPostId);
+
+
+        //then
+        then(eventPostRepository).should(times(1)).findById(any(Long.class));
+
+        assertEquals(1, deleteEventPostResponse.get("eventPostId"));
     }
 }

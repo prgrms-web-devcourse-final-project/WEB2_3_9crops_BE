@@ -51,6 +51,7 @@ public class EventPostService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public EventPostDetailResponse getEventPostDetail(long eventPostId) {
 
         EventPost eventPost = eventPostRepository.findById(eventPostId)

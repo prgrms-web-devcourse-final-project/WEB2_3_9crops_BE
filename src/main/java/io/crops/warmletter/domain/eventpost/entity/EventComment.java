@@ -15,9 +15,16 @@ public class EventComment extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+    @Column(nullable = false)
     private long eventPostId;
+
+    @Column(nullable = false)
     private long writerId;
+
+    @Column(nullable = false)
     private String content;
+
     private boolean isActive;
 
     @Builder

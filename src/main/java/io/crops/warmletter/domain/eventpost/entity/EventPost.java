@@ -13,8 +13,10 @@ public class EventPost extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @Column(nullable = false)
     private String title;
 
+    @Column(unique = true)
     private Boolean isUsed;
 
     @Builder

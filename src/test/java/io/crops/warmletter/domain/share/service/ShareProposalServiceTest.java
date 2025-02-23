@@ -58,8 +58,7 @@ class ShareProposalServiceTest {
         ShareProposal shareProposal = request.toEntity();
         ReflectionTestUtils.setField(shareProposal, "id", 1L);
 
-        ShareProposalResponse expectedResponse = new ShareProposalResponse(1L, "12345");
-
+        ShareProposalResponse expectedResponse = ShareProposalResponse.builder().shareProposalId(1L).zipCode("12345").build();
         when(shareProposalRepository.save(any(ShareProposal.class))).thenReturn(shareProposal);
         when(shareProposalRepository.findShareProposalWithZipCode(anyLong())).thenReturn(expectedResponse);
 
@@ -193,14 +192,10 @@ class ShareProposalServiceTest {
         // given
         Long shareProposalId = 1L;
 
-        ShareProposal shareProposal = ShareProposal.builder()
-                .requesterId(1L)
-                .recipientId(2L)
-                .message("test")
-                .build();
+        ShareProposal shareProposal = new ShareProposal(1L, 2L, "test");  // 생성자 사용
         ReflectionTestUtils.setField(shareProposal, "id", shareProposalId);
 
-        SharePost sharePost = SharePost.builder()
+        SharePost sharePost = SharePost.builder()  // SharePost는 빌더 그대로 사용
                 .shareProposalId(shareProposalId)
                 .content("test")
                 .isActive(true)
@@ -217,5 +212,40 @@ class ShareProposalServiceTest {
 
         // then
         assertThat(response.getShareProposalId()).isEqualTo(shareProposalId);
+    }
+
+    @Test
+    @DisplayName("공유 제안 거절 성공")
+    void rejectShareProposal_Success() {
+        // given
+        Long shareProposalId = 1L;
+
+        ShareProposal shareProposal = new ShareProposal(1L, 2L, "test");  // 생성자 사용
+        ReflectionTestUtils.setField(shareProposal, "id", shareProposalId);
+
+        when(shareProposalRepository.findById(shareProposalId))
+                .thenReturn(Optional.of(shareProposal));
+
+        // when
+        ShareProposalStatusResponse response = shareProposalService.rejectShareProposal(shareProposalId);
+
+        // then
+        assertThat(response.getShareProposalId()).isEqualTo(shareProposalId);
+        assertThat(response.getStatus()).isEqualTo(ProposalStatus.REJECTED);
+        assertThat(shareProposal.getStatus()).isEqualTo(ProposalStatus.REJECTED);
+    }
+
+    @Test
+    @DisplayName("공유 제안 거절 실패 - 존재하지 않는 제안")
+    void rejectShareProposal_NotFound() {
+        // given
+        Long shareProposalId = 1L;
+        when(shareProposalRepository.findById(shareProposalId))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> shareProposalService.rejectShareProposal(shareProposalId))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.SHARE_PROPOSAL_NOTFOUND);
     }
 }

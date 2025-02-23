@@ -16,9 +16,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Map;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -83,5 +86,19 @@ class EventCommentControllerTest {
                 .andDo(print());
     }
 
+    @Test
+    @DisplayName("DELETE 게시판 댓글 삭제 성공")
+    void delete_eventComment_success() throws Exception {
+        // given
+        long eventCommentId = 1L;
 
+        when(eventCommentService.deleteEventComment(eventCommentId)).thenReturn(Map.of("commentId", eventCommentId));
+
+        // when & then
+        mockMvc.perform(delete("/api/event-posts/comments/{commentId}", eventCommentId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("댓글 삭제 성공")) // 성공 메시지 검증
+                .andExpect(jsonPath("$.data.commentId").value(eventCommentId)) // 삭제된 eventPostId 검증
+                .andDo(print());
+    }
 }

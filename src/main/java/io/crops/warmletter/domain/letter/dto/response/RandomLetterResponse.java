@@ -28,4 +28,13 @@ public class RandomLetterResponse {
 
     private final LocalDateTime createdAt;
 
+    public RandomLetterResponse(Long letterId, String content, String zipCode, Category category, PaperType paperType, FontType fontType, LocalDateTime createdAt) {
+        this.letterId = letterId;
+        this.content = content;
+        this.zipCode = zipCode;
+        this.category = category;
+        this.paperType = paperType;
+        this.fontType = fontType;
+        this.createdAt = createdAt;
+    }
 }

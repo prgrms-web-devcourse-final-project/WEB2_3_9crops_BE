@@ -1,7 +1,10 @@
 package io.crops.warmletter.domain.letter.repository;
 
+import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
+import io.crops.warmletter.domain.letter.enums.Category;
 import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -12,23 +15,10 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
 
     List<Letter> findLettersByParentLetterId(Long parentLetterId);
 
-    @Query(value =
-            "SELECT * " +
-            "FROM letters " +
-            "WHERE category = :category " +
-            "ORDER BY RAND() " +
-            "LIMIT :limit",
-            nativeQuery = true)
-    List<Letter> findRandomLettersByCategory(@Param("category") String category, @Param("limit") int limit);
-
-
-    @Query(value =
-            "SELECT * " +
-            "FROM letters " +
-            "ORDER BY RAND() " +
-            "LIMIT :limit",
-            nativeQuery = true)
-
-    List<Letter> findRandomLetters(@Param("limit") int limit);
-
+    @Query("SELECT new io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse(" +
+            "l.id, l.content, m.zipCode, l.category, l.paperType, l.fontType, l.createdAt) " +
+            "FROM Letter l JOIN Member m ON l.writerId = m.id " +
+            "WHERE (:category IS NULL OR l.category = :category) " +
+            "ORDER BY function('RAND')")
+    List<RandomLetterResponse> findRandomLettersByCategory(@Param("category") Category category, Pageable pageable);
 }

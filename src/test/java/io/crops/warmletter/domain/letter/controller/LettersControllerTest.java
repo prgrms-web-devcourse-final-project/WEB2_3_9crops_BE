@@ -147,7 +147,7 @@ class LettersControllerTest {
                         .content(json))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.letterId").exists())
-                .andExpect(jsonPath("$.data.writerId").exists())  //todo 회원 넣어서 확인
+                .andExpect(jsonPath("$.data.writerId").exists())
                 .andExpect(jsonPath("$.data.receiverId").value(1L))
                 .andExpect(jsonPath("$.data.parentLetterId").value(2L))
                 .andExpect(jsonPath("$.data.zipCode").value("12345"))

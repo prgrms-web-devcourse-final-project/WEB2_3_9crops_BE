@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.letter.service;
 
+import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.letter.dto.response.MailboxResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterMatching;
@@ -30,17 +31,18 @@ public class MailBoxService {
     private final LetterMatchingRepository letterMatchingRepository;
     private final LetterRepository letterRepository;
     private final MemberRepository memberRepository;
+    private final AuthFacade authFacade;
 
 
     public List<MailboxResponse> getMailbox(){
-        Long myId = 3L; //todo 내 아이디 나중에 시큐리티 메서드에서 뽑아옴
+        Long myId = authFacade.getCurrentUserId();
         List<Long> matchedMembers = letterMatchingRepository.findMatchedMembers(myId); //매칭되고 나 말고 상대방 (예를들어 id 2,3) 중복은 제거
         log.info("Matched members: {}", matchedMembers);
         List<MailboxResponse> responses = new ArrayList<>();
 
 
         for (Long matchedMemberId : matchedMembers) {
-            Member otherPerson= memberRepository.findById(matchedMemberId).orElseThrow(MemberNotFoundException::new); //todo 병합시 member Exception 추가
+            Member otherPerson= memberRepository.findById(matchedMemberId).orElseThrow(MemberNotFoundException::new);
             Long id = otherPerson.getId(); //상대방 A을 찾고
             log.info("Matched member id: {}", id);
             String zipCode = otherPerson.getZipCode(); //상대방 A의 zipcode

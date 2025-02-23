@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,10 +43,8 @@ public class EventPostService {
 
     @Transactional(readOnly = true)
     public EventPostResponse getUsedEventPost() {
-        EventPost eventPost = eventPostRepository.findFirstByIsUsed(true);
-        if(eventPost == null) {
-            throw new UsedEventPostNotFoundException();
-        }
+        EventPost eventPost = eventPostRepository.findByIsUsed(true).orElseThrow(UsedEventPostNotFoundException::new);
+
         return EventPostResponse.builder()
                 .eventPostId(eventPost.getId())
                 .title(eventPost.getTitle())
@@ -57,22 +54,14 @@ public class EventPostService {
     public EventPostDetailResponse getEventPostDetail(long eventPostId) {
 
         EventPost eventPost = eventPostRepository.findById(eventPostId)
-                .orElseThrow(() -> new EventPostNotFoundException());
+                .orElseThrow(EventPostNotFoundException::new);
 
-        List<Object[]> result = eventCommentRepository.findEventCommentsWithZipCode(eventPostId);
-
-        List<EventCommentsResponse> commentsResponse = result.stream()
-                .map(comments -> {
-                    long commentId = (long) comments[0];
-                    String zipCode = (String) comments[1];
-                    String content = (String) comments[2];
-                    return new EventCommentsResponse(commentId, zipCode, content);})
-                .collect(Collectors.toList());
+        List<EventCommentsResponse> eventCommentsResponses = eventCommentRepository.findEventCommentsWithZipCode(eventPostId);
 
         return EventPostDetailResponse.builder()
                 .eventPostId(eventPost.getId())
                 .title(eventPost.getTitle())
-                .eventPostComments(commentsResponse)
+                .eventPostComments(eventCommentsResponses)
                 .build();
     }
 }

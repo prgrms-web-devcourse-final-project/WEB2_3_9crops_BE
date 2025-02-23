@@ -43,7 +43,7 @@ class EventPostServiceTest {
     private EventPostService eventPostService;
 
     @Test
-    @DisplayName("게시판 작성 성공")
+    @DisplayName("게시판 생성 성공")
     void createEventPost_success(){
         //given
         CreateEventPostRequest createEventPostRequest = CreateEventPostRequest.builder()

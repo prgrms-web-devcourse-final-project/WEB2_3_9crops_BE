@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.letter.service;
 
+import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
@@ -7,6 +8,8 @@ import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.LetterType;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
+import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
+import io.crops.warmletter.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,13 +23,17 @@ import java.util.List;
 public class LetterService {
 
     private final LetterRepository letterRepository;
+    private final MemberRepository memberRepository;
+    private final AuthFacade authFacade;
     private final BadWordService badWordService;
 
     @Transactional
     public LetterResponse createLetter(CreateLetterRequest request) {
         badWordService.validateText(request.getTitle());
         badWordService.validateText(request.getContent());
-        Long writerId = 1L; // TODO: 실제 인증 정보를 사용하도록 변경
+
+        Long writerId = authFacade.getCurrentUserId(); //현재 로그인한 유저 id
+
         Letter.LetterBuilder builder = Letter.builder()
                 .writerId(writerId)
                 .category(request.getCategory())
@@ -47,10 +54,12 @@ public class LetterService {
                     .parentLetterId(request.getParentLetterId())
                     .letterType(LetterType.DIRECT);
         }
-
         Letter letter = builder.build();
         Letter savedLetter = letterRepository.save(letter);
-        return LetterResponse.fromEntity(savedLetter);
+
+        String zipCode = authFacade.getZipCode(); //현제 로그인한 유저 ZipCode
+
+        return LetterResponse.fromEntity(savedLetter, zipCode);
     }
 
     public List<LetterResponse> getPreviousLetters(Long letterId) {
@@ -62,7 +71,8 @@ public class LetterService {
 
         List<LetterResponse> responses = new ArrayList<>();
         for (Letter findLetter : lettersByParentId) {
-            LetterResponse response = LetterResponse.fromEntityForPreviousLetters(findLetter);
+            String zipCode = memberRepository.findById(findLetter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode();
+            LetterResponse response = LetterResponse.fromEntityForPreviousLetters(findLetter,zipCode); //todo zipCode 메서드로 추가
             responses.add(response);
         }
         return responses;
@@ -77,6 +87,7 @@ public class LetterService {
 
     public LetterResponse getLetterById(Long letterId) {
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
-        return LetterResponse.fromEntityForDetailView(letter);
+        String zipCode = memberRepository.findById(letter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode(); //편지를 쓴 사람의 zipCode
+        return LetterResponse.fromEntityForDetailView(letter, zipCode);
     }
 }

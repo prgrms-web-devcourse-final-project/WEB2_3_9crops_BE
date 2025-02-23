@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.eventpost.service;
 
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
+import io.crops.warmletter.domain.eventpost.dto.response.EventCommentsResponse;
 import io.crops.warmletter.domain.eventpost.dto.response.EventPostDetailResponse;
 import io.crops.warmletter.domain.eventpost.dto.response.EventPostResponse;
 import io.crops.warmletter.domain.eventpost.entity.EventPost;
@@ -94,10 +95,10 @@ class EventPostServiceTest {
         when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.empty());
 
         // when & then
-        assertThrows(EventPostNotFoundException.class, () -> eventPostService.deleteEventPost(999));
+        BusinessException exception = assertThrows(EventPostNotFoundException.class, () -> eventPostService.deleteEventPost(999));
 
         // then
-        then(eventPostRepository).should(times(1)).findById(any(Long.class));
+        assertEquals(ErrorCode.EVENT_POST_NOT_FOUND, exception.getErrorCode());
     }
 
     @Test
@@ -109,7 +110,7 @@ class EventPostServiceTest {
         EventPost eventPost = EventPost.builder().title("제목").build();
         ReflectionTestUtils.setField(eventPost, "id", eventPostId);
 
-        when(eventPostRepository.findFirstByIsUsed(true)).thenReturn(eventPost);
+        when(eventPostRepository.findByIsUsed(true)).thenReturn(Optional.of(eventPost));
 
         //when
         EventPostResponse eventPostResponse = eventPostService.getUsedEventPost();
@@ -124,7 +125,7 @@ class EventPostServiceTest {
     @DisplayName("사용중인 게시판 조회 실패 - 조건이 일치하는 게시판 없음")
     void getUsedEventPost_not_found(){
         //given
-        when(eventPostRepository.findFirstByIsUsed(true)).thenReturn(null);
+        when(eventPostRepository.findByIsUsed(true)).thenReturn(Optional.empty());
         //when
         BusinessException exception = assertThrows(UsedEventPostNotFoundException.class, ()-> eventPostService.getUsedEventPost());
 
@@ -139,14 +140,16 @@ class EventPostServiceTest {
         EventPost eventPost = EventPost.builder().title("제목").build();
         ReflectionTestUtils.setField(eventPost, "id", 1);
 
-        List<Object[]> result = new ArrayList<>();
-        Object[] object1 = {1L, "11111", "내용1"};
-        Object[] object2 = {2L, "22222", "내용2"};
-        result.add(object1);
-        result.add(object2);
+        List<EventCommentsResponse> eventCommentsResponses = new ArrayList<>();
+        EventCommentsResponse comment1 = EventCommentsResponse.builder()
+                .commentId(1L).zipCode("11111").content("내용1").build();
+        EventCommentsResponse comment2 = EventCommentsResponse.builder()
+                .commentId(2L).zipCode("22222").content("내용2").build();
+        eventCommentsResponses.add(comment1);
+        eventCommentsResponses.add(comment2);
 
         when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.of(eventPost));
-        when(eventCommentRepository.findEventCommentsWithZipCode(any(Long.class))).thenReturn(result);
+        when(eventCommentRepository.findEventCommentsWithZipCode(any(Long.class))).thenReturn(eventCommentsResponses);
 
         // when
         EventPostDetailResponse eventPostDetailResponse = eventPostService.getEventPostDetail(1);

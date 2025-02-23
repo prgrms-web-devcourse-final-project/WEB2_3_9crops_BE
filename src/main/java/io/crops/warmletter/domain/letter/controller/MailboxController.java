@@ -21,7 +21,7 @@ public class MailboxController {
      * 내 편지함 목록 조회
      */
     @GetMapping("/api/mailbox")
-    public BaseResponse<Object> getMailbox() {
+    public BaseResponse<List<MailboxResponse>> getMailbox() {
         List<MailboxResponse> mailbox = mailBoxService.getMailbox();
         return BaseResponse.of(mailbox, "편지함 조회 완료");
     }

@@ -33,7 +33,7 @@ public class MailBoxService {
 
     public List<MailboxResponse> getMailbox(){
         Long myId = 3L; //todo 내 아이디 나중에 시큐리티 메서드에서 뽑아옴
-        List<Long> matchedMembers = letterMatchingRepository.findMatchedMembers(myId); //매칭되고 나 말고 상대방 id 2,3 중복은 제거
+        List<Long> matchedMembers = letterMatchingRepository.findMatchedMembers(myId); //매칭되고 나 말고 상대방 (예를들어 id 2,3) 중복은 제거
         log.info("Matched members: {}", matchedMembers);
         List<MailboxResponse> responses = new ArrayList<>();
 
@@ -64,7 +64,7 @@ public class MailBoxService {
                 responses.add(response);
             }
         }
-        responses.sort(Comparator.comparing(MailboxResponse::getLetterMatchingId));
+        responses.sort(Comparator.comparing(MailboxResponse::getLetterMatchingId)); //아이디로 정렬 (시간순)
         return responses;
 
     }

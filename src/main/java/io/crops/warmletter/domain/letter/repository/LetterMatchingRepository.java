@@ -19,8 +19,8 @@ public interface LetterMatchingRepository extends JpaRepository<LetterMatching, 
 
 
     @Query("SELECT lm FROM LetterMatching lm " +
-            "WHERE (lm.firstMemberId = :user1Id AND lm.secondMemberId = :user2Id) " +
-            "OR (lm.firstMemberId = :user2Id AND lm.secondMemberId = :user1Id)")
-    List<LetterMatching> findMatchingIdsByMembers(Long user1Id, Long user2Id);
+            "WHERE (lm.firstMemberId = :myId AND lm.secondMemberId = :id) " +
+            "OR (lm.firstMemberId = :id AND lm.secondMemberId = :myId)")
+    List<LetterMatching> findMatchingIdsByMembers(Long myId, Long id);
 
 }

@@ -7,6 +7,7 @@ import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.entity.Member;
+import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
@@ -39,7 +40,7 @@ public class MailBoxService {
 
 
         for (Long matchedMemberId : matchedMembers) {
-            Member otherPerson= memberRepository.findById(matchedMemberId).orElseThrow(); //todo 병합시 member Exception 추가
+            Member otherPerson= memberRepository.findById(matchedMemberId).orElseThrow(MemberNotFoundException::new); //todo 병합시 member Exception 추가
             Long id = otherPerson.getId(); //상대방 A을 찾고
             log.info("Matched member id: {}", id);
             String zipCode = otherPerson.getZipCode(); //상대방 A의 zipcode

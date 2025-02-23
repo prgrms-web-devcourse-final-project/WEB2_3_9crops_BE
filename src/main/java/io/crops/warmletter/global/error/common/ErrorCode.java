@@ -34,6 +34,7 @@ public enum ErrorCode {
     INVALID_TOKEN("AUTH-006", HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
     UNAUTHORIZED("AUTH-007", HttpStatus.UNAUTHORIZED, "인증 정보가 없습니다."),
 
+
     //Letter Error code
     LETTER_NOT_FOUND("LET-001", HttpStatus.NOT_FOUND, "해당 편지를 찾을 수 없습니다."),
 

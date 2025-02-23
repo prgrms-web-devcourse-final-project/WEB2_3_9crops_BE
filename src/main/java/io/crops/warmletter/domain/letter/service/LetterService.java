@@ -8,14 +8,12 @@ import io.crops.warmletter.domain.letter.enums.LetterType;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -57,7 +55,7 @@ public class LetterService {
 
     public List<LetterResponse> getPreviousLetters(Long letterId) {
 
-        Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new); //todo 에러처리
+        Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
         Long parentLetterId = letter.getParentLetterId(); //답장하는 편지의 부모 id
 
         List<Letter> lettersByParentId = letterRepository.findLettersByParentLetterId(parentLetterId); //부모아이디로 편지 찾기

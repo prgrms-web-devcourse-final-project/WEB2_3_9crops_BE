@@ -32,6 +32,4 @@ public class ShareProposalLetter extends BaseEntity {
         this.letterId = letterId;
     }
 
-
-
 }

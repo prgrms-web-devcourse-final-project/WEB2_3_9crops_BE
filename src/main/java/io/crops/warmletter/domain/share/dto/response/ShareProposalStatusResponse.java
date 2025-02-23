@@ -1,11 +1,12 @@
 package io.crops.warmletter.domain.share.dto.response;
 
 import io.crops.warmletter.domain.share.enums.ProposalStatus;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class ShareProposalStatusResponse {
     private Long shareProposalId;

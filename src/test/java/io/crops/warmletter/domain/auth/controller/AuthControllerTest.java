@@ -42,15 +42,18 @@ class AuthControllerTest {
     @Test
     @DisplayName("토큰 재발급 - 성공")
     void reissueToken_Success() throws Exception {
+        String bearerToken = "Bearer valid.access.token";  // Bearer 포함
+        String accessToken = "valid.access.token";
         String refreshToken = "valid.refresh.token";
         String newAccessToken = "new.access.token";
         String newRefreshToken = "new.refresh.token";
         TokenResponse tokenResponse = new TokenResponse(newAccessToken, newRefreshToken);
 
-        when(authService.reissue(eq(refreshToken), any(HttpServletResponse.class)))
+        when(authService.reissue(eq(accessToken), eq(refreshToken), any(HttpServletResponse.class)))
                 .thenReturn(tokenResponse);
 
         mockMvc.perform(post("/api/reissue")
+                        .header("Authorization", bearerToken)
                         .cookie(new Cookie("refresh_token", refreshToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accessToken").value(newAccessToken))
@@ -61,10 +64,30 @@ class AuthControllerTest {
     @Test
     @DisplayName("토큰 재발급 - 실패 (리프레시 토큰 없음)")
     void reissueToken_NoRefreshToken() throws Exception {
-        when(authService.reissue(isNull(), any(HttpServletResponse.class)))
+        String bearerToken = "Bearer valid.access.token";
+
+        mockMvc.perform(post("/api/reissue")
+                        .header("Authorization", bearerToken))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTH-006"))
+                .andExpect(jsonPath("$.message").value("유효하지 않은 토큰입니다."))
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    @DisplayName("토큰 재발급 - 실패 (유효하지 않은 리프레시 토큰)")
+    void reissueToken_InvalidRefreshToken() throws Exception {
+        String bearerToken = "Bearer valid.access.token";
+        String accessToken = "valid.access.token";  // Bearer 제거된 버전
+        String invalidRefreshToken = "invalid.refresh.token";
+
+        // refreshToken, accessToken 순서로 파라미터 전달
+        when(authService.reissue(eq(accessToken), eq(invalidRefreshToken), any(HttpServletResponse.class)))
                 .thenThrow(new InvalidRefreshTokenException());
 
-        mockMvc.perform(post("/api/reissue"))
+        mockMvc.perform(post("/api/reissue")
+                        .header("Authorization", bearerToken)
+                        .cookie(new Cookie("refresh_token", invalidRefreshToken)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("AUTH-004"))
                 .andExpect(jsonPath("$.message").value("유효하지 않은 리프레시 토큰입니다."))
@@ -72,17 +95,32 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("토큰 재발급 - 실패 (유효하지 않은 리프레시 토큰)")
-    void reissueToken_InvalidRefreshToken() throws Exception {
-        String invalidRefreshToken = "invalid.refresh.token";
-        when(authService.reissue(eq(invalidRefreshToken), any(HttpServletResponse.class)))
-                .thenThrow(new InvalidRefreshTokenException());
+    @DisplayName("토큰 재발급 - 실패 (잘못된 Bearer 토큰 형식)")
+    void reissueToken_InvalidBearerFormat() throws Exception {
+        String invalidBearerToken = "Invalid valid.access.token";  // "Bearer " 대신 "Invalid "
+        String refreshToken = "valid.refresh.token";
 
         mockMvc.perform(post("/api/reissue")
-                        .cookie(new Cookie("refresh_token", invalidRefreshToken)))
+                        .header("Authorization", invalidBearerToken)
+                        .cookie(new Cookie("refresh_token", refreshToken)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("AUTH-004"))
-                .andExpect(jsonPath("$.message").value("유효하지 않은 리프레시 토큰입니다."))
+                .andExpect(jsonPath("$.code").value("AUTH-005"))
+                .andExpect(jsonPath("$.message").value("유효하지 않은 엑세스 토큰입니다."))
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    @DisplayName("토큰 재발급 - 실패 (Bearer 접두어 없음)")
+    void reissueToken_NoBearerPrefix() throws Exception {
+        String tokenWithoutBearer = "valid.access.token";  // Bearer 접두어 없음
+        String refreshToken = "valid.refresh.token";
+
+        mockMvc.perform(post("/api/reissue")
+                        .header("Authorization", tokenWithoutBearer)
+                        .cookie(new Cookie("refresh_token", refreshToken)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTH-005"))
+                .andExpect(jsonPath("$.message").value("유효하지 않은 엑세스 토큰입니다."))
                 .andExpect(jsonPath("$.timestamp").exists());
     }
 

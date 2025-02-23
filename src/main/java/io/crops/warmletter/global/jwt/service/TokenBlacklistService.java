@@ -25,7 +25,7 @@ public class TokenBlacklistService {
         );
 
         // Refresh 토큰 삭제
-        redisTemplate.delete("refresh_token:" + jwtTokenProvider.getEmail(refreshToken));
+        redisTemplate.delete("refresh_token:" + jwtTokenProvider.getSocialUniqueId(refreshToken));
     }
 
     // 블랙리스트에 등록된 Access 토큰인지

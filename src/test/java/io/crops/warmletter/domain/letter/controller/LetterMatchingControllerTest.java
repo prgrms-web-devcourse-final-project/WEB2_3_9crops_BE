@@ -40,7 +40,7 @@ class LetterMatchingControllerTest {
     @DisplayName("GET /api/random/{category} 랜덤 편지 리스트 확인")
     void getRandomLetter() throws Exception {
         //given
-        String category = "CONSOLATION";
+        Category category = Category.CELEBRATION;
         List<RandomLetterResponse> randomLetters = List.of(
                 RandomLetterResponse.builder()
                         .letterId(1L)
@@ -71,7 +71,7 @@ class LetterMatchingControllerTest {
                 .andExpect(jsonPath("$.data[0].letterId").value(1L))
                 .andExpect(jsonPath("$.data[0].content").value("편지 내용 1"))
                 .andExpect(jsonPath("$.data[0].zipCode").value("1A2A3"))
-                .andExpect(jsonPath("$.data[0].category").value(category))
+                .andExpect(jsonPath("$.data[0].category").value("CONSOLATION"))
                 .andExpect(jsonPath("$.message").value("랜덤편지 조회 완료"))
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andDo(print());

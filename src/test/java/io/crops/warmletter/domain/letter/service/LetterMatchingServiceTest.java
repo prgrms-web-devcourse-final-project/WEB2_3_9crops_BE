@@ -14,8 +14,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import static org.mockito.Mockito.when;
@@ -28,9 +31,6 @@ class LetterMatchingServiceTest {
     @Mock
     private LetterRepository letterRepository;
 
-    @Mock
-    private MemberRepository memberRepository;
-
     @InjectMocks
     private LetterMatchingService letterMatchingService;
 
@@ -38,7 +38,7 @@ class LetterMatchingServiceTest {
     @Test
     @DisplayName("랜덤 편지 리스트 확인 - 카테고리가 있을 경우")
     void find_RandomLetters_WithCategory() {
-        String category = "CONSOLATION";
+        Category category = Category.CELEBRATION;
 
         // 10번 회원이 있고
         Member member = Member.builder()
@@ -55,9 +55,20 @@ class LetterMatchingServiceTest {
                 .writerId(10L)
                 .build();
 
+        RandomLetterResponse dto = RandomLetterResponse.builder()
+                .letterId(1L)
+                .content("내용입니닷")
+                .zipCode("12345")
+                .category(Category.CONSOLATION)
+                .paperType(PaperType.BASIC)
+                .fontType(FontType.KYOBO)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        Pageable pageable = PageRequest.of(0, 5);
+
         //조회 시 편지
-        when(letterRepository.findRandomLettersByCategory(category, 5)).thenReturn(List.of(letter));
-        when(memberRepository.findById(10L)).thenReturn(Optional.of(member));
+        when(letterRepository.findRandomLettersByCategory(category, pageable)).thenReturn(List.of(dto));
 
         //when
         List<RandomLetterResponse> responses = letterMatchingService.findRandomLetters(category);
@@ -75,7 +86,7 @@ class LetterMatchingServiceTest {
     @Test
     @DisplayName("findRandomLetters - 카테고리 null 시 전체 랜덤 편지 5개 조회 성공")
     void find_RandomLetters_WithNullCategory() {
-        String category = "";
+        Category category = null;
 
         // 10번 회원이 있고
         Member member = Member.builder()
@@ -92,9 +103,20 @@ class LetterMatchingServiceTest {
                 .writerId(10L)
                 .build();
 
+        Pageable pageable = PageRequest.of(0, 5);
+
+        RandomLetterResponse dto = RandomLetterResponse.builder()
+                .letterId(1L)
+                .content("내용입니닷")
+                .zipCode("12345")
+                .category(Category.ETC)
+                .paperType(PaperType.BASIC)
+                .fontType(FontType.KYOBO)
+                .createdAt(LocalDateTime.now())
+                .build();
+
         //조회 시 편지
-        when(letterRepository.findRandomLetters(5)).thenReturn(List.of(letter));
-        when(memberRepository.findById(10L)).thenReturn(Optional.of(member));
+        when(letterRepository.findRandomLettersByCategory(null , pageable)).thenReturn(List.of(dto));
 
         List<RandomLetterResponse> responses = letterMatchingService.findRandomLetters(category);
         RandomLetterResponse response = responses.get(0);

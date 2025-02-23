@@ -24,7 +24,7 @@ public class LetterMatchingService {
     public List<RandomLetterResponse> findRandomLetters(String category) {
         List<Letter> letters;
 
-        if(category == null){ //전체 조회 시
+        if(category == null || category.isEmpty()){ //전체 조회 시
             letters = letterRepository.findRandomLetters(5);
         }else { //카테고리로 조회 시
             letters = letterRepository.findRandomLettersByCategory(category, 5);

@@ -26,6 +26,9 @@ public class SharePostLike extends BaseEntity {
     @Column(nullable = false)
     private Long memberId;
 
+    @Column(nullable = false)
+    private boolean isLiked;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface EventPostRepository extends JpaRepository<EventPost, Long>{
     Optional<EventPost> findByIsUsed(boolean isUsed);
+
+    boolean existsByIsUsedTrue();
 }

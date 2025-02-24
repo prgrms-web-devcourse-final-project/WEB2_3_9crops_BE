@@ -28,4 +28,8 @@ public class EventPost extends BaseEntity {
     public void softDelete(){
         this.isUsed = false;
     }
+
+    public void isUsedChange(Boolean isUsed){
+        this.isUsed = isUsed;
+    }
 }

@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class SharePostLikeRequest {
 
-    private Long sharePostId;
     private Long memberId;
 
 }

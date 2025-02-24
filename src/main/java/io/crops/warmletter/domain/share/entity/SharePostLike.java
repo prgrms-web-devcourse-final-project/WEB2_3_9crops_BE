@@ -1,14 +1,11 @@
 package io.crops.warmletter.domain.share.entity;
 
 import io.crops.warmletter.global.entity.BaseEntity;
-import io.crops.warmletter.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
@@ -43,6 +40,5 @@ public class SharePostLike extends BaseEntity {
 
     public void updateLikeStatus(boolean isLiked) {
         this.isLiked = isLiked;
-        this.updatedAt = LocalDateTime.now();
     }
 }

@@ -67,8 +67,6 @@ public class ShareProposalService {
                 .build();
     }
 
-    // reject와 approve를 if문으로 분기하여 구현할 수 있긴 하지만,
-    // 기능 추가나 후의 추가적인 처리 요청등 부가적인 로직이 추가될 경우 생각해서 별도의 함수로 생성하였음.
     @Transactional
     public ShareProposalStatusResponse rejectShareProposal(Long shareProposalId) {
         ShareProposal shareProposal = shareProposalRepository.findById(shareProposalId)

@@ -3,6 +3,7 @@ package io.crops.warmletter.domain.share.service;
 import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.entity.SharePost;
+import io.crops.warmletter.domain.share.exception.SharePostNotFoundException;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
@@ -20,7 +21,6 @@ public class SharePostService {
 
     @Transactional(readOnly = true)
     public Page<SharePostResponse> getAllPosts(Pageable pageable) {
-        // 0보다 작은 페이지를 요청한 경우
         if (pageable.getPageNumber() < 0) {
             throw new BusinessException(ErrorCode.INVALID_PAGE_REQUEST);
         }
@@ -31,7 +31,7 @@ public class SharePostService {
     @Transactional(readOnly = true)
     public SharePostDetailResponse getPostDetail(Long sharePostId) {
         return sharePostRepository.findDetailById(sharePostId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.SHARE_POST_NOT_FOUND));
+                .orElseThrow(() -> new SharePostNotFoundException());
     }
 
 

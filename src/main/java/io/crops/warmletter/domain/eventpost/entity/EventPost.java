@@ -16,7 +16,6 @@ public class EventPost extends BaseEntity {
     @Column(nullable = false)
     private String title;
 
-    @Column(unique = true)
     private Boolean isUsed;
 
     @Builder
@@ -27,5 +26,9 @@ public class EventPost extends BaseEntity {
 
     public void softDelete(){
         this.isUsed = false;
+    }
+
+    public void isUsedChange(Boolean isUsed){
+        this.isUsed = isUsed;
     }
 }

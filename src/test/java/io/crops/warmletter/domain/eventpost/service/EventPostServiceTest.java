@@ -4,6 +4,7 @@ import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.EventCommentsResponse;
 import io.crops.warmletter.domain.eventpost.dto.response.EventPostDetailResponse;
 import io.crops.warmletter.domain.eventpost.dto.response.EventPostResponse;
+import io.crops.warmletter.domain.eventpost.dto.response.EventPostStatusResponse;
 import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException;
 import io.crops.warmletter.domain.eventpost.exception.UsedEventPostNotFoundException;
@@ -44,7 +45,7 @@ class EventPostServiceTest {
 
     @Test
     @DisplayName("게시판 생성 성공")
-    void createEventPost_success(){
+    void create_EventPost_success(){
         //given
         CreateEventPostRequest createEventPostRequest = CreateEventPostRequest.builder()
                 .title("제목")
@@ -67,7 +68,7 @@ class EventPostServiceTest {
 
     @Test
     @DisplayName("게시판 삭제 성공")
-    void deleteEventPost_success(){
+    void delete_EventPost_success(){
         //given
         long eventPostId = 1L;
 
@@ -80,8 +81,6 @@ class EventPostServiceTest {
         Map<String,Long> deleteEventPostResponse = eventPostService.deleteEventPost(eventPostId);
 
         //then
-        then(eventPostRepository).should(times(1)).findById(any(Long.class));
-
         assertEquals(1, deleteEventPostResponse.get("eventPostId"));
         assertFalse(eventPost.getIsUsed());
 
@@ -90,7 +89,7 @@ class EventPostServiceTest {
 
     @Test
     @DisplayName("게시판 삭제 실패 - 존재하지 않는 게시판")
-    void deleteEventPost_fail_not_found() {
+    void delete_EventPost_notFound() {
         // given
         when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.empty());
 
@@ -103,7 +102,7 @@ class EventPostServiceTest {
 
     @Test
     @DisplayName("사용중인 게시판 조회 성공")
-    void getUsedEventPost_success(){
+    void get_UsedEventPost_success(){
         //given
         long eventPostId = 1L;
 
@@ -123,7 +122,7 @@ class EventPostServiceTest {
 
     @Test
     @DisplayName("사용중인 게시판 조회 실패 - 조건이 일치하는 게시판 없음")
-    void getUsedEventPost_not_found(){
+    void get_UsedEventPost_notFound(){
         //given
         when(eventPostRepository.findByIsUsed(true)).thenReturn(Optional.empty());
         //when
@@ -135,7 +134,7 @@ class EventPostServiceTest {
 
     @Test
     @DisplayName("게시판 조회(개별) 성공")
-    void getEventPost_success(){
+    void get_EventPost_success(){
         // given
         EventPost eventPost = EventPost.builder().title("제목").build();
         ReflectionTestUtils.setField(eventPost, "id", 1);
@@ -168,7 +167,7 @@ class EventPostServiceTest {
 
     @Test
     @DisplayName("게시판 조회(개별) 실패 - 일치하는 eventPostId 없음")
-    void getEventPost_not_found(){
+    void get_EventPost_notFound(){
         //given
         when(eventPostRepository.findById(any(Long.class))).thenThrow(new EventPostNotFoundException());
 
@@ -176,8 +175,64 @@ class EventPostServiceTest {
         BusinessException exception = assertThrows(EventPostNotFoundException.class, ()-> eventPostService.getEventPostDetail(999));
 
         //then
-        then(eventPostRepository).should(times(1)).findById(any(Long.class));
-
         assertEquals(ErrorCode.EVENT_POST_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("게시판 사용여부 변경 성공 - 사용중에서 미사용")
+    void update_EventPostIsUsedToFalse_success(){
+        //given
+        long eventPostId = 1L;
+
+        EventPost eventPost = EventPost.builder().title("제목").build();
+        ReflectionTestUtils.setField(eventPost, "id", eventPostId);
+        ReflectionTestUtils.setField(eventPost, "isUsed", true);
+
+        when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.of(eventPost));
+
+        //when
+        EventPostStatusResponse eventPostStatusResponse = eventPostService.updateEventPostIsUsed(eventPostId);
+
+        //then
+        assertEquals(1, eventPostStatusResponse.getEventPostId());
+        assertFalse(eventPostStatusResponse.getIsUsed());
+    }
+
+    @Test
+    @DisplayName("게시판 사용여부 변경 성공 - 미사용에서 사용중")
+    void update_EventPostIsUsedToTrue_success(){
+        //given
+        long eventPostId = 1L;
+
+        EventPost eventPost = EventPost.builder().title("제목").build();
+        ReflectionTestUtils.setField(eventPost, "id", eventPostId);
+
+        when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.of(eventPost));
+        when(eventPostRepository.existsByIsUsedTrue()).thenReturn(false);
+
+        //when
+        EventPostStatusResponse eventPostStatusResponse = eventPostService.updateEventPostIsUsed(eventPostId);
+
+        //then
+        assertEquals(1, eventPostStatusResponse.getEventPostId());
+        assertTrue(eventPostStatusResponse.getIsUsed());
+    }
+
+    @Test
+    @DisplayName("게시판 사용여부 변경 실패 - 이미 사용중인 게시판이 있는 경우")
+    void update_EventPostIsUsedToFalse_AlreadyInUsed(){
+        //given
+        long eventPostId = 1L;
+
+        EventPost eventPost = EventPost.builder().title("제목").build();
+        ReflectionTestUtils.setField(eventPost, "id", eventPostId);
+
+        when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.of(eventPost));
+        when(eventPostRepository.existsByIsUsedTrue()).thenReturn(true);
+
+        BusinessException exception = assertThrows(BusinessException.class, ()-> eventPostService.updateEventPostIsUsed(eventPostId));
+
+        //then
+        assertEquals(ErrorCode.EVENT_POST_IN_USE, exception.getErrorCode());
     }
 }

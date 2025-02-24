@@ -28,7 +28,7 @@ public class EventCommentService {
 
         EventComment eventComment = EventComment.builder()
                 .eventPostId(eventPostId)
-                .writerId(1L)   // TODO: 실제 인증 정보를 사용하도록 변경
+                .writerId(1L)   // TODO: 실제 사용자 ID를 사용하도록 변경
                 .content(createEventCommentRequest.getContent())
                 .build();
 
@@ -41,7 +41,13 @@ public class EventCommentService {
     }
 
     public Map<String,Long> deleteEventComment(long eventCommentId) {
+        // TODO : 조회 시 실제 사용자 ID도 AND 하여 조회
         EventComment eventComment = eventCommentRepository.findById(eventCommentId).orElseThrow(EventCommentNotFoundException::new);
+
+        if(!eventComment.isActive()){
+            throw new EventCommentNotFoundException();
+        }
+
         eventComment.softDelete();
         return Map.of("commentId",eventComment.getId());
     }

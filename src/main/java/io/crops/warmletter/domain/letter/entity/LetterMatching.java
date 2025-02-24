@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "letter_matchings")
 public class LetterMatching extends BaseTimeEntity {
 
@@ -30,8 +30,6 @@ public class LetterMatching extends BaseTimeEntity {
 
     private LocalDateTime matchedAt;
 
-    private LocalDateTime replyDeadLine;
-
 
     @Builder
     public LetterMatching(Long letterId, Long firstMemberId, Long secondMemberId) {
@@ -40,6 +38,5 @@ public class LetterMatching extends BaseTimeEntity {
         this.secondMemberId = secondMemberId;
         this.isActive = true; //매칭 테이블 생성 시 바로 활성
         this.matchedAt = LocalDateTime.now(); //매칭된 시간
-        this.replyDeadLine = LocalDateTime.now().plusDays(1); //첫 답장 제한시간
     }
 }

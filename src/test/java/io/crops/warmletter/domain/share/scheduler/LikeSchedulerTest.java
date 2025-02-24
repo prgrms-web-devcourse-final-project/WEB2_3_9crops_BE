@@ -1,7 +1,7 @@
 package io.crops.warmletter.domain.share.scheduler;
 
 import io.crops.warmletter.domain.share.entity.SharePostLike;
-import io.crops.warmletter.domain.share.redis.PostLikeRedisManager;
+import io.crops.warmletter.domain.share.cache.PostLikeRedisManager;
 import io.crops.warmletter.domain.share.repository.SharePostLikeRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

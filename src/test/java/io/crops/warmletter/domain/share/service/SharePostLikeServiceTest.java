@@ -1,6 +1,6 @@
 package io.crops.warmletter.domain.share.service;
 
-import io.crops.warmletter.domain.share.redis.PostLikeRedisManager;
+import io.crops.warmletter.domain.share.cache.PostLikeRedisManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

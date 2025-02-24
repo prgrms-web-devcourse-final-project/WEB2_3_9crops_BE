@@ -18,7 +18,7 @@ public class ShareProposalController {
 
     private final ShareProposalService shareProposalService;
 
-    @PostMapping("/share-proposal")
+    @PostMapping("/share-proposals")
     public ResponseEntity<BaseResponse<ShareProposalResponse>> requestShareProposal(
             @RequestBody ShareProposalRequest request) {
         return ResponseEntity.status(HttpStatus.OK)

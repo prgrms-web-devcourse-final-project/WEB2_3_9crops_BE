@@ -47,7 +47,7 @@ public class PostLikeRedisManager {
 
     public void clearCache() {
         Set<String> keys = redisTemplate.keys("post:*:like:memberId:*");
-        if (!keys.isEmpty()) {
+        if (keys != null && !keys.isEmpty()) {
             redisTemplate.delete(keys);
         }
     }

@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.letter.service;
 
+import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
@@ -7,6 +8,8 @@ import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.*;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
+import io.crops.warmletter.domain.member.entity.Member;
+import io.crops.warmletter.domain.member.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,7 +19,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,7 +35,13 @@ class LetterServiceTest {
     private LetterRepository letterRepository;
 
     @Mock
-    private BadWordService  badWordService;
+    private BadWordService badWordService;
+
+    @Mock
+    private MemberRepository memberRepository;
+
+    @Mock
+    private AuthFacade authFacade;
 
     @InjectMocks
     private LetterService letterService;
@@ -103,6 +111,7 @@ class LetterServiceTest {
     void writeRandomLetter_success() {
         // given: repository.save() 호출 시 미리 준비한 Letter 객체를 반환하도록 설정
         when(letterRepository.save(any(Letter.class))).thenReturn(savedRandomLetter);
+        when(authFacade.getZipCode()).thenReturn("12345");
 
         // when: 서비스 메서드 호출
         LetterResponse response = letterService.createLetter(randomLetterRequest);
@@ -116,6 +125,7 @@ class LetterServiceTest {
                 () -> assertEquals(PaperType.COMFORT, response.getPaperType()),
                 () -> assertEquals(FontType.HIMCHAN, response.getFontType()),
                 () -> assertEquals(1L, response.getWriterId()),
+                () -> assertEquals("12345", authFacade.getZipCode()),
                 () -> assertNull(response.getReceiverId()),
                 () -> assertNull(response.getParentLetterId()),
                 () -> assertEquals(DeliveryStatus.IN_DELIVERY, response.getDeliveryStatus()),
@@ -131,6 +141,9 @@ class LetterServiceTest {
     void writeDirectLetter_success() {
         // given: repository.save()가 답장 편지 객체를 반환하도록 설정, save호출
         when(letterRepository.save(any(Letter.class))).thenReturn(savedDirectLetter);
+        //현재 로그인한 사용자 ID 및 ZipCode 설정
+        when(authFacade.getCurrentUserId()).thenReturn(1L);
+        when(authFacade.getZipCode()).thenReturn("12345");
 
         // when: 서비스 메서드 호출
         LetterResponse response = letterService.createLetter(directLetterRequest);
@@ -146,6 +159,7 @@ class LetterServiceTest {
                 () -> assertEquals(1L, response.getWriterId()),
                 () -> assertEquals(3L, response.getReceiverId()),
                 () -> assertEquals(5L, response.getParentLetterId()),
+                () -> assertEquals("12345", authFacade.getZipCode()),
                 () -> assertEquals(DeliveryStatus.IN_DELIVERY, response.getDeliveryStatus()),
                 () -> assertNotNull(response.getDeliveryStartedAt()),
                 () -> assertNotNull(response.getDeliveryCompletedAt())
@@ -231,9 +245,16 @@ class LetterServiceTest {
 
         List<Letter> previousLetters = List.of(previousLetter4);
 
-        // repository 동작 모의: letterId에 해당하는 편지와, 부모 ID로 이전 편지 목록 조회
+        //zipCode 추가로 맴버 추가
+        Member member = Member.builder()
+                .zipCode("12345")
+                .build();
+        ReflectionTestUtils.setField(member, "id", 1L); //아이디
+
+        // repository: letterId에 해당하는 편지와, 부모 ID로 이전 편지 목록 조회
         when(letterRepository.findById(previousLetter4.getId())).thenReturn(Optional.of(previousLetter4));
         when(letterRepository.findLettersByParentLetterId(previousLetter4.getParentLetterId())).thenReturn(previousLetters);
+        when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
 
         // when
         List<LetterResponse> responses = letterService.getPreviousLetters(previousLetter4.getId());
@@ -243,12 +264,14 @@ class LetterServiceTest {
                 () -> assertNotNull(responses),
                 () -> assertEquals(1, responses.size()),
                 () -> assertEquals("A사용자 2번 편지에 대한 답장", responses.get(0).getTitle()),
-                () -> assertEquals("내용 2", responses.get(0).getContent())
+                () -> assertEquals("내용 2", responses.get(0).getContent()),
+                () -> assertEquals("12345", member.getZipCode())
         );
 
         // repository의 각 메서드가 올바른 인자로 호출되었는지 검증
         verify(letterRepository).findById(previousLetter4.getId());
         verify(letterRepository).findLettersByParentLetterId(previousLetter4.getParentLetterId());
+        verify(memberRepository).findById(1L);
     }
 
 
@@ -306,6 +329,13 @@ class LetterServiceTest {
 
         when(letterRepository.findById(savedRandomLetter.getId())).thenReturn(Optional.of(savedRandomLetter));
 
+        Member member = Member.builder()
+                .zipCode("12345")
+                .build();
+        // savedRandomLetter의 writerId와 동일한 값으로 설정 (예를 들어 1L)
+        ReflectionTestUtils.setField(member, "id", savedRandomLetter.getWriterId());
+        when(memberRepository.findById(savedRandomLetter.getWriterId())).thenReturn(Optional.of(member));
+
         LetterResponse response = letterService.getLetterById(savedRandomLetter.getId());
 
         // then: 반환된 응답 DTO 검증
@@ -317,7 +347,10 @@ class LetterServiceTest {
                 () -> assertEquals(PaperType.COMFORT, response.getPaperType()),
                 () -> assertEquals(FontType.HIMCHAN, response.getFontType())
         );
+
         //verify 메서드로 letterRepository.save() 메서드가 정확히 1번 호출되었는지 확인
         verify(letterRepository).findById(savedRandomLetter.getId());
+        verify(memberRepository).findById(savedRandomLetter.getWriterId());
+
     }
 }

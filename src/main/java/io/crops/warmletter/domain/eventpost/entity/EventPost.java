@@ -1,7 +1,6 @@
 package io.crops.warmletter.domain.eventpost.entity;
 
 import io.crops.warmletter.global.entity.BaseEntity;
-import io.crops.warmletter.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,6 +13,7 @@ public class EventPost extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @Column(nullable = false)
     private String title;
 
     private Boolean isUsed;
@@ -26,5 +26,9 @@ public class EventPost extends BaseEntity {
 
     public void softDelete(){
         this.isUsed = false;
+    }
+
+    public void isUsedChange(Boolean isUsed){
+        this.isUsed = isUsed;
     }
 }

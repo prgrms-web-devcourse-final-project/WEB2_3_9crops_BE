@@ -7,6 +7,7 @@ import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.entity.SocialAccount;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.domain.member.enums.SocialProvider;
+import io.crops.warmletter.domain.member.exception.DeletedMemberException;
 import io.crops.warmletter.domain.member.exception.DuplicateZipCodeException;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
@@ -218,5 +219,94 @@ class MemberServiceTest {
 
         verify(authFacade).getCurrentUserId();
         verify(memberRepository).findMeById(memberId);
+    }
+
+    @DisplayName("회원 탈퇴 오류 - 해당 사용자 존재하지 않음")
+    @Test
+    void deleteMe_WithInvalidMemberId_ShouldThrowException() throws Exception {
+        // given
+        String accessToken = "accessToken";
+        String refreshToken = "refreshToken";
+        Long invalidMemberId = 999L;
+        when(authFacade.getCurrentUserId()).thenReturn(invalidMemberId);
+        when(memberRepository.findById(invalidMemberId))
+                .thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(MemberNotFoundException.class,
+                () -> memberService.deleteMe(accessToken, refreshToken, response));
+
+        verify(authFacade).getCurrentUserId();
+        verify(memberRepository).findById(invalidMemberId);
+    }
+
+    @DisplayName("회원 탈퇴 오류 - 이미 탈퇴한 사용자")
+    @Test
+    void deleteMe_WithDeletedMemberId_ShouldThrowException() throws Exception {
+        // given
+        String accessToken = "accessToken";
+        String refreshToken = "refreshToken";
+        Long memberId = 1L;
+        Member member = Member.builder()
+                .socialUniqueId("GOOGLE_12345")
+                .zipCode("1A2AC")
+                .email("test@test.com")
+                .temperature(36.5f)
+                .role(Role.USER)
+                .build();
+
+        // Reflection으로 id 설정
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, memberId);
+        Field isActiveField = Member.class.getDeclaredField("isActive");
+        isActiveField.setAccessible(true);
+        isActiveField.set(member, false);
+
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+        when(memberRepository.findById(memberId))
+                .thenReturn(Optional.of(member));
+
+        // when & then
+        assertThrows(DeletedMemberException.class,
+                () -> memberService.deleteMe(accessToken, refreshToken, response));
+
+        verify(authFacade).getCurrentUserId();
+        verify(memberRepository).findById(memberId);
+    }
+
+    @DisplayName("회원 탈퇴 성공")
+    @Test
+    void deleteMe_Success() throws Exception {
+        //given
+        String accessToken = "accessToken";
+        String refreshToken = "refreshToken";
+        Long memberId = 1L;
+        Member member = Member.builder()
+                .socialUniqueId("GOOGLE_12345")
+                .zipCode("1A2AC")
+                .email("test@test.com")
+                .temperature(36.5f)
+                .role(Role.USER)
+                .build();
+
+        // Reflection으로 id 설정
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, memberId);
+
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+        when(memberRepository.findById(memberId))
+                .thenReturn(Optional.of(member));
+
+        //when
+        memberService.deleteMe(accessToken, refreshToken, response);
+
+        //then
+        assertThat(member.isActive()).isFalse();
+
+        verify(authFacade).getCurrentUserId();
+        verify(memberRepository).findById(memberId);
+        verify(authFacade).logout(accessToken, refreshToken, response);
     }
 }

@@ -28,6 +28,8 @@ public class LetterResponse {
     //상위 편지 id -> null이면 첫편지
     private final Long parentLetterId; //상위 편지 id
 
+    private final String zipCode;
+
     private final String title;
 
     private final String content;
@@ -46,12 +48,13 @@ public class LetterResponse {
 
 
     //공통 변환
-    public static LetterResponse fromEntity(Letter letter) {
+    public static LetterResponse fromEntity(Letter letter, String zipCode) {
         return LetterResponse.builder()
                 .letterId(letter.getId())
                 .writerId(letter.getWriterId())
                 .receiverId(letter.getReceiverId())
                 .parentLetterId(letter.getParentLetterId())
+                .zipCode(zipCode)
                 .title(letter.getTitle())
                 .content(letter.getContent())
                 .category(letter.getCategory())
@@ -64,22 +67,23 @@ public class LetterResponse {
     }
 
     //이전편지 변환
-    public static LetterResponse fromEntityForPreviousLetters(Letter letter) {
+    public static LetterResponse fromEntityForPreviousLetters(Letter letter, String zipCode) {
         return LetterResponse.builder()
                 .letterId(letter.getId())
+                .zipCode(zipCode)
                 .title(letter.getTitle())
                 .content(letter.getContent())
-                .paperType(letter.getPaperType())
-                .fontType(letter.getFontType())
                 .build();
     }
 
     //단건조회에 사용
-    public static LetterResponse fromEntityForDetailView(Letter letter) {
+    public static LetterResponse fromEntityForDetailView(Letter letter, String zipCode) {
         return LetterResponse.builder()
                 .letterId(letter.getId())
+                .zipCode(zipCode)
                 .title(letter.getTitle())
                 .content(letter.getContent())
+                .category(letter.getCategory())
                 .paperType(letter.getPaperType())
                 .fontType(letter.getFontType())
                 .build();

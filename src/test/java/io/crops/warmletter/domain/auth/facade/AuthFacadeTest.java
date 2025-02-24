@@ -3,6 +3,7 @@ package io.crops.warmletter.domain.auth.facade;
 import io.crops.warmletter.domain.auth.service.AuthService;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.global.oauth.entity.UserPrincipal;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +24,9 @@ class AuthFacadeTest {
 
     @Mock
     private AuthService authService;
+
+    @Mock
+    private HttpServletResponse response;
 
     @DisplayName("authService getCurrentUser 호출 성공")
     @Test
@@ -73,5 +77,19 @@ class AuthFacadeTest {
         // then
         assertThat(result).isEqualTo(expectedZipCode);
         verify(authService).getZipCode();
+    }
+
+    @DisplayName("authService logout 호출 성공")
+    @Test
+    void logout_Success() {
+        //given
+        String accessToken = "accessToken";
+        String refreshToken = "refreshToken";
+
+        //when
+        authService.logout(accessToken, refreshToken, response);
+
+        //then
+        verify(authService).logout(accessToken, refreshToken, response);
     }
 }

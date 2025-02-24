@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +43,7 @@ public class ReportService {
         Report.ReportBuilder builder = Report.builder()
                 .memberId(memberId)  // 고정 신고자 ID 사용
                 .reasonType(request.getReasonType())
-                .reason(request.getReason())
+                .reason(Optional.ofNullable(request.getReason()).orElse(""))
                 .reportStartedAt(LocalDateTime.now())
                 .reportStatus(ReportStatus.PENDING);
 

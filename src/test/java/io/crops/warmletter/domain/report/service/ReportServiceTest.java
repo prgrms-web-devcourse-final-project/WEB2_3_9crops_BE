@@ -41,7 +41,7 @@ class ReportServiceTest {
 
 
     @Test
-    @DisplayName("✅ 정상적인 신고 등록 (LETTER)")
+    @DisplayName("정상적인 신고 등록 (LETTER)")
     void createReport_Success_Letter() {
         CreateReportRequest request = new CreateReportRequest(ReportType.LETTER, ReasonType.ABUSE, "부적절한 내용", 1L, null, null);
         Report report = Report.builder()
@@ -69,7 +69,7 @@ class ReportServiceTest {
     }
 
     @Test
-    @DisplayName("✅ 정상적인 신고 등록 (SHARE_POST)")
+    @DisplayName("정상적인 신고 등록 (SHARE_POST)")
     void createReport_Success_SharePost() {
         CreateReportRequest request = new CreateReportRequest(ReportType.SHARE_POST, ReasonType.ETC, "스팸 게시물", null, 2L, null);
         Report report = Report.builder()
@@ -96,7 +96,7 @@ class ReportServiceTest {
     }
 
     @Test
-    @DisplayName("✅ 정상적인 신고 등록 (EVENT_COMMENT)")
+    @DisplayName("정상적인 신고 등록 (EVENT_COMMENT)")
     void createReport_Success_EventComment() {
         CreateReportRequest request = new CreateReportRequest(ReportType.EVENT_COMMENT, ReasonType.HARASSMENT, "혐오 발언", null, null, 3L);
         Report report = Report.builder()
@@ -123,7 +123,7 @@ class ReportServiceTest {
     }
 
     @Test
-    @DisplayName("❌ 예외 - 존재하지 않는 Letter 신고")
+    @DisplayName("예외 - 존재하지 않는 Letter 신고")
     void createReport_LetterNotFound_ThrowsException() {
         CreateReportRequest request = new CreateReportRequest(ReportType.LETTER, ReasonType.ABUSE, "부적절한 내용", 1L, null, null);
 
@@ -134,7 +134,7 @@ class ReportServiceTest {
     }
 
     @Test
-    @DisplayName("❌ 예외 - 중복 Letter 신고")
+    @DisplayName("예외 - 중복 Letter 신고")
     void createReport_DuplicateLetterReport_ThrowsException() {
         CreateReportRequest request = new CreateReportRequest(ReportType.LETTER, ReasonType.ABUSE, "부적절한 내용", 1L, null, null);
 
@@ -146,7 +146,7 @@ class ReportServiceTest {
     }
 
     @Test
-    @DisplayName("❌ 예외 - 유효하지 않은 신고 대상")
+    @DisplayName("예외 - 유효하지 않은 신고 대상")
     void createReport_InvalidReportTarget_ThrowsException() {
         CreateReportRequest request = new CreateReportRequest(ReportType.LETTER, ReasonType.ABUSE, "잘못된 신고", 1L, 2L, null);
 
@@ -155,7 +155,7 @@ class ReportServiceTest {
     }
 
     @Test
-    @DisplayName("❌ 예외 - 존재하지 않는 EventComment 신고")
+    @DisplayName("예외 - 존재하지 않는 EventComment 신고")
     void createReport_EventCommentNotFound_ThrowsException() {
         CreateReportRequest request = new CreateReportRequest(ReportType.EVENT_COMMENT, ReasonType.HARASSMENT, "혐오 발언", null, null, 3L);
 

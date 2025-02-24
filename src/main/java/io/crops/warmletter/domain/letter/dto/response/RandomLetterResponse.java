@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RandomLetterResponse {
-
+    //todo 보낸사람(편지쓴사람)도 같이 보내줘야 될듯????
     private final Long letterId;
 
     private final String content;

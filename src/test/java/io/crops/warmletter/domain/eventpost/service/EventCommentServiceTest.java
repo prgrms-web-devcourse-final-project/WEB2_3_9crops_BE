@@ -120,4 +120,25 @@ class EventCommentServiceTest {
         // then
         assertEquals(ErrorCode.EVENT_COMMENT_NOT_FOUND, exception.getErrorCode());
     }
+
+    @Test
+    @DisplayName("게시판 댓글 삭제 실패 - 이미 삭제한 댓글")
+    void update_EventPostIsUsedToFalse_AlreadyInUsed(){
+        //given
+        long eventCommentId = 1L;
+
+        EventComment eventComment = EventComment.builder()
+                .eventPostId(1L)
+                .writerId(1L)
+                .content("내용")
+                .build();
+        ReflectionTestUtils.setField(eventComment, "isActive", false);
+
+        when(eventCommentRepository.findById(any(Long.class))).thenReturn(Optional.of(eventComment));
+
+        BusinessException exception = assertThrows(EventCommentNotFoundException.class, ()-> eventCommentService.deleteEventComment(eventCommentId));
+
+        //then
+        assertEquals(ErrorCode.EVENT_COMMENT_NOT_FOUND, exception.getErrorCode());
+    }
 }

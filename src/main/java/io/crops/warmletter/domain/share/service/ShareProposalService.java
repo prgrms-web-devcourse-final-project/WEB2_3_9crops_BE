@@ -73,7 +73,6 @@ public class ShareProposalService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.SHARE_PROPOSAL_NOTFOUND));
 
         shareProposal.updateStatus(ProposalStatus.REJECTED);
-        // 추가적으로 거절한 사람에게 거절 이유에 대해 쓰도록 한다던지, 부가적인 기능이 필요해보임. 프론트와 얘기.
         return ShareProposalStatusResponse.builder()
                 .shareProposalId(shareProposal.getId())
                 .status(shareProposal.getStatus())

@@ -3,7 +3,6 @@ package io.crops.warmletter.domain.letter.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.domain.letter.dto.response.MailboxResponse;
 import io.crops.warmletter.domain.letter.service.MailBoxService;
-import io.crops.warmletter.global.response.BaseResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

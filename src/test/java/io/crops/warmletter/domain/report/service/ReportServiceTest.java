@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.report.service;
 
+import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.eventpost.exception.EventCommentNotFoundException;
 import io.crops.warmletter.domain.eventpost.repository.EventCommentRepository;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
@@ -34,8 +35,10 @@ class ReportServiceTest {
     @Mock private LetterRepository letterRepository;
     @Mock private SharePostRepository sharePostRepository;
     @Mock private EventCommentRepository eventCommentRepository;
+    @Mock private AuthFacade authFacade;
 
     @InjectMocks private ReportService reportService;
+
 
     @Test
     @DisplayName("✅ 정상적인 신고 등록 (LETTER)")
@@ -52,6 +55,7 @@ class ReportServiceTest {
                 .letterId(1L)
                 .build();
 
+        when(authFacade.getCurrentUserId()).thenReturn(1003L);
         when(letterRepository.existsById(1L)).thenReturn(true);
         when(reportRepository.existsByLetterId(1L)).thenReturn(false);
         when(reportRepository.save(any(Report.class))).thenReturn(report);
@@ -79,6 +83,7 @@ class ReportServiceTest {
                 .sharePostId(2L)
                 .build();
 
+        when(authFacade.getCurrentUserId()).thenReturn(1003L);
         when(sharePostRepository.existsById(2L)).thenReturn(true);
         when(reportRepository.existsBySharePostId(2L)).thenReturn(false);
         when(reportRepository.save(any(Report.class))).thenReturn(report);
@@ -105,6 +110,7 @@ class ReportServiceTest {
                 .eventCommentId(3L)
                 .build();
 
+        when(authFacade.getCurrentUserId()).thenReturn(1003L);
         when(eventCommentRepository.existsById(3L)).thenReturn(true);
         when(reportRepository.existsByEventCommentId(3L)).thenReturn(false);
         when(reportRepository.save(any(Report.class))).thenReturn(report);
@@ -121,6 +127,7 @@ class ReportServiceTest {
     void createReport_LetterNotFound_ThrowsException() {
         CreateReportRequest request = new CreateReportRequest(ReportType.LETTER, ReasonType.ABUSE, "부적절한 내용", 1L, null, null);
 
+        when(authFacade.getCurrentUserId()).thenReturn(1003L);
         when(letterRepository.existsById(1L)).thenReturn(false);
 
         assertThrows(LetterNotFoundException.class, () -> reportService.createReport(request));
@@ -131,6 +138,7 @@ class ReportServiceTest {
     void createReport_DuplicateLetterReport_ThrowsException() {
         CreateReportRequest request = new CreateReportRequest(ReportType.LETTER, ReasonType.ABUSE, "부적절한 내용", 1L, null, null);
 
+        when(authFacade.getCurrentUserId()).thenReturn(1003L);
         when(letterRepository.existsById(1L)).thenReturn(true);
         when(reportRepository.existsByLetterId(1L)).thenReturn(true);
 
@@ -142,6 +150,7 @@ class ReportServiceTest {
     void createReport_InvalidReportTarget_ThrowsException() {
         CreateReportRequest request = new CreateReportRequest(ReportType.LETTER, ReasonType.ABUSE, "잘못된 신고", 1L, 2L, null);
 
+        when(authFacade.getCurrentUserId()).thenReturn(1003L);
         assertThrows(InvalidReportRequestException.class, () -> reportService.createReport(request));
     }
 
@@ -150,6 +159,7 @@ class ReportServiceTest {
     void createReport_EventCommentNotFound_ThrowsException() {
         CreateReportRequest request = new CreateReportRequest(ReportType.EVENT_COMMENT, ReasonType.HARASSMENT, "혐오 발언", null, null, 3L);
 
+        when(authFacade.getCurrentUserId()).thenReturn(1003L);
         when(eventCommentRepository.existsById(3L)).thenReturn(false);
 
         assertThrows(EventCommentNotFoundException.class, () -> reportService.createReport(request));

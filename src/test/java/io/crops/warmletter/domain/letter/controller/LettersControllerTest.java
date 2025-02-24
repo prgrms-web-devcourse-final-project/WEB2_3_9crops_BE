@@ -246,15 +246,15 @@ class LettersControllerTest {
         lettersRepository.save(letter);
         Long letterId = letter.getId();
 
-        assertEquals(true, letter.getIsActive());
-        assertTrue(letter.getIsActive(), "편지는 기본적으로 활성 상태여야 함.");
+        assertEquals(true, letter.isActive());
+        assertTrue(letter.isActive(), "편지는 기본적으로 활성 상태여야 함.");
 
         // When: delete 메서드를 호출하여 소프트 딜리트 수행
         letterService.deleteLetter(letterId);
 
         // Then: 해당 편지를 다시 조회하면 isActive가 false로 변경되어 있어야 함
         Letter deletedLetter = lettersRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
-        assertFalse(deletedLetter.getIsActive(), "편지 삭제 후 isActive는 false.");
+        assertFalse(deletedLetter.isActive(), "편지 삭제 후 isActive는 false.");
     }
 
 }

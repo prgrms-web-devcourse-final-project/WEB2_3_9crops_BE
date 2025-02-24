@@ -44,7 +44,7 @@ public class Letter extends BaseTimeEntity {
     @Column(nullable = false)
     private LocalDateTime deliveryCompletedAt;  // 배송 도착 시간
 
-    private Boolean isRead;          // 열람 여부 (YES/NO 대신 boolean 처리)
+    private boolean isRead;          // 열람 여부 (YES/NO 대신 boolean 처리)
 
     @Enumerated(EnumType.STRING)
     private FontType fontType;
@@ -52,7 +52,7 @@ public class Letter extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private PaperType paperType;     // 편지지 유형 등(필요시 enum 정의)
 
-    private Boolean isActive;        // 활성화 여부
+    private boolean isActive;        // 활성화 여부
 
 
     //빌더에 receiverId, parentLetterId가 있으면 편지 아이디 받고, 이걸 parentLetterId 에 넣자  / 상위편지아이디가 현재 편지아이디로 넣어짐

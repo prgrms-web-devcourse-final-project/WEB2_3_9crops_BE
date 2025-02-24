@@ -127,10 +127,10 @@ class SharePostControllerTest {
                 .build();
 
         SharePostDetailResponse sharePostDetailResponse = SharePostDetailResponse.builder()
-                .id(1L)                           // id -> sharePostId
+                .sharePostId(1L)
                 .zipCode("10A32")
-                .sharePostContent("hello")                  // sharePostContent -> proposalMessage
-                .letters(Collections.singletonList(letterResponse))  // letters 추가
+                .sharePostContent("hello")
+                .letters(Collections.singletonList(letterResponse))
                 .build();
 
         when(sharePostService.getPostDetail(sharePostDetailResponse.getSharePostId()))

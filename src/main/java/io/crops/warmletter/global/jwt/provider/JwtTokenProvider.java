@@ -39,10 +39,11 @@ public class JwtTokenProvider {
     }
 
     // Access Token 생성
-    public String createAccessToken(String email, Role role, String zipCode) {
-        Claims claims = Jwts.claims().setSubject(email);
+    public String createAccessToken(String socialUniqueId, Role role, String zipCode, Long memberId) {
+        Claims claims = Jwts.claims().setSubject(socialUniqueId);
         claims.put("role", role);
         claims.put("zipCode", zipCode);
+        claims.put("memberId", memberId);
         Date now = new Date();
 
         return Jwts.builder()
@@ -93,24 +94,6 @@ public class JwtTokenProvider {
         }
     }
 
-    // 토큰에서 이메일 추출
-    public String getEmail(String token) {
-        try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-
-            return claims.getSubject();
-        } catch (ExpiredJwtException e) {
-            // 만료된 토큰이어도 subject는 추출
-            return e.getClaims().getSubject();
-        } catch (JwtException e) {
-            throw new InvalidTokenException();
-        }
-    }
-
     // 토큰의 유효성 검증
     public boolean validateToken(String token, TokenType tokenType) {
         try {
@@ -125,7 +108,7 @@ public class JwtTokenProvider {
                 String isLogout = redisTemplate.opsForValue().get("blacklist:access_token:" + token);
                 return isLogout == null;
             } else {
-                String storedToken = redisTemplate.opsForValue().get("refresh_token:" + getEmail(token));
+                String storedToken = redisTemplate.opsForValue().get("refresh_token:" + getSocialUniqueId(token));
                 return token.equals(storedToken);
             }
         } catch (SecurityException | MalformedJwtException e) {

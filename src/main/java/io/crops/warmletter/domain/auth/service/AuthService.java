@@ -1,11 +1,13 @@
 package io.crops.warmletter.domain.auth.service;
 
 import io.crops.warmletter.domain.auth.dto.TokenResponse;
+import io.crops.warmletter.domain.auth.exception.UnauthorizedException;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.global.jwt.enums.TokenType;
 import io.crops.warmletter.global.jwt.exception.InvalidRefreshTokenException;
 import io.crops.warmletter.global.jwt.provider.JwtTokenProvider;
 import io.crops.warmletter.global.jwt.service.TokenBlacklistService;
+import io.crops.warmletter.global.oauth.entity.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -27,19 +31,20 @@ public class AuthService {
     private final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 14; // 14일
     private final long REFRESH_TOKEN_REISSUE_TIME = REFRESH_TOKEN_EXPIRE_TIME / 2; // 7일
 
-    public TokenResponse reissue(String refreshToken, HttpServletResponse response) {
+    public TokenResponse reissue(String accessToken, String refreshToken, HttpServletResponse response) {
         // 리프레시 토큰 검증
         if (!jwtTokenProvider.validateToken(refreshToken, TokenType.REFRESH)) {
             throw new InvalidRefreshTokenException();
         }
 
-        String socialUniqueId = jwtTokenProvider.getSocialUniqueId(refreshToken);
-        Claims claims = jwtTokenProvider.getClaims(refreshToken);
+        String socialUniqueId = jwtTokenProvider.getSocialUniqueId(accessToken);
+        Claims claims = jwtTokenProvider.getClaims(accessToken);
 
         String newAccessToken = jwtTokenProvider.createAccessToken(
                 socialUniqueId,
                 Role.valueOf(claims.get("role").toString()),
-                claims.get("zipCode", String.class)
+                claims.get("zipCode", String.class),
+                claims.get("memberId", Long.class)
         );
 
         // Access Token을 Authorization 헤더에 추가
@@ -78,5 +83,21 @@ public class AuthService {
         cookie.setHttpOnly(true);
 //        cookie.setSecure(true);
         response.addCookie(cookie);
+    }
+
+    public UserPrincipal getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedException();
+        }
+        return (UserPrincipal) authentication.getPrincipal();
+    }
+
+    public Long getCurrentUserId() {
+        return getCurrentUser().getId();
+    }
+
+    public String getZipCode() {
+        return getCurrentUser().getZipCode();
     }
 }

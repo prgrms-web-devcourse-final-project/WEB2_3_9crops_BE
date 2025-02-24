@@ -1,7 +1,6 @@
 package io.crops.warmletter.domain.eventpost.entity;
 
 import io.crops.warmletter.global.entity.BaseEntity;
-import io.crops.warmletter.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,8 +13,10 @@ public class EventPost extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @Column(nullable = false)
     private String title;
 
+    @Column(unique = true)
     private Boolean isUsed;
 
     @Builder

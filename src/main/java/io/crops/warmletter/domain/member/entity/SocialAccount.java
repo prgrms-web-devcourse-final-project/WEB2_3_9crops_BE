@@ -38,5 +38,6 @@ public class SocialAccount {
     @SuppressWarnings("lombok")
     public void setMember(Member member) {
         this.member = member;
+        member.getSocialAccounts().add(this);
     }
 }

@@ -39,7 +39,7 @@ public class ReportService {
     @Transactional
     public ReportResponse createReport(CreateReportRequest request) {
         Long memberId = authFacde.getCurrentUserId();
-        validateRequest(request);
+        validateRequest(request, memberId);
         Report.ReportBuilder builder = Report.builder()
                 .memberId(memberId)  // 고정 신고자 ID 사용
                 .reasonType(request.getReasonType())
@@ -64,7 +64,7 @@ public class ReportService {
 
     }
 
-    private void validateRequest(CreateReportRequest request) {
+    private void validateRequest(CreateReportRequest request, Long memberId) {
         // 공통: 신고 대상 ID 중 하나만 있어야 함
         boolean isLetter = request.getLetterId() != null;
         boolean isSharePost = request.getSharePostId() != null;
@@ -78,42 +78,42 @@ public class ReportService {
         // 타입별 추가 검증
         switch (request.getReportType()) {
             case LETTER:
-                validateLetterReport(request);
+                validateLetterReport(request, memberId);
                 break;
             case SHARE_POST:
-                validateSharePostReport(request);
+                validateSharePostReport(request, memberId);
                 break;
             case EVENT_COMMENT:
-                validateEventCommentReport(request);
+                validateEventCommentReport(request, memberId);
                 break;
         }
     }
 
-    private void validateLetterReport(CreateReportRequest request) {
+    private void validateLetterReport(CreateReportRequest request, Long memberId) {
         if (!letterRepository.existsById(request.getLetterId())) {
             throw new LetterNotFoundException();
         }
-        if(reportRepository.existsByLetterId(request.getLetterId())) {
+        if(reportRepository.existsByLetterIdAndMemberId(request.getLetterId(), memberId)) {
             throw new DuplicateReportException();
         }
     }
 
-    private void validateSharePostReport(CreateReportRequest request) {
+    private void validateSharePostReport(CreateReportRequest request, Long memberId) {
         if(!sharePostRepository.existsById(request.getSharePostId())) {
             throw new BusinessException(ErrorCode.SHARE_POST_NOT_FOUND);
         }
         // sharePostRepository.existsById() 등 추가 검증 가능
-        if(reportRepository.existsBySharePostId(request.getSharePostId())) {
+        if(reportRepository.existsBySharePostIdAndMemberId(request.getSharePostId(), memberId)) {
             throw new DuplicateReportException();
         }
     }
 
 
-    private void validateEventCommentReport(CreateReportRequest request) {
+    private void validateEventCommentReport(CreateReportRequest request, Long memberId) {
         if(!eventCommentRepository.existsById(request.getEventCommentId())) {
             throw new EventCommentNotFoundException();
         }
-        if(reportRepository.existsByEventCommentId(request.getEventCommentId())) {
+        if(reportRepository.existsByEventCommentIdAndMemberId(request.getEventCommentId(), memberId)) {
             throw new DuplicateReportException();
         }
     }

@@ -4,7 +4,7 @@ import io.crops.warmletter.domain.report.entity.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReportRepository extends JpaRepository<Report, Long> {
-    boolean existsByLetterId(Long letterId);
-    boolean existsBySharePostId(Long shareId);
-    boolean existsByEventCommentId(Long eventCommentId);
+    boolean existsByLetterIdAndMemberId(Long letterId, Long MemberId);
+    boolean existsBySharePostIdAndMemberId(Long shareId, Long MemberId);
+    boolean existsByEventCommentIdAndMemberId(Long eventCommentId, Long MemberId);
 }

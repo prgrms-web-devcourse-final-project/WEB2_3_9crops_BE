@@ -21,5 +21,5 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
             "from Member m join m.socialAccounts sa " +
             "where m.id = :id " +
             "order by sa.id asc limit 1")
-    Optional<MeResponse> findMeById(@Param("id") Long id);
+    Optional<MeResponse> findMeById(Long id);
 }

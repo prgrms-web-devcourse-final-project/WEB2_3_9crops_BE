@@ -45,6 +45,7 @@ public enum ErrorCode {
     // Member 관련
     MEMBER_NOT_FOUND("MEM-001", HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."),
     DUPLICATE_ZIP_CODE("MEM-002", HttpStatus.CONFLICT, "우편번호가 이미 존재합니다."),
+    DELETED_MEMBER("MEM-003", HttpStatus.FORBIDDEN, "탈퇴한 회원입니다."),
     ;
 
     private final String code;

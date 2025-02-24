@@ -2,6 +2,7 @@ package io.crops.warmletter.domain.auth.facade;
 
 import io.crops.warmletter.domain.auth.service.AuthService;
 import io.crops.warmletter.global.oauth.entity.UserPrincipal;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,5 +22,9 @@ public class AuthFacade {
 
     public String getZipCode() {
         return authService.getZipCode();
+    }
+
+    public void logout(String accessToken, String refreshToken, HttpServletResponse response) {
+        authService.logout(accessToken, refreshToken, response);
     }
 }

@@ -16,10 +16,12 @@
         SHARE_POST_NOT_FOUND("SHARE-002",HttpStatus.NOT_FOUND,"해당 공유 게시글을 찾을 수 없습니다."),
         SHARE_PROPOSAL_NOTFOUND("SHARE-003",HttpStatus.NOT_FOUND,"해당 공유 제안을 찾을 수 없습니다."),
 
+
         // 이벤트 게시판 관련 에러 코드
         EVENT_POST_NOT_FOUND("EVENT-001",HttpStatus.NOT_FOUND,"해당 이벤트 게시글을 찾을 수 없습니다."),
         USED_EVENT_POST_NOT_FOUND("EVENT-002",HttpStatus.NOT_FOUND,"사용중인 이벤트 게시글을 찾을 수 없습니다."),
         EVENT_COMMENT_NOT_FOUND("EVENT-003",HttpStatus.NOT_FOUND,"해당 이벤트 게시글의 댓글을 찾을 수 없습니다."),
+        EVENT_POST_IN_USE("EVENT-004",HttpStatus.BAD_REQUEST,"이미 사용 중인 이벤트 게시글이 있습니다."),
 
         //금칙어
         DUPLICATE_BANNED_WORD("MOD-001", HttpStatus.CONFLICT, "이미 등록된 금칙어입니다."),

@@ -16,7 +16,6 @@ public class EventPost extends BaseEntity {
     @Column(nullable = false)
     private String title;
 
-    @Column(unique = true)
     private Boolean isUsed;
 
     @Builder

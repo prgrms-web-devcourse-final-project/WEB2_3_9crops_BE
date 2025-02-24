@@ -73,7 +73,7 @@ public class EventPostService {
 
     public EventPostStatusResponse updateEventPostIsUsed(long eventPostId) {
         // true -> fasle (문제 없음)
-        // false -> true(unique)(true 값을 가진 eventPostId가 있으면 예외처리)
+        // false -> true(true 값을 가진 eventPostId가 있으면 예외처리)
         try {
             EventPost eventPost = eventPostRepository.findById(eventPostId).orElseThrow(EventPostNotFoundException::new);
 
@@ -87,12 +87,10 @@ public class EventPostService {
                 }
                 eventPost.isUsedChange(true);
             }
-
             return EventPostStatusResponse.builder()
                     .eventPostId(eventPost.getId())
                     .isUsed(eventPost.getIsUsed())
                     .build();
-
         } catch (DataIntegrityViolationException e) {
             throw new BusinessException(ErrorCode.EVENT_POST_IN_USE);
         } catch (PersistenceException e) {

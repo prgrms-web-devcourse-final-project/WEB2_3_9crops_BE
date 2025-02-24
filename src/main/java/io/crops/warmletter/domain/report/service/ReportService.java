@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.report.service;
 
 
+import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.eventpost.exception.EventCommentNotFoundException;
 import io.crops.warmletter.domain.eventpost.repository.EventCommentRepository;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
@@ -31,10 +32,12 @@ public class ReportService {
     private final SharePostRepository sharePostRepository;
     private final EventCommentRepository eventCommentRepository;
 
+    private final AuthFacade authFacde;
+
 
     @Transactional
     public ReportResponse createReport(CreateReportRequest request) {
-        Long memberId = 1003L;
+        Long memberId = authFacde.getCurrentUserId();
         validateRequest(request);
         Report.ReportBuilder builder = Report.builder()
                 .memberId(memberId)  // 고정 신고자 ID 사용

@@ -15,6 +15,6 @@ public class CreateReportRequest {
     private String reason;
     private Long letterId;
     private Long sharePostId;
-    private Long eventCommentId;;
+    private Long eventCommentId;
 
 }

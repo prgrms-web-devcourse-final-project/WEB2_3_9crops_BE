@@ -9,7 +9,6 @@ import io.crops.warmletter.domain.report.entity.Report;
 import io.crops.warmletter.domain.report.enums.ReasonType;
 import io.crops.warmletter.domain.report.enums.ReportStatus;
 import io.crops.warmletter.domain.report.enums.ReportType;
-import io.crops.warmletter.domain.report.exception.DuplicateReportException;
 import io.crops.warmletter.domain.report.exception.InvalidReportRequestException;
 import io.crops.warmletter.domain.report.service.ReportService;
 import io.crops.warmletter.global.error.common.ErrorCode;

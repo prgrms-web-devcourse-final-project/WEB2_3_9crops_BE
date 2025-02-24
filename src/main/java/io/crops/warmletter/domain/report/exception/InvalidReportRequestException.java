@@ -7,5 +7,4 @@ public class InvalidReportRequestException extends BusinessException {
     public InvalidReportRequestException() {
         super(ErrorCode.INVALID_REPORT_REQUEST);
     }
-
 }

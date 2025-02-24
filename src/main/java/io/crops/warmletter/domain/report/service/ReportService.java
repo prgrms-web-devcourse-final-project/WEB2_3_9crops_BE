@@ -1,6 +1,8 @@
 package io.crops.warmletter.domain.report.service;
 
 
+import io.crops.warmletter.domain.eventpost.exception.EventCommentNotFoundException;
+import io.crops.warmletter.domain.eventpost.repository.EventCommentRepository;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.report.dto.request.CreateReportRequest;
@@ -10,7 +12,6 @@ import io.crops.warmletter.domain.report.enums.ReportStatus;
 import io.crops.warmletter.domain.report.enums.ReportType;
 import io.crops.warmletter.domain.report.exception.DuplicateReportException;
 import io.crops.warmletter.domain.report.exception.InvalidReportRequestException;
-import io.crops.warmletter.domain.report.exception.InvalidReportTargetException;
 import io.crops.warmletter.domain.report.repository.ReportRepository;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
@@ -28,6 +29,7 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final LetterRepository letterRepository;
     private final SharePostRepository sharePostRepository;
+    private final EventCommentRepository eventCommentRepository;
 
 
     @Transactional
@@ -65,7 +67,7 @@ public class ReportService {
         boolean isEventComment = request.getEventCommentId() != null;
         int count = (isLetter ? 1 : 0) + (isSharePost ? 1 : 0) + (isEventComment ? 1 : 0);
         if(count != 1) {
-            throw new InvalidReportTargetException();
+            throw new InvalidReportRequestException();
         }
 
 
@@ -84,9 +86,6 @@ public class ReportService {
     }
 
     private void validateLetterReport(CreateReportRequest request) {
-        if (request.getLetterId() == null) {
-            throw new InvalidReportRequestException();
-        }
         if (!letterRepository.existsById(request.getLetterId())) {
             throw new LetterNotFoundException();
         }
@@ -96,9 +95,6 @@ public class ReportService {
     }
 
     private void validateSharePostReport(CreateReportRequest request) {
-        if (request.getSharePostId() == null) {
-            throw new  InvalidReportRequestException();
-        }
         if(!sharePostRepository.existsById(request.getSharePostId())) {
             throw new BusinessException(ErrorCode.SHARE_POST_NOT_FOUND);
         }
@@ -108,12 +104,11 @@ public class ReportService {
         }
     }
 
-    //구현안됌
+
     private void validateEventCommentReport(CreateReportRequest request) {
-        if (request.getEventCommentId() == null) {
-            throw new  InvalidReportRequestException();
+        if(!eventCommentRepository.existsById(request.getEventCommentId())) {
+            throw new EventCommentNotFoundException();
         }
-        // eventCommentRepository.existsById() 등 추가 검증 가능
         if(reportRepository.existsByEventCommentId(request.getEventCommentId())) {
             throw new DuplicateReportException();
         }

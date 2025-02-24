@@ -28,9 +28,8 @@
 
         //신고
         INVALID_REPORT_REQUEST("REPORT-001", HttpStatus.BAD_REQUEST, "신고 요청이 잘못되었습니다."),
-        INVALID_REPORT_TARGET("REPORT-002", HttpStatus.BAD_REQUEST, "신고 대상은 한 개만 지정되어야 합니다."),
-        REPORT_NOT_FOUND("REPORT-003", HttpStatus.NOT_FOUND, "해당 신고를 찾을 수 없습니다."),
-        DUPLICATE_REPORT("REPORT-004", HttpStatus.CONFLICT, "이미 신고된 항목입니다."),
+        REPORT_NOT_FOUND("REPORT-002", HttpStatus.NOT_FOUND, "해당 신고를 찾을 수 없습니다."),
+        DUPLICATE_REPORT("REPORT-003", HttpStatus.CONFLICT, "이미 신고된 항목입니다."),
 
 
         // OAuth2 관련 에러 코드

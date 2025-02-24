@@ -57,7 +57,7 @@ class ReportServiceTest {
 
         when(authFacade.getCurrentUserId()).thenReturn(1003L);
         when(letterRepository.existsById(1L)).thenReturn(true);
-        when(reportRepository.existsByLetterId(1L)).thenReturn(false);
+        when(reportRepository.existsByLetterIdAndMemberId(1L,1003L)).thenReturn(false);
         when(reportRepository.save(any(Report.class))).thenReturn(report);
 
         ReportResponse response = reportService.createReport(request);
@@ -85,7 +85,7 @@ class ReportServiceTest {
 
         when(authFacade.getCurrentUserId()).thenReturn(1003L);
         when(sharePostRepository.existsById(2L)).thenReturn(true);
-        when(reportRepository.existsBySharePostId(2L)).thenReturn(false);
+        when(reportRepository.existsBySharePostIdAndMemberId(2L,1003L)).thenReturn(false);
         when(reportRepository.save(any(Report.class))).thenReturn(report);
 
         ReportResponse response = reportService.createReport(request);
@@ -112,7 +112,7 @@ class ReportServiceTest {
 
         when(authFacade.getCurrentUserId()).thenReturn(1003L);
         when(eventCommentRepository.existsById(3L)).thenReturn(true);
-        when(reportRepository.existsByEventCommentId(3L)).thenReturn(false);
+        when(reportRepository.existsByEventCommentIdAndMemberId(3L,1003L)).thenReturn(false);
         when(reportRepository.save(any(Report.class))).thenReturn(report);
 
         ReportResponse response = reportService.createReport(request);
@@ -140,7 +140,7 @@ class ReportServiceTest {
 
         when(authFacade.getCurrentUserId()).thenReturn(1003L);
         when(letterRepository.existsById(1L)).thenReturn(true);
-        when(reportRepository.existsByLetterId(1L)).thenReturn(true);
+        when(reportRepository.existsByLetterIdAndMemberId(1L, 1003L)).thenReturn(true);
 
         assertThrows(DuplicateReportException.class, () -> reportService.createReport(request));
     }

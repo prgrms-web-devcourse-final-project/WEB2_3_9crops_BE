@@ -30,7 +30,7 @@ class PostLikeRedisManagerTest {
 
     @BeforeEach
     void setUp() {
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     }
 
     @Test
@@ -172,6 +172,19 @@ class PostLikeRedisManagerTest {
     }
 
     @Test
+    @DisplayName("clearCache - keys가 null인 경우 안전하게 처리")
+    void clearCache_WithNullKeys() {
+        // given
+        when(redisTemplate.keys("post:*:like:memberId:*")).thenReturn(null);
+
+        // when
+        postLikeRedisManager.clearCache();
+
+        // then
+        verify(redisTemplate, never()).delete(any(Set.class));
+    }
+
+    @Test
     @DisplayName("getAllLikeStatus - 일부 값만 null인 혼합 케이스")
     void getAllLikeStatus_MixedNullValues() {
         // given
@@ -188,4 +201,18 @@ class PostLikeRedisManagerTest {
         assertTrue(result.get("post:1:like:memberId:1"));
         assertNull(result.get("post:2:like:memberId:1"));
     }
+
+    @Test
+    @DisplayName("clearCache - 빈 set인 경우 처리")
+    void clearCache_WithEmptySet() {
+        // given
+        when(redisTemplate.keys("post:*:like:memberId:*")).thenReturn(Set.of());
+
+        // when
+        postLikeRedisManager.clearCache();
+
+        // then
+        verify(redisTemplate, never()).delete(any(Set.class));
+    }
+
 }

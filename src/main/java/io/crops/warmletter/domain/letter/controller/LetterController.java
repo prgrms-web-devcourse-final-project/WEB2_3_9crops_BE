@@ -15,6 +15,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/letters")
 public class LetterController {
 
     private final LetterService letterService;
@@ -23,7 +24,7 @@ public class LetterController {
      * 편지를 처음 쓰는지
      * 답장을 보내는지
      */
-    @PostMapping("/api/letters")
+    @PostMapping
     public ResponseEntity<BaseResponse<LetterResponse>> createLetter(@RequestBody @Valid CreateLetterRequest request) {
         LetterResponse letterResponse = letterService.createLetter(request);
         BaseResponse<LetterResponse> response = BaseResponse.of(letterResponse, "편지가 성공적으로 생성되었습니다.");
@@ -34,7 +35,7 @@ public class LetterController {
     /**
      * 지정된 letterId의 이전 편지를 조회합니다.
      */
-    @GetMapping("/api/v1/letters/{letterId}/previous")
+    @GetMapping("/v1/{letterId}/previous")
     public ResponseEntity<BaseResponse<List<LetterResponse>>> getPreviousLetters(@PathVariable Long letterId) {
         List<LetterResponse> previousLetters = letterService.getPreviousLetters(letterId);
         BaseResponse<List<LetterResponse>> response = BaseResponse.of(previousLetters, "이전 편지가 전송 완료.");
@@ -44,8 +45,8 @@ public class LetterController {
     /**
      * 지정된 letterId 삭제 (softDelete)
      */
-    @DeleteMapping("/api/letters/{letterId}")
-    public ResponseEntity<BaseResponse> deleteLetter(@PathVariable Long letterId) {
+    @DeleteMapping("/{letterId}")
+    public ResponseEntity<BaseResponse<Void>> deleteLetter(@PathVariable Long letterId) {
         letterService.deleteLetter(letterId);
         BaseResponse<Void> response = BaseResponse.of(null, "편지 삭제 완료");
         return ResponseEntity.ok(response);
@@ -55,8 +56,8 @@ public class LetterController {
     /**
      * 지정된 letterId로 편지 단건 조회
      */
-    @GetMapping("/api/letters/{letterId}")
-    public ResponseEntity<BaseResponse> getLetterById(@PathVariable Long letterId) {
+    @GetMapping("/{letterId}")
+    public ResponseEntity<BaseResponse<LetterResponse>> getLetterById(@PathVariable Long letterId) {
         LetterResponse letterResponse = letterService.getLetterById(letterId);
         BaseResponse<LetterResponse> response = BaseResponse.of(letterResponse, "편지 조회 완료");
         return ResponseEntity.ok(response);

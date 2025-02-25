@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class MailboxServiceTest {
+class MailBoxServiceTest {
 
     @Mock
     private LetterMatchingRepository letterMatchingRepository;

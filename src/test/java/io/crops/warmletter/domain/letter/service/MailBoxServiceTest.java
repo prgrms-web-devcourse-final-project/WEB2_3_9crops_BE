@@ -71,12 +71,12 @@ class MailBoxServiceTest {
         ReflectionTestUtils.setField(matchedMember, "id", 1L);
         when(memberRepository.findById(1L)).thenReturn(Optional.of(matchedMember));
 
-        LetterMatching letterMatching = new LetterMatching();
+        LetterMatching letterMatching = LetterMatching.builder()
+                .letterId(2L)
+                .build();
 
         // letterMatching의 ID, letterId, isActive 설정 (setter가 없으면 Reflection 사용)
         ReflectionTestUtils.setField(letterMatching, "id", 100L);
-        ReflectionTestUtils.setField(letterMatching, "letterId", 2L);
-        ReflectionTestUtils.setField(letterMatching, "isActive", true);
         List<LetterMatching> matchingList = List.of(letterMatching);
         when(letterMatchingRepository.findMatchingIdsByMembers(myId, 1L)).thenReturn(matchingList);
 

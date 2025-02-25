@@ -36,7 +36,7 @@ public class Letter extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private DeliveryStatus deliveryStatus;  // 배송 상태 (IN_DELIVERY, DELIVERED 등)
+    private Status status;  // 배송 상태 (IN_DELIVERY, DELIVERED 등)
 
     @Column(nullable = false)
     private LocalDateTime deliveryStartedAt;    // 배송 시작 시간
@@ -44,7 +44,7 @@ public class Letter extends BaseTimeEntity {
     @Column(nullable = false)
     private LocalDateTime deliveryCompletedAt;  // 배송 도착 시간
 
-    private Boolean isRead;          // 열람 여부 (YES/NO 대신 boolean 처리)
+    private boolean isRead;          // 열람 여부 (YES/NO 대신 boolean 처리)
 
     @Enumerated(EnumType.STRING)
     private FontType fontType;
@@ -52,14 +52,14 @@ public class Letter extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private PaperType paperType;     // 편지지 유형 등(필요시 enum 정의)
 
-    private Boolean isActive;        // 활성화 여부
+    private boolean isActive;        // 활성화 여부
 
 
     //빌더에 receiverId, parentLetterId가 있으면 편지 아이디 받고, 이걸 parentLetterId 에 넣자  / 상위편지아이디가 현재 편지아이디로 넣어짐
     @Builder
     public Letter(Long writerId, Long receiverId,
                    Long parentLetterId, LetterType letterType,
-                   Category category, String title, String content,
+                   Category category, String title, String content,Status status,
                    FontType fontType, PaperType paperType) {
 
         this.writerId = writerId;
@@ -69,7 +69,7 @@ public class Letter extends BaseTimeEntity {
         this.category = category;
         this.title = title;
         this.content = content;
-        this.deliveryStatus = DeliveryStatus.IN_DELIVERY;
+        this.status = status;
         this.deliveryStartedAt = LocalDateTime.now();
         this.deliveryCompletedAt = LocalDateTime.now().plusHours(1); //편지 생성 시, 답장 시 한 시간 뒤에 도착
         this.isRead = false;

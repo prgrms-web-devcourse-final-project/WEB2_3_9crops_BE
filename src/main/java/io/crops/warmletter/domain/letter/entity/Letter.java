@@ -36,7 +36,7 @@ public class Letter extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Status deliveryStatus;  // 배송 상태 (IN_DELIVERY, DELIVERED 등)
+    private Status status;  // 배송 상태 (IN_DELIVERY, DELIVERED 등)
 
     @Column(nullable = false)
     private LocalDateTime deliveryStartedAt;    // 배송 시작 시간
@@ -59,7 +59,7 @@ public class Letter extends BaseTimeEntity {
     @Builder
     public Letter(Long writerId, Long receiverId,
                    Long parentLetterId, LetterType letterType,
-                   Category category, String title, String content,
+                   Category category, String title, String content,Status status,
                    FontType fontType, PaperType paperType) {
 
         this.writerId = writerId;
@@ -69,7 +69,7 @@ public class Letter extends BaseTimeEntity {
         this.category = category;
         this.title = title;
         this.content = content;
-        this.deliveryStatus = Status.IN_DELIVERY;
+        this.status = status;
         this.deliveryStartedAt = LocalDateTime.now();
         this.deliveryCompletedAt = LocalDateTime.now().plusHours(1); //편지 생성 시, 답장 시 한 시간 뒤에 도착
         this.isRead = false;

@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.letter.entity;
 
+import io.crops.warmletter.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "letter_temporary_matchings")
-public class LetterTemporaryMatching {
+public class LetterTemporaryMatching extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -5,10 +5,7 @@ import io.crops.warmletter.config.TestConfig;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.entity.Letter;
-import io.crops.warmletter.domain.letter.enums.Category;
-import io.crops.warmletter.domain.letter.enums.FontType;
-import io.crops.warmletter.domain.letter.enums.LetterType;
-import io.crops.warmletter.domain.letter.enums.PaperType;
+import io.crops.warmletter.domain.letter.enums.*;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.letter.service.LetterService;
@@ -240,6 +237,7 @@ class LettersControllerTest {
                 .content("테스트 편지 내용")
                 .fontType(FontType.HIMCHAN)
                 .paperType(PaperType.COMFORT)
+                .status(Status.IN_DELIVERY)
                 .build();
 
         // 보통 빌더에서 isActive의 기본값을 true로 설정합니다.

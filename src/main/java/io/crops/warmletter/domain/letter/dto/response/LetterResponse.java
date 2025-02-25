@@ -60,7 +60,7 @@ public class LetterResponse {
                 .category(letter.getCategory())
                 .paperType(letter.getPaperType())
                 .fontType(letter.getFontType())
-                .status(letter.getDeliveryStatus())
+                .status(letter.getStatus())
                 .deliveryStartedAt(letter.getDeliveryStartedAt())
                 .deliveryCompletedAt(letter.getDeliveryCompletedAt())
                 .build();

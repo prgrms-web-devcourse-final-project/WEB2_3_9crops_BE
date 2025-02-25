@@ -89,6 +89,7 @@ class LetterServiceTest {
                 .fontType(randomLetterRequest.getFont())
                 .receiverId(randomLetterRequest.getReceiverId())
                 .parentLetterId(randomLetterRequest.getParentLetterId())
+                .status(Status.IN_DELIVERY)
                 .build();
 
         // repository.save()가 반환할 Letter 객체 미리 준비 (다이렉트 편지, 답장)
@@ -102,6 +103,7 @@ class LetterServiceTest {
                 .fontType(directLetterRequest.getFont())
                 .receiverId(directLetterRequest.getReceiverId())
                 .parentLetterId(directLetterRequest.getParentLetterId())
+                .status(Status.IN_DELIVERY)
                 .build();
     }
 

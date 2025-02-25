@@ -46,6 +46,9 @@
 
         //Letter Error code
         LETTER_NOT_FOUND("LET-001", HttpStatus.NOT_FOUND, "해당 편지를 찾을 수 없습니다."),
+        MATCHING_NOT_FOUND("LET-003", HttpStatus.NOT_FOUND, "매칭을 찾을 수 없습니다."),
+        NOT_BELONG_TO_MATCHING("LET-004", HttpStatus.FORBIDDEN, "해당 매칭에 대해 권한이 없습니다."),
+        ALREADY_BLOCKED_MATCHING("LET-005", HttpStatus.CONFLICT, "이미 매칭이 차단되었습니다."),
 
         // Member 관련
         MEMBER_NOT_FOUND("MEM-001", HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."),

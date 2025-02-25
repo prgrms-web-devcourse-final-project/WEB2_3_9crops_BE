@@ -76,12 +76,12 @@ public class MailboxService {
     public void disconnectMatching(Long matchingId) {
         Long memberId = authFacade.getCurrentUserId();
 
+        LetterMatching matching = letterMatchingRepository.findById(matchingId)
+                .orElseThrow(MatchingNotFoundException::new);
+
         if (!letterMatchingRepository.existsByIdAndFirstMemberIdOrSecondMemberId(matchingId, memberId, memberId)) {
             throw new MatchingNotBelongException();
         }
-
-        LetterMatching matching = letterMatchingRepository.findById(matchingId)
-                .orElseThrow(MatchingNotFoundException::new);
 
         if (!matching.isActive()) {
             throw new MatchingAlreadyBlockedException();

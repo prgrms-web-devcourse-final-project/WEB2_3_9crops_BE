@@ -2,6 +2,9 @@ package io.crops.warmletter.domain.letter.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.domain.letter.dto.response.MailboxResponse;
+import io.crops.warmletter.domain.letter.exception.MatchingAlreadyBlockedException;
+import io.crops.warmletter.domain.letter.exception.MatchingNotBelongException;
+import io.crops.warmletter.domain.letter.exception.MatchingNotFoundException;
 import io.crops.warmletter.domain.letter.service.MailboxService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,8 +17,9 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
@@ -89,5 +93,79 @@ class MailboxControllerTest {
                 .andExpect(jsonPath("$.message").value("편지함 조회 완료"))
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andDo(print());
+    }
+    
+    @DisplayName("매칭 차단 API 호출 실패 - 존재하지 않은 매칭")
+    @Test
+    void disconnectMatching_Fail_NotFoundMatching() throws Exception {
+        //given
+        Long invalidMatchingId = 1L;
+
+        doThrow(new MatchingNotFoundException())
+                .when(mailBoxService)
+                .disconnectMatching(invalidMatchingId);
+
+        //when & then
+        mockMvc.perform(post("/api/mailbox/" + invalidMatchingId + "/disconnect"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("LET-003"))
+                .andExpect(jsonPath("$.message").value("매칭을 찾을 수 없습니다."));
+
+        verify(mailBoxService).disconnectMatching(invalidMatchingId);
+    }
+
+    @DisplayName("매칭 차단 API 호출 실패 - 속하지 않은 매칭")
+    @Test
+    void disconnectMatching_Fail_NotBelong() throws Exception {
+        //given
+        Long invalidMatchingId = 1L;
+
+        doThrow(new MatchingNotBelongException())
+                .when(mailBoxService)
+                .disconnectMatching(invalidMatchingId);
+
+        //when & then
+        mockMvc.perform(post("/api/mailbox/" + invalidMatchingId + "/disconnect"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("LET-004"))
+                .andExpect(jsonPath("$.message").value("해당 매칭에 대해 권한이 없습니다."));
+
+        verify(mailBoxService).disconnectMatching(invalidMatchingId);
+    }
+
+    @DisplayName("매칭 차단 API 호출 실패 - 이미 차단된 매칭")
+    @Test
+    void disconnectMatching_Fail_AlreadyBlockedMatching() throws Exception {
+        //given
+        Long invalidMatchingId = 1L;
+
+        doThrow(new MatchingAlreadyBlockedException())
+                .when(mailBoxService)
+                .disconnectMatching(invalidMatchingId);
+
+        //when & then
+        mockMvc.perform(post("/api/mailbox/" + invalidMatchingId + "/disconnect"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("LET-005"))
+                .andExpect(jsonPath("$.message").value("이미 매칭이 차단되었습니다."));
+
+        verify(mailBoxService).disconnectMatching(invalidMatchingId);
+    }
+
+    @DisplayName("매칭 차단 API 호출 성공")
+    @Test
+    void disconnectMatching_Success() throws Exception {
+        //given
+        Long validMatchingId = 1L;
+
+        doNothing().when(mailBoxService).disconnectMatching(validMatchingId);
+
+        //when & then
+        mockMvc.perform(post("/api/mailbox/" + validMatchingId + "/disconnect"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("매칭 차단 완료"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        verify(mailBoxService).disconnectMatching(validMatchingId);
     }
 }

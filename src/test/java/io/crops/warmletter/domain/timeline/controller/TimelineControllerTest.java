@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Import(TestConfig.class)
 @SpringBootTest
-class TimeLineControllerTest {
+class TimelineControllerTest {
     @Autowired
     private MockMvc mockMvc;
 

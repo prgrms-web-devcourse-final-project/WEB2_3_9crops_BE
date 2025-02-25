@@ -43,6 +43,10 @@ public class EventCommentService {
 
     public Map<String,Long> deleteEventComment(long eventCommentId) {
         EventComment eventComment = eventCommentRepository.findById(eventCommentId).orElseThrow(EventCommentNotFoundException::new);
+        if(!eventComment.isActive()){
+            throw new EventCommentNotFoundException();
+        }
+
         eventComment.softDelete();
         return Map.of("commentId",eventComment.getId());
     }

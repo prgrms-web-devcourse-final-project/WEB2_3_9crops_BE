@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 
 @ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
-class TimeLineServiceTest {
+class TimelineServiceTest {
     @Mock
     private TimeLineRepository timeLineRepository;
 

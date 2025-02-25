@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "timelines")
-public class TimeLine extends BaseTimeEntity {
+public class Timeline extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -31,7 +31,7 @@ public class TimeLine extends BaseTimeEntity {
     private Boolean isRead;
 
     @Builder
-    public TimeLine(long memberId, String title, String content, AlarmType alarmType) {
+    public Timeline(long memberId, String title, String content, AlarmType alarmType) {
         this.memberId = memberId;
         this.title = title;
         this.content = content;

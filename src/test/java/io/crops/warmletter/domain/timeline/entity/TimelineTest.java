@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 // 임시 테스트
 @ActiveProfiles("test")
-class TimeLineTest {
+class TimelineTest {
     @Test
     @DisplayName("타임라인 생성")
     void create_eventComment() {
@@ -20,7 +20,7 @@ class TimeLineTest {
         AlarmType alarmType = AlarmType.LETTER;
 
         // When
-        TimeLine timeLine = TimeLine.builder()
+        Timeline timeLine = Timeline.builder()
                 .memberId(memberId)
                 .title(title)
                 .content(content)

@@ -5,14 +5,14 @@ import io.crops.warmletter.domain.letter.dto.response.MailboxResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
+import io.crops.warmletter.domain.letter.exception.MatchingAlreadyBlockedException;
+import io.crops.warmletter.domain.letter.exception.MatchingNotBelongException;
+import io.crops.warmletter.domain.letter.exception.MatchingNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
-import io.crops.warmletter.global.error.common.ErrorCode;
-import io.crops.warmletter.global.error.exception.BusinessException;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ import java.util.List;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class MailBoxService {
+public class MailboxService {
 
     private final LetterMatchingRepository letterMatchingRepository;
     private final LetterRepository letterRepository;
@@ -70,5 +70,23 @@ public class MailBoxService {
         responses.sort(Comparator.comparing(MailboxResponse::getLetterMatchingId).reversed()); //아이디로 정렬 (시간순)
         return responses;
 
+    }
+
+    @Transactional
+    public void disconnectMatching(Long matchingId) {
+        Long memberId = authFacade.getCurrentUserId();
+
+        LetterMatching matching = letterMatchingRepository.findById(matchingId)
+                .orElseThrow(MatchingNotFoundException::new);
+
+        if (!letterMatchingRepository.existsByIdAndFirstMemberIdOrSecondMemberId(matchingId, memberId, memberId)) {
+            throw new MatchingNotBelongException();
+        }
+
+        if (!matching.isActive()) {
+            throw new MatchingAlreadyBlockedException();
+        }
+
+        matching.inactive();
     }
 }

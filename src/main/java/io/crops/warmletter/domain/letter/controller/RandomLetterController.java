@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.letter.controller;
 
+import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
 import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
@@ -53,15 +54,25 @@ public class RandomLetterController {
      * 매칭 취소 하기 - 임시테이블 제거
      */
     @DeleteMapping("/matching/cancel")
-    public ResponseEntity<BaseResponse<String>> matchingCancel(){
+    public ResponseEntity<BaseResponse<Void>> matchingCancel(){
         randomLetterService.matchingCancel();
-        BaseResponse<String> response = BaseResponse.of("매칭 취소 성공", "랜덤 편지 매칭이 취소되었습니다.");
+        BaseResponse<Void> response = BaseResponse.of(null, "랜덤 편지 매칭이 취소되었습니다.");
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 랜덤 편지 승인하기
+     */
+    @PostMapping("/approve")
+    public ResponseEntity<BaseResponse<Void>> approveLetter(@RequestBody ApproveLetterRequest request) {
+        randomLetterService.approveLetter(request);
+        BaseResponse<Void> response = BaseResponse.of(null, "랜덤 편지 승인 완료");
         return ResponseEntity.ok(response);
     }
 
 
 //    /**
-//     * 랜덤편지 승인
+//     * 랜덤편지 매칭
 //     */
 //    @PostMapping("/api/random-letters/matching")
 //    public void letterMatching(@RequestBody RandomMatchingRequest request) {

@@ -144,7 +144,7 @@ class LetterMatchingControllerTest {
 
         mockMvc.perform(delete("/api/random-letters/matching/cancel")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.data").value("매칭 취소 성공"))
+                .andExpect(jsonPath("$.data").isEmpty())
                 .andExpect(jsonPath("$.message").value("랜덤 편지 매칭이 취소되었습니다."))
                 .andExpect(status().isOk())
                 .andDo(print());

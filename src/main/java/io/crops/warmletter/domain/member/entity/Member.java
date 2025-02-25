@@ -75,4 +75,8 @@ public class Member extends BaseEntity {
     public void inactive() {
         this.isActive = false;
     }
+
+    public void updateLastMatchedAt(LocalDateTime lastMatchedAt) {
+        this.lastMatchedAt = lastMatchedAt;
+    }
 }

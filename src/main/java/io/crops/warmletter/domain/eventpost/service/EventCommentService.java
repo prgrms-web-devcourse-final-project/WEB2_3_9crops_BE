@@ -1,9 +1,9 @@
 package io.crops.warmletter.domain.eventpost.service;
 
+import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventCommentRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.EventCommentResponse;
 import io.crops.warmletter.domain.eventpost.entity.EventComment;
-import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.exception.EventCommentNotFoundException;
 import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException;
 import io.crops.warmletter.domain.eventpost.repository.EventCommentRepository;
@@ -18,8 +18,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Transactional
 public class EventCommentService {
-    public final EventCommentRepository eventCommentRepository;
-    public final EventPostRepository eventPostRepository;
+    private final AuthFacade authFacade;
+    private final EventCommentRepository eventCommentRepository;
+    private final EventPostRepository eventPostRepository;
 
     public EventCommentResponse createEventComment(CreateEventCommentRequest createEventCommentRequest, long eventPostId) {
         if(!eventPostRepository.existsById(eventPostId)) {
@@ -28,7 +29,7 @@ public class EventCommentService {
 
         EventComment eventComment = EventComment.builder()
                 .eventPostId(eventPostId)
-                .writerId(1L)   // TODO: 실제 사용자 ID를 사용하도록 변경
+                .writerId(1L)   // TODO: authFacade.getCurrentUserId();
                 .content(createEventCommentRequest.getContent())
                 .build();
 
@@ -41,9 +42,7 @@ public class EventCommentService {
     }
 
     public Map<String,Long> deleteEventComment(long eventCommentId) {
-        // TODO : 조회 시 실제 사용자 ID도 AND 하여 조회
         EventComment eventComment = eventCommentRepository.findById(eventCommentId).orElseThrow(EventCommentNotFoundException::new);
-
         if(!eventComment.isActive()){
             throw new EventCommentNotFoundException();
         }

@@ -7,6 +7,7 @@ import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.report.dto.request.CreateReportRequest;
 import io.crops.warmletter.domain.report.dto.response.ReportResponse;
+import io.crops.warmletter.domain.report.dto.response.ReportsResponse;
 import io.crops.warmletter.domain.report.entity.Report;
 import io.crops.warmletter.domain.report.enums.ReasonType;
 import io.crops.warmletter.domain.report.enums.ReportStatus;
@@ -21,8 +22,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
+
+import static org.mockito.BDDMockito.given;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -165,7 +172,60 @@ class ReportServiceTest {
         assertThrows(EventCommentNotFoundException.class, () -> reportService.createReport(request));
     }
 
+    @Test
+    @DisplayName("신고 목록 조회 - 모든 신고 조회")
+    void getAllReports_AllReports_Success() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ReportsResponse> mockPage = new PageImpl<>(List.of(
+                new ReportsResponse(1L, 101L, "ReporterA", 201L, "TargetA",
+                        ReportType.SHARE_POST.name(), ReasonType.THREATS.name(),
+                        "협박 신고", "RESOLVED", LocalDateTime.now(), null, 30L, null, null),
+                new ReportsResponse(2L, 102L, "ReporterB", 202L, "TargetB",
+                        ReportType.EVENT_COMMENT.name(), ReasonType.DEFAMATION.name(),
+                        "비방 신고", "PENDING", LocalDateTime.now(), null, null, 40L, null)
+        ));
 
+        given(reportRepository.findAllWithFilters(isNull(), isNull(), any(Pageable.class)))
+                .willReturn(mockPage);
 
+        // When
+        Page<ReportsResponse> result = reportService.getAllReports(null, null, pageable);
+
+        // Then
+        assertThat(result.getTotalElements()).isEqualTo(2);
+        verify(reportRepository, times(1)).findAllWithFilters(isNull(), isNull(), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("신고 목록 조회 - reportType=LETTER, status=PENDING")
+    void getAllReports_LetterPending_Success() {
+        // Given (Mock 데이터 준비)
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("id").descending());
+
+        Page<ReportsResponse> mockPage = new PageImpl<>(List.of(
+                new ReportsResponse(
+                        1L, 100L, "Reporter1", 200L, "Target1",
+                        ReportType.LETTER.name(), ReasonType.ABUSE.name(),
+                        "욕설 포함", "PENDING", LocalDateTime.now(),
+                        10L, null, null, null
+                )
+        ));
+
+        given(reportRepository.findAllWithFilters(eq("LETTER"), eq("PENDING"), any(Pageable.class)))
+                .willReturn(mockPage);
+
+        // When (서비스 메서드 호출)
+        Page<ReportsResponse> result = reportService.getAllReports("LETTER", "PENDING", pageable);
+
+        // Then (검증)
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getReportType()).isEqualTo("LETTER");
+        assertThat(result.getContent().get(0).getStatus()).isEqualTo("PENDING");
+
+        // Mock 검증
+        verify(reportRepository, times(1)).findAllWithFilters(eq("LETTER"), eq("PENDING"), any(Pageable.class));
+    }
 
 }

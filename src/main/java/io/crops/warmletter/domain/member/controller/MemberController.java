@@ -7,10 +7,7 @@ import io.crops.warmletter.global.response.BaseResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/members")
@@ -29,5 +26,16 @@ public class MemberController {
     public ResponseEntity<BaseResponse<MeResponse>> getMe() {
         MeResponse response = memberService.getMe();
         return ResponseEntity.ok(BaseResponse.of(response, "마이페이지 조회 완료"));
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<BaseResponse<Void>> deleteMe(
+            @RequestHeader("Authorization") String bearerToken,
+            @CookieValue(value = "refresh_token", required = false) String refreshToken,
+            HttpServletResponse response
+    ) {
+        memberService.deleteMe(bearerToken.substring(7), refreshToken, response);
+
+        return ResponseEntity.ok(BaseResponse.of(null, "회원 탈퇴 완료"));
     }
 }

@@ -6,6 +6,7 @@ import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.EventCommentsResponse;
 import io.crops.warmletter.domain.eventpost.dto.response.EventPostDetailResponse;
 import io.crops.warmletter.domain.eventpost.dto.response.EventPostResponse;
+import io.crops.warmletter.domain.eventpost.dto.response.EventPostStatusResponse;
 import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException;
 import io.crops.warmletter.domain.eventpost.service.EventPostService;
@@ -46,7 +47,7 @@ class EventPostControllerTest {
 
     @Test
     @DisplayName("POST 게시판 생성 성공")
-    void create_event_post_success() throws Exception {
+    void create_eventPost_success() throws Exception {
         // given
         CreateEventPostRequest createEventPostRequest = CreateEventPostRequest.builder()
                 .title("제목")
@@ -65,15 +66,15 @@ class EventPostControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createEventPostRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.eventPostId").value(1L)) // 반환된 eventPostId 검증
-                .andExpect(jsonPath("$.data.title").value("제목")) // 반환된 title 검증
-                .andExpect(jsonPath("$.message").value("게시판 생성 성공")) // 반환된 message 검증
+                .andExpect(jsonPath("$.data.eventPostId").value(1L))
+                .andExpect(jsonPath("$.data.title").value("제목"))
+                .andExpect(jsonPath("$.message").value("게시판 생성 성공"))
                 .andDo(print());
     }
 
     @Test
     @DisplayName("POST 게시판 생성 실패 - title 값이 없음")
-    void create_event_post_not_exist_title () throws Exception {
+    void create_eventPost_notExistTitle () throws Exception {
         //given
         CreateEventPostRequest createEventPostRequest = CreateEventPostRequest.builder()
                 .title("")
@@ -90,7 +91,7 @@ class EventPostControllerTest {
 
     @Test
     @DisplayName("DELETE 게시판 삭제 성공")
-    void delete_event_post_success() throws Exception {
+    void delete_eventPost_success() throws Exception {
         // given
         long eventPostId = 1L;
 
@@ -99,14 +100,14 @@ class EventPostControllerTest {
         // when & then
         mockMvc.perform(delete("/api/admin/event-posts/{eventPostId}", eventPostId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("게시판 삭제 성공")) // 성공 메시지 검증
-                .andExpect(jsonPath("$.data.eventPostId").value(eventPostId)) // 삭제된 eventPostId 검증
+                .andExpect(jsonPath("$.message").value("게시판 삭제 성공"))
+                .andExpect(jsonPath("$.data.eventPostId").value(eventPostId))
                 .andDo(print());
     }
 
     @Test
     @DisplayName("DELETE 게시판 삭제 실패 - 일치하는 eventPostId 없음")
-    void delete_event_post_not_found() throws Exception {
+    void delete_eventPost_notFound() throws Exception {
         // given
         long eventPostId = 999L;
 
@@ -115,13 +116,13 @@ class EventPostControllerTest {
         // when & then
         mockMvc.perform(delete("/api/admin/event-posts/{eventPostId}", eventPostId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("해당 이벤트 게시글을 찾을 수 없습니다.")) // 실패 메시지 검증
+                .andExpect(jsonPath("$.message").value("해당 이벤트 게시글을 찾을 수 없습니다."))
                 .andDo(print());
     }
 
     @Test
     @DisplayName("GET 사용중인 게시판 조회 성공")
-    void get_used_event_post_success() throws Exception {
+    void get_usedEventPost_success() throws Exception {
         EventPostResponse eventPostResponse = EventPostResponse.builder()
                 .eventPostId(1L)
                 .title("제목")
@@ -135,13 +136,13 @@ class EventPostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.eventPostId").value(1L))
                 .andExpect(jsonPath("$.data.title").value("제목"))
-                .andExpect(jsonPath("$.message").value("게시판 조회(사용중) 성공")) // 실패 메시지 검증
+                .andExpect(jsonPath("$.message").value("게시판 조회(사용중) 성공"))
                 .andDo(print());
     }
 
     @Test
     @DisplayName("GET 게시판 개별 조회 성공")
-    void get_event_post_success() throws Exception {
+    void get_eventPost_success() throws Exception {
         long eventPostId = 1L;
 
         List<EventCommentsResponse> comments = new ArrayList<>();
@@ -170,10 +171,29 @@ class EventPostControllerTest {
                 .andExpect(jsonPath("$.data.eventPostComments[1].commentId").value(2L))
                 .andExpect(jsonPath("$.data.eventPostComments[1].zipCode").value("22222"))
                 .andExpect(jsonPath("$.data.eventPostComments[1].content").value("내용2"))
-                .andExpect(jsonPath("$.message").value("게시판 조회(개별) 성공")) // 실패 메시지 검증
+                .andExpect(jsonPath("$.message").value("게시판 조회(개별) 성공"))
                 .andDo(print());
     }
 
+    @Test
+    @DisplayName("PATCH 게시판 사용여부 변경 성공 - true에서 false")
+    void update_eventPostIsUsedToFalse_success() throws Exception {
+        // given
+        long eventPostId = 1L;
 
+        EventPostStatusResponse eventPostStatusResponse = EventPostStatusResponse.builder()
+                .eventPostId(1L)
+                .isUsed(false).build();
+
+        when(eventPostService.updateEventPostIsUsed(eventPostId)).thenReturn(eventPostStatusResponse);
+
+        // when & then
+        mockMvc.perform(patch("/api/admin/event-posts/{eventPostId}/status", eventPostId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.eventPostId").value(eventPostStatusResponse.getEventPostId()))
+                .andExpect(jsonPath("$.data.isUsed").value(eventPostStatusResponse.getIsUsed()))
+                .andExpect(jsonPath("$.message").value("게시판 사용여부 변경 성공"))
+                .andDo(print());
+    }
 
 }

@@ -4,6 +4,7 @@ import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.member.dto.response.MeResponse;
 import io.crops.warmletter.domain.member.dto.response.ZipCodeResponse;
 import io.crops.warmletter.domain.member.entity.Member;
+import io.crops.warmletter.domain.member.exception.DeletedMemberException;
 import io.crops.warmletter.domain.member.exception.DuplicateZipCodeException;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
@@ -83,5 +84,20 @@ public class MemberService {
 
         return memberRepository.findMeById(currentUserId)
                 .orElseThrow(MemberNotFoundException::new);
+    }
+
+    @Transactional
+    public void deleteMe(String accessToken, String refreshToken, HttpServletResponse response) {
+        Long currentUserId = authFacade.getCurrentUserId();
+        Member member = memberRepository.findById(currentUserId)
+                .orElseThrow(MemberNotFoundException::new);
+
+        if (!member.isActive()) {
+            throw new DeletedMemberException();
+        }
+
+        member.inactive();
+
+        authFacade.logout(accessToken, refreshToken, response);
     }
 }

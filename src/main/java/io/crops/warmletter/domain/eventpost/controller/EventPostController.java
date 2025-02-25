@@ -5,6 +5,7 @@ import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.EventCommentResponse;
 import io.crops.warmletter.domain.eventpost.dto.response.EventPostDetailResponse;
 import io.crops.warmletter.domain.eventpost.dto.response.EventPostResponse;
+import io.crops.warmletter.domain.eventpost.dto.response.EventPostStatusResponse;
 import io.crops.warmletter.domain.eventpost.service.EventCommentService;
 import io.crops.warmletter.domain.eventpost.service.EventPostService;
 import io.crops.warmletter.global.response.BaseResponse;
@@ -45,5 +46,10 @@ public class EventPostController {
         return ResponseEntity.ok(BaseResponse.of(eventPostService.getEventPostDetail(eventPostId),"게시판 조회(개별) 성공"));
     }
 
+    // 이벤트 게시판 사용여부 변경(true or false)
+    @PatchMapping("/admin/event-posts/{eventPostId}/status")
+    public ResponseEntity<BaseResponse<EventPostStatusResponse>> updateEventPostIsUsed(@PathVariable Long eventPostId){
+        return ResponseEntity.ok(BaseResponse.of(eventPostService.updateEventPostIsUsed(eventPostId),"게시판 사용여부 변경 성공"));
+    }
 
 }

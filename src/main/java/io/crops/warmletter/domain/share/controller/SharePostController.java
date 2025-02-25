@@ -28,7 +28,7 @@ public class SharePostController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new PageResponse<>(sharePostService.getAllPosts(pageable)));
     }
-    //
+
     @GetMapping("/share-posts/{sharePostId}")
     public ResponseEntity<BaseResponse<SharePostDetailResponse>> getPostDetail(@PathVariable(name = "sharePostId") Long sharePostId)
     {

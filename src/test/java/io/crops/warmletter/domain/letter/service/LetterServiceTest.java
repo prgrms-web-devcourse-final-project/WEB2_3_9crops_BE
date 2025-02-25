@@ -89,6 +89,7 @@ class LetterServiceTest {
                 .fontType(randomLetterRequest.getFont())
                 .receiverId(randomLetterRequest.getReceiverId())
                 .parentLetterId(randomLetterRequest.getParentLetterId())
+                .status(Status.IN_DELIVERY)
                 .build();
 
         // repository.save()가 반환할 Letter 객체 미리 준비 (다이렉트 편지, 답장)
@@ -102,6 +103,7 @@ class LetterServiceTest {
                 .fontType(directLetterRequest.getFont())
                 .receiverId(directLetterRequest.getReceiverId())
                 .parentLetterId(directLetterRequest.getParentLetterId())
+                .status(Status.IN_DELIVERY)
                 .build();
     }
 
@@ -128,7 +130,7 @@ class LetterServiceTest {
                 () -> assertEquals("12345", authFacade.getZipCode()),
                 () -> assertNull(response.getReceiverId()),
                 () -> assertNull(response.getParentLetterId()),
-                () -> assertEquals(DeliveryStatus.IN_DELIVERY, response.getDeliveryStatus()),
+                () -> assertEquals(Status.IN_DELIVERY, response.getStatus()),
                 () -> assertNotNull(response.getDeliveryStartedAt()),
                 () -> assertNotNull(response.getDeliveryCompletedAt())
         );
@@ -160,7 +162,7 @@ class LetterServiceTest {
                 () -> assertEquals(3L, response.getReceiverId()),
                 () -> assertEquals(5L, response.getParentLetterId()),
                 () -> assertEquals("12345", authFacade.getZipCode()),
-                () -> assertEquals(DeliveryStatus.IN_DELIVERY, response.getDeliveryStatus()),
+                () -> assertEquals(Status.IN_DELIVERY, response.getStatus()),
                 () -> assertNotNull(response.getDeliveryStartedAt()),
                 () -> assertNotNull(response.getDeliveryCompletedAt())
         );
@@ -312,14 +314,14 @@ class LetterServiceTest {
         when(letterRepository.findById(1L)).thenReturn(Optional.of(letter));
 
         // 검증: 기본적으로 편지는 활성 상태여야 함
-        assertTrue(letter.getIsActive(), "편지는 기본적으로 활성 상태여야 합니다.");
+        assertTrue(letter.isActive(), "편지는 기본적으로 활성 상태여야 합니다.");
 
         // When: delete 메서드를 호출하여 소프트 딜리트 수행
         letterService.deleteLetter(1L);
 
         // Then: 해당 편지를 다시 조회하면 isActive가 false로 변경되어 있어야 함
         Letter deletedLetter = letterRepository.findById(1L).orElseThrow(LetterNotFoundException::new);
-        assertFalse(deletedLetter.getIsActive(), "편지 삭제 후 isActive는 false여야 합니다.");
+        assertFalse(deletedLetter.isActive(), "편지 삭제 후 isActive는 false여야 합니다.");
     }
 
     @Test

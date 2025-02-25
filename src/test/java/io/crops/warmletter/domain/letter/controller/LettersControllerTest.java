@@ -5,10 +5,7 @@ import io.crops.warmletter.config.TestConfig;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.entity.Letter;
-import io.crops.warmletter.domain.letter.enums.Category;
-import io.crops.warmletter.domain.letter.enums.FontType;
-import io.crops.warmletter.domain.letter.enums.LetterType;
-import io.crops.warmletter.domain.letter.enums.PaperType;
+import io.crops.warmletter.domain.letter.enums.*;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.letter.service.LetterService;
@@ -115,7 +112,7 @@ class LettersControllerTest {
                 .andExpect(jsonPath("$.data.zipCode").value("12345"))
                 .andExpect(jsonPath("$.data.title").value("제목입니다"))
                 .andExpect(jsonPath("$.data.content").value("편지 내용입니다"))
-                .andExpect(jsonPath("$.data.deliveryStatus").value("IN_DELIVERY"))
+                .andExpect(jsonPath("$.data.status").value("IN_DELIVERY"))
                 .andExpect(jsonPath("$.message").value("편지가 성공적으로 생성되었습니다."))
                 .andDo(print());
 
@@ -156,7 +153,7 @@ class LettersControllerTest {
                 .andExpect(jsonPath("$.data.category").value("CONSULT"))
                 .andExpect(jsonPath("$.data.paperType").value("COMFORT"))
                 .andExpect(jsonPath("$.data.fontType").value("HIMCHAN"))
-                .andExpect(jsonPath("$.data.deliveryStatus").value("IN_DELIVERY"))
+                .andExpect(jsonPath("$.data.status").value("IN_DELIVERY"))
                 .andExpect(jsonPath("$.message").value("편지가 성공적으로 생성되었습니다."))
                 .andDo(print());
 
@@ -240,21 +237,22 @@ class LettersControllerTest {
                 .content("테스트 편지 내용")
                 .fontType(FontType.HIMCHAN)
                 .paperType(PaperType.COMFORT)
+                .status(Status.IN_DELIVERY)
                 .build();
 
         // 보통 빌더에서 isActive의 기본값을 true로 설정합니다.
         lettersRepository.save(letter);
         Long letterId = letter.getId();
 
-        assertEquals(true, letter.getIsActive());
-        assertTrue(letter.getIsActive(), "편지는 기본적으로 활성 상태여야 함.");
+        assertEquals(true, letter.isActive());
+        assertTrue(letter.isActive(), "편지는 기본적으로 활성 상태여야 함.");
 
         // When: delete 메서드를 호출하여 소프트 딜리트 수행
         letterService.deleteLetter(letterId);
 
         // Then: 해당 편지를 다시 조회하면 isActive가 false로 변경되어 있어야 함
         Letter deletedLetter = lettersRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
-        assertFalse(deletedLetter.getIsActive(), "편지 삭제 후 isActive는 false.");
+        assertFalse(deletedLetter.isActive(), "편지 삭제 후 isActive는 false.");
     }
 
 }

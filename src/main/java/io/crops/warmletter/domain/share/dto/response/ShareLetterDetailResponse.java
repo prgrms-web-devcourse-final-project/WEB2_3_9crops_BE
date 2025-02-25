@@ -9,12 +9,11 @@ import java.util.List;
 @AllArgsConstructor
 public class ShareLetterDetailResponse {
 
-    // 공유 제안 편지 클릭시
-    // 상세 편지 정보가 나와야하는 클래스 .
     private Long sharePostId;
-    private String zipCode;
+    private String writerZipCode;
     private String sharePostContent;
     private List<ShareLetterPostResponse> letters;
+
 
 }
 

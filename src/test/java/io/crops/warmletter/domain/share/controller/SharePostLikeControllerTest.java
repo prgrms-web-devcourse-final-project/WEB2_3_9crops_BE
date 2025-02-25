@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.share.controller;
 
 import io.crops.warmletter.domain.share.dto.request.SharePostLikeRequest;
+import io.crops.warmletter.domain.share.dto.response.SharePostLikeResponse;
 import io.crops.warmletter.domain.share.service.SharePostLikeService;
 import io.crops.warmletter.global.response.BaseResponse;
 import org.junit.jupiter.api.DisplayName;
@@ -43,5 +44,29 @@ class SharePostLikeControllerTest {
         );
 
         verify(sharePostLikeService).toggleLike(sharePostId, request.getMemberId());
+    }
+
+    @Test
+    @DisplayName("좋아요 개수 요청 호출 성공")
+    void getLikeCountAndStatus() {
+        // given
+        Long sharePostId = 1L;
+        SharePostLikeResponse mockResponse = new SharePostLikeResponse(5L, true);
+        when(sharePostLikeService.getLikeCountAndStatus(sharePostId, 1L))
+                .thenReturn(mockResponse);
+
+        // when
+        ResponseEntity<SharePostLikeResponse> response =
+                sharePostLikeController.getLikeCountAndStatus(sharePostId);
+
+        // then
+        assertAll(
+                () -> assertNotNull(response),
+                () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
+                () -> assertEquals(5L, response.getBody().getLikeCount()),
+                () -> assertEquals(true, response.getBody().isLiked())
+        );
+
+        verify(sharePostLikeService).getLikeCountAndStatus(sharePostId, 1L);
     }
 }

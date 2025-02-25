@@ -6,6 +6,7 @@ import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.LetterType;
+import io.crops.warmletter.domain.letter.enums.Status;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
@@ -46,13 +47,15 @@ public class LetterService {
         if (request.getReceiverId() == null) {
             builder.receiverId(null)
                     .parentLetterId(null)
-                    .letterType(LetterType.RANDOM);
+                    .letterType(LetterType.RANDOM)
+                    .status(Status.IN_DELIVERY);
         }
         //주고받는 답장편지, 랜덤편지에 대한 답장
         else {
             builder.receiverId(request.getReceiverId())
                     .parentLetterId(request.getParentLetterId())
-                    .letterType(LetterType.DIRECT);
+                    .letterType(LetterType.DIRECT)
+                    .status(Status.IN_DELIVERY);
         }
         Letter letter = builder.build();
         Letter savedLetter = letterRepository.save(letter);

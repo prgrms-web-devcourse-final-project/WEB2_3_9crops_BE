@@ -1,6 +1,5 @@
 package io.crops.warmletter.domain.letter.entity;
 
-
 import io.crops.warmletter.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -13,8 +12,8 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "letter_matchings")
-public class LetterMatching extends BaseTimeEntity {
+@Table(name = "letter_temporary_matchings")
+public class LetterTemporaryMatching extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,17 +25,17 @@ public class LetterMatching extends BaseTimeEntity {
 
     private Long secondMemberId;
 
-    private boolean isActive;
-
     private LocalDateTime matchedAt;
 
+    private LocalDateTime replyDeadLine;
 
     @Builder
-    public LetterMatching(Long letterId, Long firstMemberId, Long secondMemberId) {
+    public LetterTemporaryMatching(Long letterId, Long firstMemberId, Long secondMemberId) {
         this.letterId = letterId;
         this.firstMemberId = firstMemberId;
         this.secondMemberId = secondMemberId;
-        this.isActive = true; //매칭 테이블 생성 시 바로 활성
         this.matchedAt = LocalDateTime.now(); //매칭된 시간
+        this.replyDeadLine = LocalDateTime.now().plusDays(1); //첫 답장 제한시간
     }
+
 }

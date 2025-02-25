@@ -16,11 +16,11 @@ public class TemporaryMatchingResponse {
 
     private final Long letterId;
 
+    private final String letterTitle;      // 매칭된 편지의 제목
+
     private final String content;
 
     private final String zipCode;          // 현재 로그인한 회원의 우편번호
-
-    private final String letterTitle;      // 매칭된 편지의 제목
 
     private final Category category;       // 편지의 카테고리
 

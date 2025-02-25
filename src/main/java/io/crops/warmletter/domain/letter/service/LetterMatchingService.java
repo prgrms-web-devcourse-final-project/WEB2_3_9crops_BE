@@ -1,20 +1,17 @@
 package io.crops.warmletter.domain.letter.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
-import io.crops.warmletter.domain.letter.dto.request.RandomMatchingRequest;
 import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
 import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
-import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
-import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
+import io.crops.warmletter.domain.letter.exception.TemporaryMatchingNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.letter.repository.LetterTemporaryMatchingRepository;
 import io.crops.warmletter.domain.member.entity.Member;
-import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,11 +30,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class LetterMatchingService {
 
+    private final LetterTemporaryMatchingRepository letterTemporaryMatchingRepository;
     private final LetterRepository letterRepository;
     private final MemberRepository memberRepository;
     private final AuthFacade authFacade;
-    private final LetterMatchingRepository letterMatchingRepository;
-    private final LetterTemporaryMatchingRepository letterTemporaryMatchingRepository;
 
     /**
      *  랜덤 편지 리스트 찾기 5개씩 (수정필요)
@@ -49,6 +45,7 @@ public class LetterMatchingService {
         //todo 배송완료된 편지만 보이게 조건문 추가. -> 배송완료는 배치처리로 하기.
         //todo 활성 여부 false만 -> 신고처리가 안된것만 보여주기.
         //todo 랜덤편지 content값 대신에 title값으로, paperType fontType 빼기
+        //todo 편지 리스트 다 가져와버리기
         return letterRepository.findRandomLettersByCategory(category, pageable);
     }
 
@@ -115,7 +112,11 @@ public class LetterMatchingService {
     public void matchingCancel(){
         Long currentUserId = authFacade.getCurrentUserId();
         Optional<LetterTemporaryMatching> tempTable = letterTemporaryMatchingRepository.findBySecondMemberId(currentUserId);
-
+        if (tempTable.isPresent()) {
+            letterTemporaryMatchingRepository.delete(tempTable.get());
+        } else {
+            throw new TemporaryMatchingNotFoundException();
+        }
     }
 
 //    /**

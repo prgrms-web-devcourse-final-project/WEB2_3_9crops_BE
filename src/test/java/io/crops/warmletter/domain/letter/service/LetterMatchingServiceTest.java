@@ -47,7 +47,7 @@ class LetterMatchingServiceTest {
     private LetterTemporaryMatchingRepository letterTemporaryMatchingRepository;
 
     @InjectMocks
-    private LetterMatchingService letterMatchingService;
+    private RandomLetterService letterMatchingService;
 
 
     @Test

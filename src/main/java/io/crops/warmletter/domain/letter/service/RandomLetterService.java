@@ -28,7 +28,7 @@ import java.util.Optional;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class LetterMatchingService {
+public class RandomLetterService {
 
     private final LetterTemporaryMatchingRepository letterTemporaryMatchingRepository;
     private final LetterRepository letterRepository;

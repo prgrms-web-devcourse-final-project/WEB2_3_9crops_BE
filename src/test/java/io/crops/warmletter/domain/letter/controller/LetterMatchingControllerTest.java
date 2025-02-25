@@ -7,7 +7,7 @@ import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.FontType;
 import io.crops.warmletter.domain.letter.enums.PaperType;
-import io.crops.warmletter.domain.letter.service.LetterMatchingService;
+import io.crops.warmletter.domain.letter.service.RandomLetterService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(LetterMatchingController.class)
+@WebMvcTest(RandomLetterController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class LetterMatchingControllerTest {
 
@@ -38,11 +38,11 @@ class LetterMatchingControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private LetterMatchingService letterMatchingService;
+    private RandomLetterService letterMatchingService;
 
 
     @Test
-    @DisplayName("GET /api/random/{category} 랜덤 편지 리스트 확인")
+    @DisplayName("GET /api/random-letters/{category} 랜덤 편지 리스트 확인")
     void getRandomLetter() throws Exception {
         //given
         Category category = Category.CELEBRATION;
@@ -69,7 +69,7 @@ class LetterMatchingControllerTest {
         );
         when(letterMatchingService.findRandomLetters(category)).thenReturn(randomLetters);
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/random/" + category)
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/random-letters/" + category)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].letterId").value(1L))

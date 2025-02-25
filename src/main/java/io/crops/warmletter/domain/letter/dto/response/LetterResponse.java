@@ -3,9 +3,9 @@ package io.crops.warmletter.domain.letter.dto.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.Category;
-import io.crops.warmletter.domain.letter.enums.DeliveryStatus;
 import io.crops.warmletter.domain.letter.enums.FontType;
 import io.crops.warmletter.domain.letter.enums.PaperType;
+import io.crops.warmletter.domain.letter.enums.Status;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -40,7 +40,7 @@ public class LetterResponse {
 
     private final FontType fontType;
 
-    private final DeliveryStatus deliveryStatus;
+    private final Status deliveryStatus;
 
     private final LocalDateTime deliveryStartedAt;
 

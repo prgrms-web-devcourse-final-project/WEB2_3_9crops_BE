@@ -2,6 +2,8 @@ package io.crops.warmletter.domain.member.entity;
 
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.member.enums.Role;
+import io.crops.warmletter.domain.member.enums.TemperaturePolicy;
+import io.crops.warmletter.domain.member.exception.InvalidTemperatureException;
 import io.crops.warmletter.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -18,6 +20,9 @@ import java.util.List;
 @Table(name = "members")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
+
+    private static final float MAX_TEMPERATURE = 100.0f;
+    private static final float MIN_TEMPERATURE = 0.0f;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -74,5 +79,43 @@ public class Member extends BaseEntity {
 
     public void inactive() {
         this.isActive = false;
+    }
+
+    public void applyTemperaturePolicy(TemperaturePolicy policy) {
+        float change = policy.getValue();
+
+        if (change > 0) {
+            increaseTemperature(change);
+        } else if (change < 0) {
+            decreaseTemperature(Math.abs(change));
+        }
+    }
+
+    public void increaseTemperature(float temperature) {
+        if (temperature <= 0) {
+            throw new InvalidTemperatureException();
+        }
+
+        float newTemperature = this.temperature + temperature;
+
+        if (newTemperature > MAX_TEMPERATURE) {
+            this.temperature = MAX_TEMPERATURE;
+        } else {
+            this.temperature = newTemperature;
+        }
+    }
+
+    public void decreaseTemperature(float temperature) {
+        if (temperature <= 0) {
+            throw new InvalidTemperatureException();
+        }
+
+        float newTemperature = this.temperature - temperature;
+
+        if (newTemperature < MIN_TEMPERATURE) {
+            this.temperature = MIN_TEMPERATURE;
+        } else {
+            this.temperature = newTemperature;
+        }
     }
 }

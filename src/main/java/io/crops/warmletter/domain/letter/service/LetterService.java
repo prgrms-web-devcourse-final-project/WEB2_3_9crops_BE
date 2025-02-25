@@ -3,12 +3,17 @@ package io.crops.warmletter.domain.letter.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
+import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
+import io.crops.warmletter.domain.letter.enums.LetterEvaluation;
 import io.crops.warmletter.domain.letter.enums.LetterType;
 import io.crops.warmletter.domain.letter.enums.Status;
+import io.crops.warmletter.domain.letter.exception.LetterNotBelongException;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
+import io.crops.warmletter.domain.member.entity.Member;
+import io.crops.warmletter.domain.member.enums.TemperaturePolicy;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -84,7 +89,7 @@ public class LetterService {
     @Transactional //더티채킹
     public void deleteLetter(Long letterId) {
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
-        letter.softDelete();
+        letter.inactive();
     }
 
 
@@ -92,5 +97,23 @@ public class LetterService {
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
         String zipCode = memberRepository.findById(letter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode(); //편지를 쓴 사람의 zipCode
         return LetterResponse.fromEntityForDetailView(letter, zipCode);
+    }
+
+    @Transactional
+    public void evaluateLetter(Long letterId, EvaluateLetterRequest request) {
+        Long receiverId = authFacade.getCurrentUserId();
+
+        Letter letter = letterRepository.findByIdAndReceiverId(letterId, receiverId)
+                                        .orElseThrow(LetterNotBelongException::new);
+
+        Member evaluatedMember = memberRepository.findById(letter.getWriterId())
+                                                    .orElseThrow(MemberNotFoundException::new);
+
+        if (request.getEvaluation() == LetterEvaluation.GOOD) {
+            evaluatedMember.applyTemperaturePolicy(TemperaturePolicy.GOOD_EVALUATION);
+        } else if (request.getEvaluation() == LetterEvaluation.BAD) {
+            evaluatedMember.applyTemperaturePolicy(TemperaturePolicy.BAD_EVALUATION);
+        }
+
     }
 }

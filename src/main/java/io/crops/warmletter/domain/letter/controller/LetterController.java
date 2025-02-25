@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.letter.controller;
 
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
+import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.service.LetterService;
 import io.crops.warmletter.global.response.BaseResponse;
@@ -64,8 +65,8 @@ public class LetterController {
     }
 
     @PostMapping("/letters/{letterId}/evaluate")
-    public ResponseEntity<BaseResponse<Void>> evaluateLetter(@PathVariable Long letterId) {
-        letterService.evaluateLetter(letterId);
+    public ResponseEntity<BaseResponse<Void>> evaluateLetter(@PathVariable Long letterId, @RequestBody EvaluateLetterRequest request) {
+        letterService.evaluateLetter(letterId, request);
         return ResponseEntity.ok(BaseResponse.of(null, "편지 평가 완료"));
     }
 }

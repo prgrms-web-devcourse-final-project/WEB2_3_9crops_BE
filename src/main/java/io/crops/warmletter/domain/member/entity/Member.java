@@ -3,7 +3,6 @@ package io.crops.warmletter.domain.member.entity;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.domain.member.enums.TemperaturePolicy;
-import io.crops.warmletter.domain.member.exception.InvalidTemperatureException;
 import io.crops.warmletter.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -21,9 +20,6 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
 
-    private static final float MAX_TEMPERATURE = 100.0f;
-    private static final float MIN_TEMPERATURE = 0.0f;
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -39,8 +35,8 @@ public class Member extends BaseEntity {
 
     private String password;
 
-    @Column(nullable = false)
-    private float temperature;
+    @Embedded
+    private Temperature temperature;
 
     @Enumerated(EnumType.STRING)
     private Category preferredLetterCategory;
@@ -57,12 +53,12 @@ public class Member extends BaseEntity {
     private List<SocialAccount> socialAccounts = new ArrayList<>();
 
     @Builder
-    public Member(String socialUniqueId, String email, String zipCode, String password, float temperature, Category preferredLetterCategory, Role role, LocalDateTime lastMatchedAt) {
+    public Member(String socialUniqueId, String email, String zipCode, String password, Category preferredLetterCategory, Role role, LocalDateTime lastMatchedAt) {
         this.socialUniqueId = socialUniqueId;
         this.email = email;
         this.zipCode = zipCode;
         this.password = password;
-        this.temperature = temperature;
+        this.temperature = new Temperature(36.5f);
         this.preferredLetterCategory = preferredLetterCategory;
         this.role = role;
         this.lastMatchedAt = lastMatchedAt;
@@ -81,41 +77,19 @@ public class Member extends BaseEntity {
         this.isActive = false;
     }
 
+    public float getTemperatureValue() {
+        return temperature.getValue();
+    }
+
+    public void increaseTemperature(float amount) {
+        temperature.increase(amount);
+    }
+
+    public void decreaseTemperature(float amount) {
+        temperature.decrease(amount);
+    }
+
     public void applyTemperaturePolicy(TemperaturePolicy policy) {
-        float change = policy.getValue();
-
-        if (change > 0) {
-            increaseTemperature(change);
-        } else if (change < 0) {
-            decreaseTemperature(Math.abs(change));
-        }
-    }
-
-    public void increaseTemperature(float temperature) {
-        if (temperature <= 0) {
-            throw new InvalidTemperatureException();
-        }
-
-        float newTemperature = this.temperature + temperature;
-
-        if (newTemperature > MAX_TEMPERATURE) {
-            this.temperature = MAX_TEMPERATURE;
-        } else {
-            this.temperature = newTemperature;
-        }
-    }
-
-    public void decreaseTemperature(float temperature) {
-        if (temperature <= 0) {
-            throw new InvalidTemperatureException();
-        }
-
-        float newTemperature = this.temperature - temperature;
-
-        if (newTemperature < MIN_TEMPERATURE) {
-            this.temperature = MIN_TEMPERATURE;
-        } else {
-            this.temperature = newTemperature;
-        }
+        temperature.applyPolicy(policy);
     }
 }

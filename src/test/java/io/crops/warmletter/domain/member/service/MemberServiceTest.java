@@ -95,7 +95,6 @@ class MemberServiceTest {
                             .socialUniqueId("GOOGLE_12345")
                             .zipCode("12345")
                             .email("test@test.com")
-                            .temperature(36.5f)
                             .role(Role.USER)
                             .build();
         when(authFacade.getCurrentUserId()).thenReturn(memberId);
@@ -117,7 +116,6 @@ class MemberServiceTest {
         Member member = Member.builder()
                 .socialUniqueId("GOOGLE_12345")
                 .email("test@test.com")
-                .temperature(36.5f)
                 .role(Role.USER)
                 .build();
 
@@ -184,7 +182,6 @@ class MemberServiceTest {
                 .socialUniqueId("GOOGLE_12345")
                 .zipCode("1A2AC")
                 .email("test@test.com")
-                .temperature(36.5f)
                 .role(Role.USER)
                 .build();
 
@@ -204,7 +201,7 @@ class MemberServiceTest {
         when(memberRepository.findMeById(memberId))
                 .thenReturn(Optional.of(new MeResponse(
                         member.getZipCode(),
-                        member.getTemperature(),
+                        member.getTemperatureValue(),
                         socialAccount.getProvider(),
                         member.getEmail()
                 )));
@@ -213,7 +210,7 @@ class MemberServiceTest {
 
         //then
         assertThat(member.getZipCode()).isEqualTo(meResponse.getZipCode());
-        assertThat(member.getTemperature()).isEqualTo(meResponse.getTemperature());
+        assertThat(member.getTemperatureValue()).isEqualTo(meResponse.getTemperature());
         assertThat(socialAccount.getProvider()).isEqualTo(meResponse.getSocial());
         assertThat(member.getEmail()).isEqualTo(meResponse.getEmail());
 
@@ -251,7 +248,6 @@ class MemberServiceTest {
                 .socialUniqueId("GOOGLE_12345")
                 .zipCode("1A2AC")
                 .email("test@test.com")
-                .temperature(36.5f)
                 .role(Role.USER)
                 .build();
 
@@ -286,7 +282,6 @@ class MemberServiceTest {
                 .socialUniqueId("GOOGLE_12345")
                 .zipCode("1A2AC")
                 .email("test@test.com")
-                .temperature(36.5f)
                 .role(Role.USER)
                 .build();
 

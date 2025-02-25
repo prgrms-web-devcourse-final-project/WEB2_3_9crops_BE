@@ -42,4 +42,8 @@ public class LetterMatching extends BaseTimeEntity {
         this.matchedAt = LocalDateTime.now(); //매칭된 시간
         this.replyDeadLine = LocalDateTime.now().plusDays(1); //첫 답장 제한시간
     }
+
+    public void inactive() {
+        this.isActive = false;
+    }
 }

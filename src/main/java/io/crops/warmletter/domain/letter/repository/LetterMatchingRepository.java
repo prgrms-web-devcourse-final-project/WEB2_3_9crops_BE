@@ -23,4 +23,5 @@ public interface LetterMatchingRepository extends JpaRepository<LetterMatching, 
             "OR (lm.firstMemberId = :id AND lm.secondMemberId = :myId)")
     List<LetterMatching> findMatchingIdsByMembers(Long myId, Long id);
 
+    boolean existsByIdAndFirstMemberIdOrSecondMemberId(Long Id, Long firstMemberId, Long secondMemberId);
 }

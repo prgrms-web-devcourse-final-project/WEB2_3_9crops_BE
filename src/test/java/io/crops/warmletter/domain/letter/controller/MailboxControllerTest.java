@@ -2,7 +2,7 @@ package io.crops.warmletter.domain.letter.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.domain.letter.dto.response.MailboxResponse;
-import io.crops.warmletter.domain.letter.service.MailBoxService;
+import io.crops.warmletter.domain.letter.service.MailboxService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ class MailboxControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private MailBoxService mailBoxService;
+    private MailboxService mailBoxService;
 
     @Test
     @DisplayName("GET /api/mailbox - 내 편지함 목록 조회 성공 테스트")

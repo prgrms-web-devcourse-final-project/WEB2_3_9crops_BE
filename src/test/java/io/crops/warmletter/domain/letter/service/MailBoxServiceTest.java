@@ -39,7 +39,7 @@ class MailBoxServiceTest {
     private AuthFacade authFacade;
 
     @InjectMocks
-    private MailBoxService mailBoxService;
+    private MailboxService mailBoxService;
 
     @Test
     @DisplayName("내 편지함 목록 조회 성공 테스트")

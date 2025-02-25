@@ -119,6 +119,8 @@ public class LetterMatchingService {
         }
     }
 
+    //lastMatchedAt 매칭시 시간 넣어주기.
+    //
 //    /**
 //     *  랜덤편지 매칭 로직
 //     */

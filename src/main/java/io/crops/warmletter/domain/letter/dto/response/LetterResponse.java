@@ -40,7 +40,7 @@ public class LetterResponse {
 
     private final FontType fontType;
 
-    private final Status deliveryStatus;
+    private final Status status;
 
     private final LocalDateTime deliveryStartedAt;
 
@@ -60,7 +60,7 @@ public class LetterResponse {
                 .category(letter.getCategory())
                 .paperType(letter.getPaperType())
                 .fontType(letter.getFontType())
-                .deliveryStatus(letter.getDeliveryStatus())
+                .status(letter.getDeliveryStatus())
                 .deliveryStartedAt(letter.getDeliveryStartedAt())
                 .deliveryCompletedAt(letter.getDeliveryCompletedAt())
                 .build();

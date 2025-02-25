@@ -4,9 +4,11 @@ import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 public interface LetterMatchingRepository extends JpaRepository<LetterMatching, Long> {
 
     //firstMemberId 1이고 secondMemberId: 2면 만약 memberId가 1이면 2반환 아니면 1반환

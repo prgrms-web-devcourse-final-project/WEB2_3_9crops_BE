@@ -128,7 +128,7 @@ class LetterServiceTest {
                 () -> assertEquals("12345", authFacade.getZipCode()),
                 () -> assertNull(response.getReceiverId()),
                 () -> assertNull(response.getParentLetterId()),
-                () -> assertEquals(Status.IN_DELIVERY, response.getDeliveryStatus()),
+                () -> assertEquals(Status.IN_DELIVERY, response.getStatus()),
                 () -> assertNotNull(response.getDeliveryStartedAt()),
                 () -> assertNotNull(response.getDeliveryCompletedAt())
         );
@@ -160,7 +160,7 @@ class LetterServiceTest {
                 () -> assertEquals(3L, response.getReceiverId()),
                 () -> assertEquals(5L, response.getParentLetterId()),
                 () -> assertEquals("12345", authFacade.getZipCode()),
-                () -> assertEquals(Status.IN_DELIVERY, response.getDeliveryStatus()),
+                () -> assertEquals(Status.IN_DELIVERY, response.getStatus()),
                 () -> assertNotNull(response.getDeliveryStartedAt()),
                 () -> assertNotNull(response.getDeliveryCompletedAt())
         );

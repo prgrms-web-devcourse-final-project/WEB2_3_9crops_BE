@@ -56,7 +56,7 @@ public class MailBoxService {
                 //매칭된 최초의 편지 id
                 Letter letter = letterRepository.findById(letterMatching.getLetterId()).orElseThrow(LetterNotFoundException::new);
                 Boolean isActive = letterMatching.isActive(); //매칭이 계속적으로 주고 받을 수 있는지
-                Boolean isRead = letter.getIsRead(); //편지가 읽어졌는지 todo 내 편지함 상세 조회 로직으로 다 찾아서 확인 해야 함. -> 전부 다 읽으면 true , 아니면 false로 반환
+                Boolean isRead = letter.isRead(); //편지가 읽어졌는지 todo 내 편지함 상세 조회 로직으로 다 찾아서 확인 해야 함. -> 전부 다 읽으면 true , 아니면 false로 반환
 
                 MailboxResponse response = MailboxResponse.builder()
                         .letterMatchingId(letterMatchingId) //매칭id
@@ -67,7 +67,7 @@ public class MailBoxService {
                 responses.add(response);
             }
         }
-        responses.sort(Comparator.comparing(MailboxResponse::getLetterMatchingId)); //아이디로 정렬 (시간순)
+        responses.sort(Comparator.comparing(MailboxResponse::getLetterMatchingId).reversed()); //아이디로 정렬 (시간순)
         return responses;
 
     }

@@ -1,12 +1,11 @@
 package io.crops.warmletter.domain.letter.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
-import io.crops.warmletter.domain.letter.enums.Category;
-import io.crops.warmletter.domain.letter.enums.FontType;
-import io.crops.warmletter.domain.letter.enums.LetterType;
-import io.crops.warmletter.domain.letter.enums.PaperType;
+import io.crops.warmletter.domain.letter.enums.*;
+import io.crops.warmletter.domain.letter.exception.LetterNotBelongException;
 import io.crops.warmletter.domain.letter.service.LetterService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,11 +18,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -114,5 +115,67 @@ class LettersControllerUnitTest {
                 .andExpect(jsonPath("$.data.paperType").value("PAPER"))
                 .andExpect(jsonPath("$.data.fontType").value("KYOBO"))
                 .andDo(print());
+    }
+
+    @DisplayName("편지 평가하기 API 호출 실패 - 권한 없는 편지")
+    @Test
+    void evaluateLetter_Fail_NotBelongLetter() throws Exception {
+        //given
+        Long invalidLetterId = 999L;
+
+        EvaluateLetterRequest request = new EvaluateLetterRequest();
+        LetterEvaluation evaluation = LetterEvaluation.GOOD;
+
+        Field evaluationField = EvaluateLetterRequest.class.getDeclaredField("evaluation");
+        evaluationField.setAccessible(true);
+        evaluationField.set(request, evaluation);
+
+        doThrow(new LetterNotBelongException())
+                .when(letterService)
+                .evaluateLetter(eq(invalidLetterId), any(EvaluateLetterRequest.class));
+
+        //when & then
+        mockMvc.perform(post("/api/letters/" + invalidLetterId + "/evaluate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("LET-006"))
+                .andExpect(jsonPath("$.message").value("편지에 대한 권한이 없습니다."));
+
+        verify(letterService).evaluateLetter(
+                eq(invalidLetterId),
+                any(EvaluateLetterRequest.class)
+        );
+    }
+
+    @DisplayName("편지 평가하기 API 호출 성공")
+    @Test
+    void evaluateLetter_Success() throws Exception {
+        //given
+        Long letterId = 1L;
+
+        EvaluateLetterRequest request = new EvaluateLetterRequest();
+        LetterEvaluation evaluation = LetterEvaluation.GOOD;
+
+        Field evaluationField = EvaluateLetterRequest.class.getDeclaredField("evaluation");
+        evaluationField.setAccessible(true);
+        evaluationField.set(request, evaluation);
+
+        doNothing()
+                .when(letterService)
+                .evaluateLetter(eq(letterId), any(EvaluateLetterRequest.class));
+
+        //when & then
+        mockMvc.perform(post("/api/letters/" + letterId + "/evaluate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("편지 평가 완료"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        verify(letterService).evaluateLetter(
+                eq(letterId),
+                any(EvaluateLetterRequest.class)
+        );
     }
 }

@@ -2,6 +2,7 @@ package io.crops.warmletter.domain.member.entity;
 
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.member.enums.Role;
+import io.crops.warmletter.domain.member.enums.TemperaturePolicy;
 import io.crops.warmletter.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -34,8 +35,8 @@ public class Member extends BaseEntity {
 
     private String password;
 
-    @Column(nullable = false)
-    private float temperature;
+    @Embedded
+    private Temperature temperature;
 
     @Enumerated(EnumType.STRING)
     private Category preferredLetterCategory;
@@ -52,12 +53,12 @@ public class Member extends BaseEntity {
     private List<SocialAccount> socialAccounts = new ArrayList<>();
 
     @Builder
-    public Member(String socialUniqueId, String email, String zipCode, String password, float temperature, Category preferredLetterCategory, Role role, LocalDateTime lastMatchedAt) {
+    public Member(String socialUniqueId, String email, String zipCode, String password, Category preferredLetterCategory, Role role, LocalDateTime lastMatchedAt) {
         this.socialUniqueId = socialUniqueId;
         this.email = email;
         this.zipCode = zipCode;
         this.password = password;
-        this.temperature = temperature;
+        this.temperature = new Temperature(36.5f);
         this.preferredLetterCategory = preferredLetterCategory;
         this.role = role;
         this.lastMatchedAt = lastMatchedAt;
@@ -74,5 +75,13 @@ public class Member extends BaseEntity {
 
     public void inactive() {
         this.isActive = false;
+    }
+
+    public float getTemperatureValue() {
+        return temperature.getValue();
+    }
+
+    public void applyTemperaturePolicy(TemperaturePolicy policy) {
+        temperature.applyPolicy(policy);
     }
 }

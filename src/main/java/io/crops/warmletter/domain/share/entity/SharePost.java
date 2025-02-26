@@ -1,22 +1,20 @@
 package io.crops.warmletter.domain.share.entity;
 
 import io.crops.warmletter.global.entity.BaseEntity;
-import io.crops.warmletter.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-
-import java.time.LocalDateTime;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
+@Table(
+        indexes = {
+                @Index(name = "idx_sharepost_active_created", columnList = "isActive,createdAt")
+        }
+)
 public class SharePost extends BaseEntity {
 
     @Id
@@ -38,7 +36,6 @@ public class SharePost extends BaseEntity {
         this.isActive = isActive;
     }
 
-    // 비즈니스 로직 메서드
     public void activate() {
         this.isActive = true;
     }

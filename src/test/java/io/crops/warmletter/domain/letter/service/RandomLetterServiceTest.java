@@ -2,10 +2,13 @@ package io.crops.warmletter.domain.letter.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
+import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
+import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
+import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.FontType;
@@ -14,6 +17,8 @@ import io.crops.warmletter.domain.letter.enums.PaperType;
 import io.crops.warmletter.domain.letter.exception.AlreadyApprovedException;
 import io.crops.warmletter.domain.letter.exception.DuplicateLetterMatchException;
 import io.crops.warmletter.domain.letter.exception.TemporaryMatchingNotFoundException;
+import io.crops.warmletter.domain.letter.facade.LetterFacade;
+import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.letter.repository.LetterTemporaryMatchingRepository;
 import io.crops.warmletter.domain.member.entity.Member;
@@ -51,6 +56,12 @@ class RandomLetterServiceTest {
 
     @Mock
     private LetterTemporaryMatchingRepository letterTemporaryMatchingRepository;
+
+    @Mock
+    private LetterMatchingRepository letterMatchingRepository;
+
+    @Mock
+    private LetterFacade letterFacade;
 
     @InjectMocks
     private RandomLetterService randomLetterService;
@@ -311,9 +322,6 @@ class RandomLetterServiceTest {
                 .role(Role.USER)
                 .build();
 
-        when(memberRepository.findById(userId))
-                .thenReturn(Optional.of(dummyMember));
-
         // 중복 매칭 상황을 재현하기 위해 save() 호출 시 DataIntegrityViolationException 발생하도록 함 -> 유니크제약조건 시 실행되는 에러
         when(letterTemporaryMatchingRepository.save(any(LetterTemporaryMatching.class)))
                 .thenThrow(new DataIntegrityViolationException("Duplicate match"));
@@ -321,4 +329,53 @@ class RandomLetterServiceTest {
         // DuplicateLetterMatchException이 발생하는지 검증
         assertThrows(DuplicateLetterMatchException.class, () -> randomLetterService.approveLetter(request));
     }
+
+    @Test
+    @DisplayName("completeLetterMatching - 최종 랜덤 편지 매칭(작성 완료 버튼)")
+    void completeLetterMatching() {
+        // given
+        Long currentUserId = 1L;
+        CreateLetterRequest request = CreateLetterRequest.builder()
+                .parentLetterId(10L)
+                .build();
+
+        // 임시 매칭 데이터 생성 (요청의 parentLetterId와 매칭)
+        LetterTemporaryMatching tempMatching = LetterTemporaryMatching.builder()
+                .letterId(20L)
+                .firstMemberId(100L)
+                .secondMemberId(200L)
+                .build();
+
+        when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
+        when(letterTemporaryMatchingRepository.findByLetterId(request.getParentLetterId()))
+                .thenReturn(Optional.of(tempMatching));
+
+        // Member 객체 생성 및 현재 사용자 ID 할당
+        Member member = Member.builder()
+                .email("test@example.com")
+                .password("password")
+                .socialUniqueId("unique_test_id")
+                .role(Role.USER)
+                .build();
+        when(memberRepository.findById(currentUserId)).thenReturn(Optional.of(member));
+
+        // letterFacade.createLetter(request) 호출 시 예상 LetterResponse 반환
+        LetterResponse expectedResponse = LetterResponse.builder()
+                .letterId(50L)
+                .title("생성된 편지 제목")
+                .build();
+
+        when(letterFacade.createLetter(request)).thenReturn(expectedResponse);
+
+        LetterResponse actualResponse = randomLetterService.completeLetterMatching(request);
+
+        // LetterMatching 저장 검증
+        verify(letterMatchingRepository, times(1)).save(any(LetterMatching.class));
+        // 임시 매칭 데이터 삭제 검증
+        verify(letterTemporaryMatchingRepository, times(1)).delete(tempMatching);
+        // Member 조회 및 업데이트 검증
+        verify(memberRepository, times(1)).findById(currentUserId);
+        assertEquals(expectedResponse, actualResponse);
+    }
+
 }

@@ -8,6 +8,7 @@ import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
 import io.crops.warmletter.domain.letter.enums.Category;
+import io.crops.warmletter.domain.letter.enums.LetterType;
 import io.crops.warmletter.domain.letter.exception.AlreadyApprovedException;
 import io.crops.warmletter.domain.letter.exception.DuplicateLetterMatchException;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
@@ -18,6 +19,7 @@ import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -115,7 +117,10 @@ public class RandomLetterService {
     public void matchingCancel(){
         Long currentUserId = authFacade.getCurrentUserId();
         Optional<LetterTemporaryMatching> tempTable = letterTemporaryMatchingRepository.findBySecondMemberId(currentUserId);
+
         if (tempTable.isPresent()) {
+            Letter letter = letterRepository.findById(tempTable.get().getLetterId()).orElseThrow(LetterNotFoundException::new);
+            letter.updateLetterType(LetterType.RANDOM);
             letterTemporaryMatchingRepository.delete(tempTable.get());
         } else {
             throw new TemporaryMatchingNotFoundException();
@@ -123,7 +128,7 @@ public class RandomLetterService {
     }
 
     /**
-     * 랜덤 편지 승인하기. 추후 유니크 제약 조건도 생각해보자.
+     * 랜덤 편지 승인하기.
      */
     @Transactional
     public void approveLetter(ApproveLetterRequest request) {
@@ -134,12 +139,6 @@ public class RandomLetterService {
             throw new AlreadyApprovedException();
         }
 
-        //해당 편지가 이미 다른 사용자에 의해 승인되었는지 확인
-        letterTemporaryMatchingRepository.findByLetterIdForUpdate(request.getLetterId())
-                .ifPresent(match -> {
-                    throw new DuplicateLetterMatchException();
-                });
-
         Member member = memberRepository.findById(currentUserId).orElseThrow();
 
         LetterTemporaryMatching letterTemporaryMatching = LetterTemporaryMatching.builder()
@@ -147,8 +146,16 @@ public class RandomLetterService {
                 .firstMemberId(request.getWriterId())
                 .secondMemberId(currentUserId)
                 .build();
-        letterTemporaryMatchingRepository.save(letterTemporaryMatching);
 
+        try {
+            letterTemporaryMatchingRepository.save(letterTemporaryMatching);
+        } catch (DataIntegrityViolationException e) {
+            // 유니크 제약조건 위반 시 중복 매칭이 발생한 것으로 판단하고 예외 던짐
+            throw new DuplicateLetterMatchException();
+        }
+
+        Letter letter = letterRepository.findById(letterTemporaryMatching.getLetterId()).orElseThrow(LetterNotFoundException::new);
+        letter.updateLetterType(LetterType.DIRECT);
         member.updateLastMatchedAt(letterTemporaryMatching.getMatchedAt());
     }
 

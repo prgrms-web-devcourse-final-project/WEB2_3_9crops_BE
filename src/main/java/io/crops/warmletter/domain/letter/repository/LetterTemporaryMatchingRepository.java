@@ -14,9 +14,4 @@ import java.util.Optional;
 public interface LetterTemporaryMatchingRepository extends JpaRepository<LetterTemporaryMatching, Long> {
     Optional<LetterTemporaryMatching> findBySecondMemberId(Long secondMemberId);
 
-    // 편지 ID에 대한 비관적 락
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT ltm FROM LetterTemporaryMatching ltm WHERE ltm.letterId = :letterId")
-    Optional<LetterTemporaryMatching> findByLetterIdForUpdate(@Param("letterId") Long letterId);
-
 }

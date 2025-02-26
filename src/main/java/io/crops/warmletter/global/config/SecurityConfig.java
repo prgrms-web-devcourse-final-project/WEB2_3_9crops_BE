@@ -70,8 +70,7 @@ public class SecurityConfig {
                                         .requestMatchers("/login/**")
                                         .permitAll()
                                         .anyRequest()
-                                        .permitAll()
-//                                        .authenticated() // 그 외 요청은 인증 필요
+                                        .authenticated() // 그 외 요청은 인증 필요
                         )
                 // OAuth2 설정 추가
                 .oauth2Login(oauth2 -> oauth2

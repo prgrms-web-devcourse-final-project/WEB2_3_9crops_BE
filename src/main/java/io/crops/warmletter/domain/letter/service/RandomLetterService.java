@@ -44,14 +44,15 @@ public class RandomLetterService {
      *  랜덤 편지 리스트 찾기 5개씩 (수정필요)
      */
     public List<RandomLetterResponse> findRandomLetters(Category category) {
+        Long currentUserId = authFacade.getCurrentUserId();
         Pageable pageable = PageRequest.of(0, 5);  // 첫 페이지, 5개 제한
-        //todo 내가 쓴 편지는 나한테 안보이게 authFacade로 작성자랑 같으면 안나오게
-        //todo 지금은 첫편지만 조회 되지 않음. receiverId 가 null일때만 리스트로 보여지게. -> 랜덤편지 조건만 걸면 됨.
-        //todo 배송완료된 편지만 보이게 조건문 추가. -> 배송완료는 배치처리로 하기.
-        //todo 활성 여부 false만 -> 신고처리가 안된것만 보여주기.
-        //todo 랜덤편지 content값 대신에 title값으로, paperType fontType 빼기
-        //todo 편지 리스트 다 가져와버리기
-        return letterRepository.findRandomLettersByCategory(category, pageable);
+
+        if (category != null) { //전체 조회가 아닌 경우에 회원의 선호 카테고리를 변경
+            Member member = memberRepository.findById(currentUserId).orElseThrow();
+            member.updatePreferredLetterCategory(category);
+        }
+
+        return letterRepository.findRandomLettersByCategory(category, currentUserId, pageable);
     }
 
     /**

@@ -14,9 +14,11 @@ public class SharePostLikeService {
     private final PostLikeRedisManager postLikeRedisManager;
 
     private final SharePostLikeRepository sharePostLikeRepository;
+
     public void toggleLike(Long postId, Long memberId) {
         postLikeRedisManager.toggleLike(postId, memberId);
     }
+
     public SharePostLikeResponse getLikeCountAndStatus(Long sharePostId, Long memberId) {
         if (sharePostId == null)
             throw new SharePostNotFoundException();

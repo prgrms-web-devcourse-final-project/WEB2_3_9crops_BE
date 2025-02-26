@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 public class SharePostResponse {
 
     private Long shareProposalId;
+    private String writerZipCode;
+    private String receiverZipCode;
     private String content;
     private boolean isActive;
     private LocalDateTime createdAt;
@@ -22,4 +24,13 @@ public class SharePostResponse {
         this.createdAt = sharePost.getCreatedAt();
     }
 
+    public SharePostResponse(Long shareProposalId, String writerZipCode, String receiverZipCode,
+                             String content, boolean isActive, LocalDateTime createdAt) {
+        this.shareProposalId = shareProposalId;
+        this.writerZipCode = writerZipCode;
+        this.receiverZipCode = receiverZipCode;
+        this.content = content;
+        this.isActive = isActive;
+        this.createdAt = createdAt;
+    }
 }

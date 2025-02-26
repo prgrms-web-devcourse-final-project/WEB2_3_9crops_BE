@@ -82,4 +82,8 @@ public class Letter extends BaseTimeEntity {
         this.isActive = false; // 신고시 비활성 상태
     }
 
+    public void updateLetterType(LetterType letterType) {
+        this.letterType = letterType;
+    }
+
 }

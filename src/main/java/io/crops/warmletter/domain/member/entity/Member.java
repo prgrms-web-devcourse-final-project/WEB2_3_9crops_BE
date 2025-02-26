@@ -84,4 +84,12 @@ public class Member extends BaseEntity {
     public void applyTemperaturePolicy(TemperaturePolicy policy) {
         temperature.applyPolicy(policy);
     }
+
+    public void updateLastMatchedAt(LocalDateTime lastMatchedAt) {
+        this.lastMatchedAt = lastMatchedAt;
+    }
+
+    public void updatePreferredLetterCategory(Category category) {
+        this.preferredLetterCategory = category;
+    }
 }

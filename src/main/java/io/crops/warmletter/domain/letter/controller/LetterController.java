@@ -7,6 +7,7 @@ import io.crops.warmletter.global.response.BaseResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -60,5 +61,19 @@ public class LetterController {
         LetterResponse letterResponse = letterService.getLetterById(letterId);
         BaseResponse<LetterResponse> response = BaseResponse.of(letterResponse, "편지 조회 완료");
         return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/api/letters{status}")
+    public ResponseEntity<BaseResponse<List<LetterResponse>>> getLettersByStatus(@RequestParam("status") String status) {
+
+        Long memberId = 1L;
+        if (!status.equals("IN_DELIVERY") && !status.equals("SAVED")) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>((status.equals("IN_DELIVERY")
+                ? letterService.getInDeliveryLetters(memberId, status)
+                : letterService.getSavedLetters(memberId, status)),"편지 조회 완료"));
     }
 }

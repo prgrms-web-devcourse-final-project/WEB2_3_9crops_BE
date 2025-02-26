@@ -93,4 +93,43 @@ public class LetterService {
         String zipCode = memberRepository.findById(letter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode(); //편지를 쓴 사람의 zipCode
         return LetterResponse.fromEntityForDetailView(letter, zipCode);
     }
+
+    public List<LetterResponse> getInDeliveryLetters(Long memberId, String statusStr) {
+        Status status = Status.valueOf(statusStr);
+        List<Letter> letters = letterRepository.findInDeliveryLetters(memberId, status);
+
+        return letters.stream()
+                .map(letter -> LetterResponse.builder()
+                        .letterId(letter.getId())
+                        .writerId(letter.getWriterId())
+                        .receiverId(letter.getReceiverId())
+                        .content(letter.getContent())
+                        .deliveryStartedAt(letter.getDeliveryStartedAt())
+                        .deliveryCompletedAt(letter.getDeliveryCompletedAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+
+    public List<LetterResponse> getSavedLetters(Long memberId, String statusStr) {
+        Status status = Status.valueOf(statusStr);
+        List<Letter> letters = letterRepository.findSavedLetters(memberId, status);
+
+        return letters.stream()
+                .map(letter -> LetterResponse.builder()
+                        .letterId(letter.getId())
+                        .receiverId(letter.getReceiverId())
+                        .parentLetterId(letter.getParentLetterId())
+                        .title(letter.getTitle())
+                        .content(letter.getContent())
+                        .category(letter.getCategory())
+                        .paperType(letter.getPaperType())
+                        .fontType(letter.getFontType())
+                        .status(letter.getStatus())
+                        .deliveryStartedAt(letter.getDeliveryStartedAt())
+                        .deliveryCompletedAt(letter.getDeliveryCompletedAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
 }

@@ -24,8 +24,6 @@ public class SharePostLikeController {
                  .body(new BaseResponse<>(null, "좋아요 요청 성공"));
      }
 
-
-
      @GetMapping("/share-posts/{sharePostId}/likes")
      public ResponseEntity<SharePostLikeResponse> getLikeCountAndStatus(@PathVariable(name = "sharePostId") Long sharePostId) {
 

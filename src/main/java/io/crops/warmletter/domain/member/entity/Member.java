@@ -81,14 +81,6 @@ public class Member extends BaseEntity {
         return temperature.getValue();
     }
 
-    public void increaseTemperature(float amount) {
-        temperature.increase(amount);
-    }
-
-    public void decreaseTemperature(float amount) {
-        temperature.decrease(amount);
-    }
-
     public void applyTemperaturePolicy(TemperaturePolicy policy) {
         temperature.applyPolicy(policy);
     }

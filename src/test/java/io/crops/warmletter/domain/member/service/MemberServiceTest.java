@@ -1,12 +1,15 @@
 package io.crops.warmletter.domain.member.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.letter.enums.LetterEvaluation;
 import io.crops.warmletter.domain.member.dto.response.MeResponse;
 import io.crops.warmletter.domain.member.dto.response.ZipCodeResponse;
 import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.entity.SocialAccount;
+import io.crops.warmletter.domain.member.entity.Temperature;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.domain.member.enums.SocialProvider;
+import io.crops.warmletter.domain.member.enums.TemperaturePolicy;
 import io.crops.warmletter.domain.member.exception.DeletedMemberException;
 import io.crops.warmletter.domain.member.exception.DuplicateZipCodeException;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
@@ -303,5 +306,138 @@ class MemberServiceTest {
         verify(authFacade).getCurrentUserId();
         verify(memberRepository).findById(memberId);
         verify(authFacade).logout(accessToken, refreshToken, response);
+    }
+    
+    @DisplayName("평가에 따른 온도 적용 실패 - 존재하지 않은 회원")
+    @Test
+    void applyEvaluationTemperature_WithInvalidMemberId_ShouldThrowException() {
+        //given
+        Long invalidMemberId = 999L;
+        LetterEvaluation evaluation = LetterEvaluation.GOOD;
+        when(memberRepository.findById(invalidMemberId)).thenReturn(Optional.empty());
+
+        //when & then
+        assertThrows(MemberNotFoundException.class,
+                () -> memberService.applyEvaluationTemperature(invalidMemberId, evaluation));
+
+        verify(memberRepository).findById(invalidMemberId);
+    }
+
+    @DisplayName("평가에 따른 온도 적용 성공 - 좋은 편지 평가를 받았을 경우")
+    @Test
+    void applyEvaluationTemperature_Success_GoodLetterEvaluation() throws Exception {
+        //given
+        Long memberId = 1L;
+        LetterEvaluation evaluation = LetterEvaluation.GOOD;
+        Member member = Member.builder()
+                .socialUniqueId("GOOGLE_12345")
+                .zipCode("1AA2C")
+                .role(Role.USER)
+                .build();
+
+        // Reflection으로 id 설정
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, memberId);
+
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
+
+        //when
+        memberService.applyEvaluationTemperature(memberId, evaluation);
+
+        //then
+        float expectedTemperature = 36.5f + TemperaturePolicy.GOOD_EVALUATION.getValue();
+        assertEquals(expectedTemperature, member.getTemperatureValue());
+        verify(memberRepository).findById(memberId);
+    }
+
+    @DisplayName("평가에 따른 온도 적용 성공 - 나쁜 편지 평가를 받았을 경우")
+    @Test
+    void applyEvaluationTemperature_Success_BadLetterEvaluation() throws Exception {
+        //given
+        Long memberId = 1L;
+        LetterEvaluation evaluation = LetterEvaluation.BAD;
+        Member member = Member.builder()
+                .socialUniqueId("GOOGLE_12345")
+                .zipCode("1AA2C")
+                .role(Role.USER)
+                .build();
+
+        // Reflection으로 id 설정
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, memberId);
+
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
+
+        //when
+        memberService.applyEvaluationTemperature(memberId, evaluation);
+
+        //then
+        float expectedTemperature = 36.5f + TemperaturePolicy.BAD_EVALUATION.getValue();
+        assertEquals(expectedTemperature, member.getTemperatureValue());
+        verify(memberRepository).findById(memberId);
+    }
+
+    @DisplayName("온도 경계값 테스트 - 최대값을 초과하는 경우 최대값으로 제한되어야 한다")
+    @Test
+    void applyEvaluationTemperature_MaxBoundary() throws Exception {
+        //given
+        Long memberId = 1L;
+        LetterEvaluation evaluation = LetterEvaluation.GOOD;
+        Member member = Member.builder()
+                .socialUniqueId("GOOGLE_12345")
+                .zipCode("1AA2C")
+                .role(Role.USER)
+                .build();
+
+        // Reflection으로 id 설정
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, memberId);
+        // Reflection으로 temperature 필드에 새 객체 설정
+        Field temperatureField = Member.class.getDeclaredField("temperature");
+        temperatureField.setAccessible(true);
+        temperatureField.set(member, new Temperature(99.5f));
+
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
+
+        //when
+        memberService.applyEvaluationTemperature(memberId, evaluation);
+
+        //then
+        assertEquals(100.0f, member.getTemperatureValue());  // 최대값으로 제한
+        verify(memberRepository).findById(memberId);
+    }
+
+    @DisplayName("온도 경계값 테스트 - 최소값 미만으로 감소하는 경우 최소값으로 제한되어야 한다")
+    @Test
+    void applyEvaluationTemperature_MinBoundary() throws Exception {
+        //given
+        Long memberId = 1L;
+        LetterEvaluation evaluation = LetterEvaluation.BAD;
+        Member member = Member.builder()
+                .socialUniqueId("GOOGLE_12345")
+                .zipCode("1AA2C")
+                .role(Role.USER)
+                .build();
+
+        // Reflection으로 id 설정
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, memberId);
+        // Reflection으로 temperature 필드에 새 객체 설정
+        Field temperatureField = Member.class.getDeclaredField("temperature");
+        temperatureField.setAccessible(true);
+        temperatureField.set(member, new Temperature(0.5f));
+
+        when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
+
+        //when
+        memberService.applyEvaluationTemperature(memberId, evaluation);
+
+        //then
+        assertEquals(0.0f, member.getTemperatureValue());  // 최소값으로 제한
+        verify(memberRepository).findById(memberId);
     }
 }

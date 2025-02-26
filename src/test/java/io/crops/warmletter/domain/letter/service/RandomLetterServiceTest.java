@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.letter.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
 import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
@@ -9,10 +10,13 @@ import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.FontType;
 import io.crops.warmletter.domain.letter.enums.PaperType;
+import io.crops.warmletter.domain.letter.exception.AlreadyApprovedException;
+import io.crops.warmletter.domain.letter.exception.DuplicateLetterMatchException;
 import io.crops.warmletter.domain.letter.exception.TemporaryMatchingNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.letter.repository.LetterTemporaryMatchingRepository;
 import io.crops.warmletter.domain.member.entity.Member;
+import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -32,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class LetterMatchingServiceTest {
+class RandomLetterServiceTest {
 
     @Mock
     private LetterRepository letterRepository;
@@ -47,7 +52,7 @@ class LetterMatchingServiceTest {
     private LetterTemporaryMatchingRepository letterTemporaryMatchingRepository;
 
     @InjectMocks
-    private RandomLetterService letterMatchingService;
+    private RandomLetterService randomLetterService;
 
 
     @Test
@@ -86,7 +91,7 @@ class LetterMatchingServiceTest {
         when(letterRepository.findRandomLettersByCategory(category, pageable)).thenReturn(List.of(dto));
 
         //when
-        List<RandomLetterResponse> responses = letterMatchingService.findRandomLetters(category);
+        List<RandomLetterResponse> responses = randomLetterService.findRandomLetters(category);
         RandomLetterResponse response = responses.get(0);
         // Then
         assertAll("랜덤 편지 응답 검증",
@@ -133,7 +138,7 @@ class LetterMatchingServiceTest {
         //조회 시 편지
         when(letterRepository.findRandomLettersByCategory(null, pageable)).thenReturn(List.of(dto));
 
-        List<RandomLetterResponse> responses = letterMatchingService.findRandomLetters(category);
+        List<RandomLetterResponse> responses = randomLetterService.findRandomLetters(category);
         RandomLetterResponse response = responses.get(0);
 
         assertAll("랜덤 편지 응답 검증",
@@ -156,7 +161,7 @@ class LetterMatchingServiceTest {
         when(authFacade.getCurrentUserId()).thenReturn(userId);
         when(memberRepository.findById(userId)).thenReturn(Optional.ofNullable(member));
 
-        CheckLastMatchResponse response = letterMatchingService.checkLastMatched();
+        CheckLastMatchResponse response = randomLetterService.checkLastMatched();
         assertTrue(response.isCanSend());
         assertNull(response.getLastMatchedAt());
     }
@@ -172,7 +177,7 @@ class LetterMatchingServiceTest {
         when(authFacade.getCurrentUserId()).thenReturn(userId);
         when(memberRepository.findById(userId)).thenReturn(Optional.of(member));
 
-        CheckLastMatchResponse response = letterMatchingService.checkLastMatched();
+        CheckLastMatchResponse response = randomLetterService.checkLastMatched();
         assertTrue(response.isCanSend());
     }
 
@@ -188,7 +193,7 @@ class LetterMatchingServiceTest {
         when(authFacade.getCurrentUserId()).thenReturn(userId);
         when(memberRepository.findById(userId)).thenReturn(Optional.ofNullable(member));
 
-        CheckLastMatchResponse response = letterMatchingService.checkLastMatched();
+        CheckLastMatchResponse response = randomLetterService.checkLastMatched();
         assertFalse(response.isCanSend());
     }
 
@@ -219,7 +224,7 @@ class LetterMatchingServiceTest {
 
         when(letterRepository.findById(100L)).thenReturn(Optional.of(letter));
 
-        TemporaryMatchingResponse response = letterMatchingService.checkTemporaryMatchedTable();
+        TemporaryMatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
 
         assertTrue(response.isTemporary());
         assertEquals("테스트 편지", response.getLetterTitle());
@@ -233,7 +238,7 @@ class LetterMatchingServiceTest {
         when(authFacade.getCurrentUserId()).thenReturn(1L);
         when(letterTemporaryMatchingRepository.findBySecondMemberId(userId)).thenReturn(Optional.empty());
 
-        TemporaryMatchingResponse response = letterMatchingService.checkTemporaryMatchedTable();
+        TemporaryMatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
 
         assertFalse(response.isTemporary());
     }
@@ -243,15 +248,27 @@ class LetterMatchingServiceTest {
     void matchingCancel_whenExists() {
         Long userId = 1L;
         when(authFacade.getCurrentUserId()).thenReturn(userId);
+
+        Letter letter = Letter.builder()
+                .content("내용입니닷")
+                .category(Category.CONSOLATION)
+                .paperType(PaperType.BASIC)
+                .fontType(FontType.KYOBO)
+                .writerId(10L)
+                .build();
+        ReflectionTestUtils.setField(letter, "id", 100L);
+
         LetterTemporaryMatching tempMatching = LetterTemporaryMatching.builder()
-                .letterId(100L)
+                .letterId(letter.getId())
                 .firstMemberId(2L)
                 .secondMemberId(userId)
                 .build();
+        when(letterRepository.findById(tempMatching.getLetterId())).thenReturn(Optional.of(letter));
         when(letterTemporaryMatchingRepository.findBySecondMemberId(userId)).thenReturn(Optional.of(tempMatching));
 
-        letterMatchingService.matchingCancel();
+        randomLetterService.matchingCancel();
 
+        verify(letterRepository, times(1)).findById(tempMatching.getLetterId());
         verify(letterTemporaryMatchingRepository, times(1)).delete(tempMatching);
     }
 
@@ -261,7 +278,55 @@ class LetterMatchingServiceTest {
         Long userId = 1L;
         when(authFacade.getCurrentUserId()).thenReturn(userId);
         when(letterTemporaryMatchingRepository.findBySecondMemberId(userId)).thenReturn(Optional.empty());
-        assertThrows(TemporaryMatchingNotFoundException.class, () -> letterMatchingService.matchingCancel());
+        assertThrows(TemporaryMatchingNotFoundException.class, () -> randomLetterService.matchingCancel());
     }
 
+
+    @Test
+    @DisplayName("approveLetter - 이미 승인된 경우 AlreadyApprovedException 발생")
+    void approveLetter_alreadyApproved() {
+        Long userId = 1L;
+        ApproveLetterRequest request = ApproveLetterRequest.builder()
+                .letterId(1L)
+                .writerId(2L)
+                .build();
+        when(authFacade.getCurrentUserId()).thenReturn(userId);
+        // 이미 임시 매칭 데이터가 존재한다고 가정
+        when(letterTemporaryMatchingRepository.findBySecondMemberId(userId))
+                .thenReturn(Optional.of(LetterTemporaryMatching.builder().build()));
+        assertThrows(AlreadyApprovedException.class, () -> randomLetterService.approveLetter(request));
+    }
+
+    @Test
+    @DisplayName("approveLetter - 중복 매칭된 경우 DuplicateLetterMatchException 발생")
+    void approveLetter_duplicateMatch() {
+        Long userId = 1L;
+        ApproveLetterRequest request = ApproveLetterRequest.builder()
+                .letterId(1L)
+                .writerId(2L)
+                .build();
+        // 현재 사용자 ID 설정
+        when(authFacade.getCurrentUserId()).thenReturn(userId);
+        // 기존 임시 매칭 데이터는 없다고 가정
+        when(letterTemporaryMatchingRepository.findBySecondMemberId(userId))
+                .thenReturn(Optional.empty());
+
+        // memberRepository.findById(userId) 가 정상적으로 Member를 반환하도록 스텁 처리
+        Member dummyMember = Member.builder()
+                .email("test@example.com")
+                .password("password")
+                .socialUniqueId("unique_test_id")
+                .role(Role.USER)
+                .build();
+
+        when(memberRepository.findById(userId))
+                .thenReturn(Optional.of(dummyMember));
+
+        // 중복 매칭 상황을 재현하기 위해 save() 호출 시 DataIntegrityViolationException 발생하도록 함 -> 유니크제약조건 시 실행되는 에러
+        when(letterTemporaryMatchingRepository.save(any(LetterTemporaryMatching.class)))
+                .thenThrow(new DataIntegrityViolationException("Duplicate match"));
+
+        // DuplicateLetterMatchException이 발생하는지 검증
+        assertThrows(DuplicateLetterMatchException.class, () -> randomLetterService.approveLetter(request));
+    }
 }

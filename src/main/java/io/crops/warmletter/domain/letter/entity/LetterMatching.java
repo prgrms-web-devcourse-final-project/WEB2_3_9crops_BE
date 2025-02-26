@@ -32,12 +32,12 @@ public class LetterMatching extends BaseTimeEntity {
 
 
     @Builder
-    public LetterMatching(Long letterId, Long firstMemberId, Long secondMemberId) {
+    public LetterMatching(Long letterId, Long firstMemberId, Long secondMemberId, LocalDateTime matchedAt) {
         this.letterId = letterId;
         this.firstMemberId = firstMemberId;
         this.secondMemberId = secondMemberId;
-        this.isActive = true; //매칭 테이블 생성 시 바로 활성
-        this.matchedAt = LocalDateTime.now(); //매칭된 시간
+        this.isActive = true; // 매칭 테이블 생성 시 바로 활성
+        this.matchedAt = matchedAt; // 매칭된 시간
     }
 
     public void inactive() {

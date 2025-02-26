@@ -9,6 +9,7 @@ import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.FontType;
+import io.crops.warmletter.domain.letter.enums.LetterType;
 import io.crops.warmletter.domain.letter.enums.PaperType;
 import io.crops.warmletter.domain.letter.exception.AlreadyApprovedException;
 import io.crops.warmletter.domain.letter.exception.DuplicateLetterMatchException;
@@ -63,43 +64,45 @@ class RandomLetterServiceTest {
         // 10번 회원이 있고
         Member member = Member.builder()
                 .zipCode("12345")
+                .preferredLetterCategory(Category.CONSULT)
                 .build();
-        ReflectionTestUtils.setField(member, "id", 10L);
+        ReflectionTestUtils.setField(member, "id", 1L);
 
         // 10번 회원이 쓴 편지
         Letter letter = Letter.builder()
+                .title("제목입니다")
                 .content("내용입니닷")
                 .category(Category.CONSOLATION)
                 .paperType(PaperType.BASIC)
                 .fontType(FontType.KYOBO)
+                .letterType(LetterType.RANDOM)
                 .writerId(10L)
                 .build();
 
         RandomLetterResponse dto = RandomLetterResponse.builder()
                 .letterId(1L)
-                .content("내용입니닷")
+                .writerId(2L)
+                .title("제목입니다")
                 .zipCode("12345")
                 .category(Category.CONSOLATION)
-                .paperType(PaperType.BASIC)
-                .fontType(FontType.KYOBO)
                 .createdAt(LocalDateTime.now())
                 .build();
 
         Pageable pageable = PageRequest.of(0, 5);
 
         //조회 시 편지
-        when(letterRepository.findRandomLettersByCategory(category, pageable)).thenReturn(List.of(dto));
+        when(authFacade.getCurrentUserId()).thenReturn(1L);
+        when(letterRepository.findRandomLettersByCategory(category,1L, pageable)).thenReturn(List.of(dto));
+        when((memberRepository.findById(1L))).thenReturn(Optional.of(member));
 
         //when
         List<RandomLetterResponse> responses = randomLetterService.findRandomLetters(category);
         RandomLetterResponse response = responses.get(0);
         // Then
         assertAll("랜덤 편지 응답 검증",
-                () -> assertEquals("내용입니닷", response.getContent()),
+                () -> assertEquals("제목입니다", response.getTitle()),
                 () -> assertEquals("12345", response.getZipCode()),
-                () -> assertEquals(Category.CONSOLATION, response.getCategory()),
-                () -> assertEquals(PaperType.BASIC, response.getPaperType()),
-                () -> assertEquals(FontType.KYOBO, response.getFontType())
+                () -> assertEquals(Category.CONSOLATION, response.getCategory())
         );
     }
 
@@ -114,39 +117,28 @@ class RandomLetterServiceTest {
                 .build();
         ReflectionTestUtils.setField(member, "id", 10L);
 
-        // 10번 회원이 쓴 편지
-        Letter letter = Letter.builder()
-                .content("내용입니닷")
-                .category(Category.ETC)
-                .paperType(PaperType.BASIC)
-                .fontType(FontType.KYOBO)
-                .writerId(10L)
-                .build();
-
         Pageable pageable = PageRequest.of(0, 5);
 
         RandomLetterResponse dto = RandomLetterResponse.builder()
                 .letterId(1L)
-                .content("내용입니닷")
+                .writerId(2L)
+                .title("제목블라블라")
                 .zipCode("12345")
                 .category(Category.ETC)
-                .paperType(PaperType.BASIC)
-                .fontType(FontType.KYOBO)
                 .createdAt(LocalDateTime.now())
                 .build();
 
         //조회 시 편지
-        when(letterRepository.findRandomLettersByCategory(null, pageable)).thenReturn(List.of(dto));
+        when(authFacade.getCurrentUserId()).thenReturn(1L);
+        when(letterRepository.findRandomLettersByCategory(null, 1L, pageable)).thenReturn(List.of(dto));
 
         List<RandomLetterResponse> responses = randomLetterService.findRandomLetters(category);
         RandomLetterResponse response = responses.get(0);
 
         assertAll("랜덤 편지 응답 검증",
-                () -> assertEquals("내용입니닷", response.getContent()),
+                () -> assertEquals("제목블라블라", response.getTitle()),
                 () -> assertEquals("12345", response.getZipCode()),
-                () -> assertEquals(Category.ETC, response.getCategory()),
-                () -> assertEquals(PaperType.BASIC, response.getPaperType()),
-                () -> assertEquals(FontType.KYOBO, response.getFontType())
+                () -> assertEquals(Category.ETC, response.getCategory())
         );
     }
 

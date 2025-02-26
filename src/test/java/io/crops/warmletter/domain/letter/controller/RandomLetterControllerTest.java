@@ -52,20 +52,16 @@ class RandomLetterControllerTest {
         List<RandomLetterResponse> randomLetters = List.of(
                 RandomLetterResponse.builder()
                         .letterId(1L)
-                        .content("편지 내용 1")
+                        .title("편지 제목 1")
                         .zipCode("1A2A3")
                         .category(Category.CONSOLATION)
-                        .paperType(PaperType.PAPER)
-                        .fontType(FontType.KYOBO)
                         .createdAt(LocalDateTime.now())
                         .build(),
                 RandomLetterResponse.builder()
                         .letterId(2L)
-                        .content("편지 내용 2")
+                        .title("편지 제목 2")
                         .zipCode("33DDD")
                         .category(Category.CONSOLATION)
-                        .paperType(PaperType.PAPER)
-                        .fontType(FontType.KYOBO)
                         .createdAt(LocalDateTime.now())
                         .build()
 
@@ -76,7 +72,7 @@ class RandomLetterControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].letterId").value(1L))
-                .andExpect(jsonPath("$.data[0].content").value("편지 내용 1"))
+                .andExpect(jsonPath("$.data[0].title").value("편지 제목 1"))
                 .andExpect(jsonPath("$.data[0].zipCode").value("1A2A3"))
                 .andExpect(jsonPath("$.data[0].category").value("CONSOLATION"))
                 .andDo(print());

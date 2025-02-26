@@ -15,6 +15,7 @@ import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.enums.TemperaturePolicy;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
+import io.crops.warmletter.domain.member.facade.MemberFacade;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class LetterService {
     private final MemberRepository memberRepository;
     private final AuthFacade authFacade;
     private final BadWordService badWordService;
+    private final MemberFacade memberFacade;
 
     @Transactional
     public LetterResponse createLetter(CreateLetterRequest request) {
@@ -106,14 +108,7 @@ public class LetterService {
         Letter letter = letterRepository.findByIdAndReceiverId(letterId, receiverId)
                                         .orElseThrow(LetterNotBelongException::new);
 
-        Member evaluatedMember = memberRepository.findById(letter.getWriterId())
-                                                    .orElseThrow(MemberNotFoundException::new);
-
-        if (request.getEvaluation() == LetterEvaluation.GOOD) {
-            evaluatedMember.applyTemperaturePolicy(TemperaturePolicy.GOOD_EVALUATION);
-        } else if (request.getEvaluation() == LetterEvaluation.BAD) {
-            evaluatedMember.applyTemperaturePolicy(TemperaturePolicy.BAD_EVALUATION);
-        }
+        memberFacade.applyEvaluationTemperature(letter.getWriterId(), request.getEvaluation());
 
     }
 }

@@ -47,6 +47,9 @@
         //Letter Error code
         LETTER_NOT_FOUND("LET-001", HttpStatus.NOT_FOUND, "해당 편지를 찾을 수 없습니다."),
         TEMPORARY_MATCHING_NOT_FOUND("LET-002", HttpStatus.NOT_FOUND, "임시 매칭 테이블이 존재하지 않습니다."),
+        MATCHING_NOT_FOUND("LET-003", HttpStatus.NOT_FOUND, "매칭을 찾을 수 없습니다."),
+        NOT_BELONG_TO_MATCHING("LET-004", HttpStatus.FORBIDDEN, "해당 매칭에 대해 권한이 없습니다."),
+        ALREADY_BLOCKED_MATCHING("LET-005", HttpStatus.CONFLICT, "이미 매칭이 차단되었습니다."),
 
         ALREADY_APPROVED("LET-007", HttpStatus.CONFLICT, "이미 승인된 편지입니다."),
         DUPLICATE_LETTER_MATCH("LET-008", HttpStatus.CONFLICT, "이미 다른 사용자가 매칭된 편지입니다."),

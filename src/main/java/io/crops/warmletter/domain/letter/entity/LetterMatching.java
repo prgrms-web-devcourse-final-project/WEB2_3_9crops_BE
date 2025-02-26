@@ -39,4 +39,8 @@ public class LetterMatching extends BaseTimeEntity {
         this.isActive = true; //매칭 테이블 생성 시 바로 활성
         this.matchedAt = LocalDateTime.now(); //매칭된 시간
     }
+
+    public void inactive() {
+        this.isActive = false;
+    }
 }

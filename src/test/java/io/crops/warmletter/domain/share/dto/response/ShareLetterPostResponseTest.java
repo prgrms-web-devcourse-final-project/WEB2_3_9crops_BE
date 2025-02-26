@@ -38,4 +38,33 @@ class ShareLetterPostResponseTest {
                 () -> assertThat(response.getCreatedAt()).isEqualTo(createdAt)
         );
     }
+    @Test
+    @DisplayName("SharePostLikeResponse 생성 및 getter 테스트")
+    void testSharePostLikeResponse() {
+        // given
+        Long likeCount = 42L;
+        boolean isLiked = true;
+
+        // when
+        SharePostLikeResponse response = new SharePostLikeResponse(likeCount, isLiked);
+
+        // then
+        assertEquals(likeCount, response.getLikeCount());
+        assertEquals(isLiked, response.isLiked());
+    }
+
+    @Test
+    @DisplayName("좋아요 안 한 상태의 SharePostLikeResponse 테스트")
+    void testSharePostLikeResponseNotLiked() {
+        // given
+        Long likeCount = 10L;
+        boolean isLiked = false;
+
+        // when
+        SharePostLikeResponse response = new SharePostLikeResponse(likeCount, isLiked);
+
+        // then
+        assertEquals(likeCount, response.getLikeCount());
+        assertFalse(response.isLiked());
+    }
 }

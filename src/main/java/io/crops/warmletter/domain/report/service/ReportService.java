@@ -8,6 +8,7 @@ import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.report.dto.request.CreateReportRequest;
 import io.crops.warmletter.domain.report.dto.response.ReportResponse;
+import io.crops.warmletter.domain.report.dto.response.ReportsResponse;
 import io.crops.warmletter.domain.report.entity.Report;
 import io.crops.warmletter.domain.report.enums.ReportStatus;
 import io.crops.warmletter.domain.report.enums.ReportType;
@@ -19,9 +20,12 @@ import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.Optional;
 
 @Service
@@ -36,9 +40,17 @@ public class ReportService {
     private final AuthFacade authFacde;
 
 
+
+    public Page<ReportsResponse> getAllReports(String reportType, String status, Pageable pageable) {
+        return reportRepository.findAllWithFilters(reportType, status, pageable);
+    }
+
+
+
     @Transactional
     public ReportResponse createReport(CreateReportRequest request) {
         Long memberId = authFacde.getCurrentUserId();
+       // Long memberId = 12L;
         validateRequest(request, memberId);
         Report.ReportBuilder builder = Report.builder()
                 .memberId(memberId)  // 고정 신고자 ID 사용

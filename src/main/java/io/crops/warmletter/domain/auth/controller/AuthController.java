@@ -1,13 +1,20 @@
 package io.crops.warmletter.domain.auth.controller;
 
 import io.crops.warmletter.domain.auth.dto.TokenResponse;
+import io.crops.warmletter.domain.auth.dto.TokenStorageResponse;
 import io.crops.warmletter.domain.auth.service.AuthService;
 import io.crops.warmletter.global.jwt.exception.InvalidAccessTokenException;
+import io.crops.warmletter.global.jwt.service.TokenStorage;
 import io.crops.warmletter.global.response.BaseResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -15,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final TokenStorage tokenStorage;
 
     // Access 토큰이 만료되었을 때 호출
     @PostMapping("/reissue")
@@ -45,5 +53,12 @@ public class AuthController {
             authService.logout(bearerToken.substring(7), refreshToken, response);
         }
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/auth/token")
+    public ResponseEntity<BaseResponse<TokenStorageResponse>> getToken(@RequestParam("state") String stateToken) {
+        TokenStorageResponse response = authService.getTokenByState(stateToken);
+
+        return ResponseEntity.ok(BaseResponse.of(response, "임시 저장소 토큰 조회 완료"));
     }
 }

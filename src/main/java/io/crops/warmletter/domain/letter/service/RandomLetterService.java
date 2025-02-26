@@ -1,12 +1,16 @@
 package io.crops.warmletter.domain.letter.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
 import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
 import io.crops.warmletter.domain.letter.enums.Category;
+import io.crops.warmletter.domain.letter.enums.LetterType;
+import io.crops.warmletter.domain.letter.exception.AlreadyApprovedException;
+import io.crops.warmletter.domain.letter.exception.DuplicateLetterMatchException;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.exception.TemporaryMatchingNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
@@ -15,6 +19,7 @@ import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,14 +44,15 @@ public class RandomLetterService {
      *  랜덤 편지 리스트 찾기 5개씩 (수정필요)
      */
     public List<RandomLetterResponse> findRandomLetters(Category category) {
+        Long currentUserId = authFacade.getCurrentUserId();
         Pageable pageable = PageRequest.of(0, 5);  // 첫 페이지, 5개 제한
-        //todo 내가 쓴 편지는 나한테 안보이게 authFacade로 작성자랑 같으면 안나오게
-        //todo 지금은 첫편지만 조회 되지 않음. receiverId 가 null일때만 리스트로 보여지게.
-        //todo 배송완료된 편지만 보이게 조건문 추가. -> 배송완료는 배치처리로 하기.
-        //todo 활성 여부 false만 -> 신고처리가 안된것만 보여주기.
-        //todo 랜덤편지 content값 대신에 title값으로, paperType fontType 빼기
-        //todo 편지 리스트 다 가져와버리기
-        return letterRepository.findRandomLettersByCategory(category, pageable);
+
+        if (category != null) { //전체 조회가 아닌 경우에 회원의 선호 카테고리를 변경
+            Member member = memberRepository.findById(currentUserId).orElseThrow();
+            member.updatePreferredLetterCategory(category);
+        }
+
+        return letterRepository.findRandomLettersByCategory(category, currentUserId, pageable);
     }
 
     /**
@@ -112,12 +118,49 @@ public class RandomLetterService {
     public void matchingCancel(){
         Long currentUserId = authFacade.getCurrentUserId();
         Optional<LetterTemporaryMatching> tempTable = letterTemporaryMatchingRepository.findBySecondMemberId(currentUserId);
+
         if (tempTable.isPresent()) {
+            Letter letter = letterRepository.findById(tempTable.get().getLetterId()).orElseThrow(LetterNotFoundException::new);
+            letter.updateLetterType(LetterType.RANDOM);
             letterTemporaryMatchingRepository.delete(tempTable.get());
         } else {
             throw new TemporaryMatchingNotFoundException();
         }
     }
+
+    /**
+     * 랜덤 편지 승인하기.
+     */
+    @Transactional
+    public void approveLetter(ApproveLetterRequest request) {
+        Long currentUserId = authFacade.getCurrentUserId();
+
+        // 현재 사용자가 이미 다른 편지를 승인했는지 확인
+        if (letterTemporaryMatchingRepository.findBySecondMemberId(currentUserId).isPresent()) {
+            throw new AlreadyApprovedException();
+        }
+
+        Member member = memberRepository.findById(currentUserId).orElseThrow();
+
+        LetterTemporaryMatching letterTemporaryMatching = LetterTemporaryMatching.builder()
+                .letterId(request.getLetterId())
+                .firstMemberId(request.getWriterId())
+                .secondMemberId(currentUserId)
+                .build();
+
+        try {
+            letterTemporaryMatchingRepository.save(letterTemporaryMatching);
+        } catch (DataIntegrityViolationException e) {
+            // 유니크 제약조건 위반 시 중복 매칭이 발생한 것으로 판단하고 예외 던짐
+            throw new DuplicateLetterMatchException();
+        }
+
+        Letter letter = letterRepository.findById(letterTemporaryMatching.getLetterId()).orElseThrow(LetterNotFoundException::new);
+        letter.updateLetterType(LetterType.DIRECT);
+        member.updateLastMatchedAt(letterTemporaryMatching.getMatchedAt());
+    }
+
+
 
     //lastMatchedAt 매칭시 시간 넣어주기.
     //

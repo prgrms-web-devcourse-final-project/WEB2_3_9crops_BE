@@ -35,7 +35,7 @@ public class CustomOAuth2AuthenticationSuccessHandler extends SavedRequestAwareA
         sb.append(redirectUri);
 
         if (userPrincipal.getZipCode() == null || userPrincipal.getZipCode().isEmpty()) {
-            sb.append("/welcome"); // zipCode가 없으면 welcome 페이지로
+            sb.append("/onboarding"); // zipCode가 없으면 onboarding 페이지로
         } else {
             sb.append("/home"); // zipCode가 있으면 home 페이지로
         }

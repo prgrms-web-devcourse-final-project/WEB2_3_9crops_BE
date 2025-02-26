@@ -5,6 +5,7 @@ import io.crops.warmletter.domain.eventpost.exception.EventCommentNotFoundExcept
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.report.dto.request.CreateReportRequest;
 import io.crops.warmletter.domain.report.dto.response.ReportResponse;
+import io.crops.warmletter.domain.report.dto.response.ReportsResponse;
 import io.crops.warmletter.domain.report.entity.Report;
 import io.crops.warmletter.domain.report.enums.ReasonType;
 import io.crops.warmletter.domain.report.enums.ReportStatus;
@@ -19,11 +20,20 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.Mockito.*;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -274,6 +284,83 @@ class ReportControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("EVENT-003"))
                 .andExpect(jsonPath("$.message").value("해당 이벤트 게시글의 댓글을 찾을 수 없습니다."));
+    }
+
+
+    @Test
+    @DisplayName("신고 목록 조회 - 정상 요청")
+    void getAllReports_Success() throws Exception {
+        // Given (Mock 데이터 준비)
+        Page<ReportsResponse> mockPage = new PageImpl<>(List.of(
+                new ReportsResponse(
+                        1L,                           // id
+                        100L,                         // reporterId
+                        "Reporter Name",              // reporterEmail
+                        200L,                         // targetId
+                        "Target User",                // targetEmail
+                        ReportType.SHARE_POST.name(), // ✅ reportType (SHARE_POST)
+                        ReasonType.ABUSE.name(),      // ✅ reasonType (ABUSE)
+                        "욕설 포함",                   // reason
+                        "PENDING",                    // status
+                        LocalDateTime.now(),          // reportedAt
+                        10L,                          // letterId
+                        null,                         // sharePostId (게시글 신고가 아니므로 null)
+                        null,                         // eventCommentId
+                        null                          // contentDetail
+                ),
+                new ReportsResponse(
+                        2L,
+                        101L,
+                        "Another Reporter",
+                        201L,
+                        "Target User 2",
+                        ReportType.LETTER.name(),
+                        ReasonType.THREATS.name(),
+                        "협박 관련 신고",
+                        "RESOLVED",
+                        LocalDateTime.now(),
+                        null,
+                        null,
+                        null,
+                        null
+                )
+        ));
+
+        given(reportService.getAllReports(any(), any(), any())).willReturn(mockPage);
+
+        // When & Then (API 요청 및 검증)
+        mockMvc.perform(get("/api/reports")
+                        .param("reportType", ReportType.SHARE_POST.name()) // "SHARE_POST"
+                        .param("status", "PENDING")
+                        .param("page", "1")
+                        .param("size", "10")
+                        .param("sort", "id,desc")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()) // HTTP 200 응답
+                .andExpect(jsonPath("$.message").value("신고 목록 조회 성공"))
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.content[0].id").value(1L))
+                .andExpect(jsonPath("$.data.content[0].reportType").value("SHARE_POST")) // ✅ 올바른 값으로 수정
+                .andExpect(jsonPath("$.data.content[0].reasonType").value("ABUSE"))      // ✅ 올바른 값으로 수정
+                .andExpect(jsonPath("$.data.content[0].status").value("PENDING"));
+    }
+
+
+    @Test
+    @DisplayName("신고 목록 조회 - 빈 목록")
+    void getAllReports_EmptyList() throws Exception {
+        // Given (빈 데이터)
+        Page<ReportsResponse> emptyPage = new PageImpl<>(Collections.emptyList());
+        given(reportService.getAllReports(any(), any(), any())).willReturn(emptyPage);
+
+        // When & Then (API 요청 및 검증)
+        mockMvc.perform(get("/api/reports")
+                        .param("reportType", ReportType.LETTER.name()) // "LETTER"
+                        .param("status", "PENDING")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("신고 목록 조회 성공"))
+                .andExpect(jsonPath("$.data.content").isEmpty()); // 신고 목록이 비어 있어야 함
     }
 
 

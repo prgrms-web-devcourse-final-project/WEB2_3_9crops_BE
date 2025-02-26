@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.member.facade;
 
+import io.crops.warmletter.domain.letter.enums.LetterEvaluation;
 import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.domain.member.service.MemberService;
@@ -38,5 +39,19 @@ class MemberFacadeTest {
 
         // then
         verify(memberService).updateMemberEmail(member, newEmail);
+    }
+    
+    @DisplayName("회원 온도 평가 요청이 서비스 계층으로 잘 전달되는지 확인")
+    @Test
+    void applyEvaluationTemperature() {
+        //given
+        Long memberId = 1L;
+        LetterEvaluation evaluation = LetterEvaluation.GOOD;
+
+        //when
+        memberFacade.applyEvaluationTemperature(memberId, evaluation);
+
+        //then
+        verify(memberService).applyEvaluationTemperature(memberId, evaluation);
     }
 }

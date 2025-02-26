@@ -1,9 +1,11 @@
 package io.crops.warmletter.domain.member.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.letter.enums.LetterEvaluation;
 import io.crops.warmletter.domain.member.dto.response.MeResponse;
 import io.crops.warmletter.domain.member.dto.response.ZipCodeResponse;
 import io.crops.warmletter.domain.member.entity.Member;
+import io.crops.warmletter.domain.member.enums.TemperaturePolicy;
 import io.crops.warmletter.domain.member.exception.DeletedMemberException;
 import io.crops.warmletter.domain.member.exception.DuplicateZipCodeException;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
@@ -99,5 +101,17 @@ public class MemberService {
         member.inactive();
 
         authFacade.logout(accessToken, refreshToken, response);
+    }
+
+    // 단독으로 사용되지 않으므로 @Transactional 어노테이션 미사용
+    public void applyEvaluationTemperature(Long memberId, LetterEvaluation evaluation) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(MemberNotFoundException::new);
+
+        if (evaluation == LetterEvaluation.GOOD) {
+            member.applyTemperaturePolicy(TemperaturePolicy.GOOD_EVALUATION);
+        } else if (evaluation == LetterEvaluation.BAD) {
+            member.applyTemperaturePolicy(TemperaturePolicy.BAD_EVALUATION);
+        }
     }
 }

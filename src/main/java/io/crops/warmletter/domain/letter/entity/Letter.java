@@ -78,7 +78,7 @@ public class Letter extends BaseTimeEntity {
         this.isActive = true; // 기본값: 활성 상태
     }
 
-    public void softDelete() {
+    public void inactive() {
         this.isActive = false; // 신고시 비활성 상태
     }
 

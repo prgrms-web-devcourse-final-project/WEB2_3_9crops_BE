@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
+
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -51,10 +52,15 @@ class SharePostServiceTest {
     void getAllPosts_ReturnsActivePosts() {
         // given
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-        List<SharePost> posts = List.of(sharePost1, sharePost2);
-        Page<SharePost> sharePostPage = new PageImpl<>(posts, pageable, posts.size());
 
-        when(sharePostRepository.findAllByIsActiveTrue(pageable)).thenReturn(sharePostPage);
+        List<SharePostResponse> responses = List.of(
+                new SharePostResponse(1L, "12345", "67890", "to share my post", true, LocalDateTime.now()),
+                new SharePostResponse(2L, "13579", "24680", "to share my post1", true, LocalDateTime.now().minusDays(1))
+        );
+
+        Page<SharePostResponse> responsePage = new PageImpl<>(responses, pageable, responses.size());
+
+        when(sharePostRepository.findAllActiveSharePostsWithZipCodes(pageable)).thenReturn(responsePage);
 
         // when
         Page<SharePostResponse> result = sharePostService.getAllPosts(pageable);
@@ -64,11 +70,15 @@ class SharePostServiceTest {
                 () -> assertThat(result.getContent()).hasSize(2),
                 () -> assertThat(result.getContent().get(0).getContent()).isEqualTo("to share my post"),
                 () -> assertThat(result.getContent().get(1).getContent()).isEqualTo("to share my post1"),
+                () -> assertThat(result.getContent().get(0).getWriterZipCode()).isEqualTo("12345"),
+                () -> assertThat(result.getContent().get(0).getReceiverZipCode()).isEqualTo("67890"),
+                () -> assertThat(result.getContent().get(1).getWriterZipCode()).isEqualTo("13579"),
+                () -> assertThat(result.getContent().get(1).getReceiverZipCode()).isEqualTo("24680"),
                 () -> assertThat(result.getTotalElements()).isEqualTo(2),
                 () -> assertThat(result.getNumber()).isZero()
         );
 
-        verify(sharePostRepository).findAllByIsActiveTrue(pageable);
+        verify(sharePostRepository).findAllActiveSharePostsWithZipCodes(pageable);
     }
 
     @Test
@@ -76,9 +86,9 @@ class SharePostServiceTest {
     void getAllPosts_ReturnsEmptyPage_WhenNoActivePost() {
         // given
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<SharePost> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        Page<SharePostResponse> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
 
-        when(sharePostRepository.findAllByIsActiveTrue(pageable)).thenReturn(emptyPage);
+        when(sharePostRepository.findAllActiveSharePostsWithZipCodes(pageable)).thenReturn(emptyPage);
 
         // when
         Page<SharePostResponse> result = sharePostService.getAllPosts(pageable);
@@ -90,30 +100,36 @@ class SharePostServiceTest {
                 () -> assertThat(result.getTotalPages()).isZero()
         );
 
-        verify(sharePostRepository).findAllByIsActiveTrue(pageable);
+        verify(sharePostRepository).findAllActiveSharePostsWithZipCodes(pageable);
     }
+
+
     @Test
     @DisplayName("두 번째 페이지 조회 성공")
     void getAllPosts_ReturnsSecondPage() {
-        // given
         Pageable pageable = PageRequest.of(1, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-        List<SharePost> posts = List.of(sharePost1, sharePost2);
-        Page<SharePost> sharePostPage = new PageImpl<>(posts, pageable, 25); // 총 25개 중 2번째 페이지
 
-        when(sharePostRepository.findAllByIsActiveTrue(pageable)).thenReturn(sharePostPage);
+        List<SharePostResponse> responses = List.of(
+                new SharePostResponse(1L, "12345", "67890", "to share my post", true, LocalDateTime.now()),
+                new SharePostResponse(2L, "13579", "24680", "to share my post1", true, LocalDateTime.now().minusDays(1))
+        );
 
-        // when
+        Page<SharePostResponse> responsePage = new PageImpl<>(responses, pageable, 25); // 총 25개 중 2번째 페이지
+
+        when(sharePostRepository.findAllActiveSharePostsWithZipCodes(pageable)).thenReturn(responsePage);
+
         Page<SharePostResponse> result = sharePostService.getAllPosts(pageable);
 
-        // then
         assertAll(
                 () -> assertThat(result.getContent()).hasSize(2),
                 () -> assertThat(result.getTotalElements()).isEqualTo(25),
                 () -> assertThat(result.getNumber()).isEqualTo(1),
-                () -> assertThat(result.getTotalPages()).isEqualTo(3)
+                () -> assertThat(result.getTotalPages()).isEqualTo(3),
+                () -> assertThat(result.getContent().get(0).getWriterZipCode()).isEqualTo("12345"),
+                () -> assertThat(result.getContent().get(0).getReceiverZipCode()).isEqualTo("67890")
         );
 
-        verify(sharePostRepository).findAllByIsActiveTrue(pageable);
+        verify(sharePostRepository).findAllActiveSharePostsWithZipCodes(pageable);
     }
 
     @Test

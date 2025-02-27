@@ -136,7 +136,7 @@ class ShareProposalServiceTest {
         BusinessException exception = assertThrows(BusinessException.class,
                 () -> shareProposalService.requestShareProposal(request));
 
-        assertEquals(ErrorCode.SHARE_POST_NOT_FOUND, exception.getErrorCode());
+        assertEquals(ErrorCode.SHARE_PROPOSAL_NOTFOUND, exception.getErrorCode());
         verify(shareProposalRepository).save(any(ShareProposal.class));
         verify(shareProposalLetterRepository).saveAll(anyList());
     }

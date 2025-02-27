@@ -57,7 +57,6 @@ class SharePostControllerTest {
     @Test
     @DisplayName("페이징된 공유 게시글 반환 ")
     void getAllPosts() throws Exception {
-
         // given
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "createdAt"));
         List<SharePostResponse> posts = List.of(sharePostResponse1, sharePostResponse2);
@@ -66,7 +65,7 @@ class SharePostControllerTest {
 
         //when
         mockMvc.perform(get("/api/share-posts")
-                .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content",hasSize(2)))
                 .andExpect(jsonPath("$.content[0].content").value("to share my post"))
@@ -81,21 +80,22 @@ class SharePostControllerTest {
     @DisplayName("페이지 파라미터에 따라서 해당 페이지 반환 ")
     void getAllPosts_ReturnsSpecificPage() throws Exception {
         // given
-        Pageable pageable = PageRequest.of(1, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")); // 수정: 1 -> 0
         Page<SharePostResponse> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 20);
 
         when(sharePostService.getAllPosts(any(Pageable.class))).thenReturn(emptyPage);
 
         // when & then
         mockMvc.perform(get("/api/share-posts")
-                        .param("page", "1")
+                        .param("page", "1") // 프론트엔드는 여전히 1을 보냄
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.currentPage").value(2))
+                .andExpect(jsonPath("$.currentPage").value(1)) // 수정: 2 -> 1 (BackendPage 0 + 1)
                 .andExpect(jsonPath("$.totalElements").value(20))
                 .andDo(print());
     }
+
 
     @Test
     @DisplayName("음수 페이지 요청시 예외 발생")

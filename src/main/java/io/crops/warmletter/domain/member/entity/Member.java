@@ -49,6 +49,8 @@ public class Member extends BaseEntity {
 
     private boolean isActive;
 
+    private int warningCount;
+
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SocialAccount> socialAccounts = new ArrayList<>();
 
@@ -75,6 +77,13 @@ public class Member extends BaseEntity {
 
     public void inactive() {
         this.isActive = false;
+    }
+
+    public void increaseWarningCount() {
+        this.warningCount += 1;
+        if (this.warningCount >= 3) {
+            this.isActive = false;
+        }
     }
 
     public float getTemperatureValue() {

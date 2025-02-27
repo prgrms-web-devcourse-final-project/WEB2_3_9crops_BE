@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.report.repository;
 
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanPath;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -32,6 +33,7 @@ public class ReportRepositoryImpl implements ReportRepositoryCustom {
         QSharePost sharePost = QSharePost.sharePost;
         QEventComment eventComment = QEventComment.eventComment;
         QShareProposal shareProposal = QShareProposal.shareProposal;
+
         QMember reporter = new QMember("reporter");
         QMember target = new QMember("target");
 
@@ -52,6 +54,7 @@ public class ReportRepositoryImpl implements ReportRepositoryCustom {
                         report.reason,
                         report.reportStatus.stringValue(),
                         report.reportStartedAt,
+                        report.updatedAt,
                         report.letterId,
                         report.sharePostId,
                         report.eventCommentId,

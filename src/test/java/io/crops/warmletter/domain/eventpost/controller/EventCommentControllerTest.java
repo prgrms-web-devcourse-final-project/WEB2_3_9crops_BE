@@ -45,7 +45,7 @@ class EventCommentControllerTest {
     @DisplayName("POST 게시판 댓글 생성 성공")
     void create_eventComment_success() throws Exception {
         // given
-        long eventPostId = 1L;
+        Long eventPostId = 1L;
 
         CreateEventCommentRequest createEventCommentRequest = CreateEventCommentRequest.builder()
                 .content("내용")
@@ -90,7 +90,7 @@ class EventCommentControllerTest {
     @DisplayName("DELETE 게시판 댓글 삭제 성공")
     void delete_eventComment_success() throws Exception {
         // given
-        long eventCommentId = 1L;
+        Long eventCommentId = 1L;
 
         when(eventCommentService.deleteEventComment(eventCommentId)).thenReturn(Map.of("commentId", eventCommentId));
 

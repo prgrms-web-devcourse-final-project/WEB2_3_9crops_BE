@@ -8,10 +8,12 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface LetterTemporaryMatchingRepository extends JpaRepository<LetterTemporaryMatching, Long> {
     Optional<LetterTemporaryMatching> findBySecondMemberId(Long secondMemberId);
 
+    Optional<LetterTemporaryMatching> findByLetterId(Long letterId);
 }

@@ -6,14 +6,11 @@ import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
-import io.crops.warmletter.domain.letter.enums.LetterEvaluation;
 import io.crops.warmletter.domain.letter.enums.LetterType;
 import io.crops.warmletter.domain.letter.enums.Status;
 import io.crops.warmletter.domain.letter.exception.LetterNotBelongException;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
-import io.crops.warmletter.domain.member.entity.Member;
-import io.crops.warmletter.domain.member.enums.TemperaturePolicy;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
@@ -31,9 +28,9 @@ public class LetterService {
 
     private final LetterRepository letterRepository;
     private final MemberRepository memberRepository;
-    private final AuthFacade authFacade;
     private final BadWordService badWordService;
     private final MemberFacade memberFacade;
+    private final AuthFacade authFacade;
 
     @Transactional
     public LetterResponse createLetter(CreateLetterRequest request) {

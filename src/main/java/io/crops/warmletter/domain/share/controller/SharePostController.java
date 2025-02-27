@@ -5,6 +5,7 @@ import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.service.SharePostService;
 import io.crops.warmletter.global.response.BaseResponse;
 import io.crops.warmletter.global.response.PageResponse;
+import io.crops.warmletter.global.util.PageableConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,14 +28,8 @@ public class SharePostController {
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
 
-        Pageable newPageable = PageRequest.of(
-                pageable.getPageNumber() > 0 ? pageable.getPageNumber() - 1 : 0,
-                pageable.getPageSize(),
-                pageable.getSort()
-        );
-
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new PageResponse<>(sharePostService.getAllPosts(newPageable)));
+                .body(new PageResponse<>(sharePostService.getAllPosts(PageableConverter.convertToPageable(pageable))));
     }
 
     @GetMapping("/share-posts/{sharePostId}")

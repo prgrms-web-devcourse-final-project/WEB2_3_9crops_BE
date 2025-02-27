@@ -1,13 +1,16 @@
 package io.crops.warmletter.domain.report.controller;
 
 import io.crops.warmletter.domain.report.dto.request.CreateReportRequest;
+import io.crops.warmletter.domain.report.dto.request.UpdateReportRequest;
 import io.crops.warmletter.domain.report.dto.response.ReportResponse;
 import io.crops.warmletter.domain.report.dto.response.ReportsResponse;
+import io.crops.warmletter.domain.report.dto.response.UpdateReportResponse;
 import io.crops.warmletter.domain.report.enums.ReportStatus;
 import io.crops.warmletter.domain.report.enums.ReportType;
 import io.crops.warmletter.domain.report.service.ReportService;
 import io.crops.warmletter.global.response.BaseResponse;
 import io.crops.warmletter.global.response.PageResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -44,6 +47,12 @@ public class ReportController {
         );
         Page<ReportsResponse> reports = reportService.getAllReports(reportType, status, adjustedPageable);
         return ResponseEntity.ok(BaseResponse.of(new PageResponse<>(reports), "신고 목록 조회 성공"));
+    }
+
+    @PatchMapping("/{reportId}")
+    public ResponseEntity<BaseResponse<UpdateReportResponse>> updateReport(@PathVariable Long reportId, @RequestBody @Valid UpdateReportRequest request) {
+        UpdateReportResponse response = reportService.updateReport(reportId, request);
+        return ResponseEntity.ok(BaseResponse.of(response, "신고 처리 완료"));
     }
 
 }

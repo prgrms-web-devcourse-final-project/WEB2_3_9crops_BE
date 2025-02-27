@@ -42,7 +42,7 @@ class NotificationControllerTest {
         when(notificationService.subscribeNotification(memberId)).thenReturn(mockEmitter);
 
         // SSE 구독 API 호출
-        mockMvc.perform(get("/api/notification/sub/{memberId}", memberId)
+        mockMvc.perform(get("/api/notifications/sub/{memberId}", memberId)
                         .accept("text/event-stream"))  // accept 헤더에 text/event-stream 추가
                 .andExpect(status().isOk());
     }
@@ -61,7 +61,7 @@ class NotificationControllerTest {
         when(notificationService.updateNotificationRead(notificationId)).thenReturn(readNotificationResponse);
 
         // when & then
-        mockMvc.perform(patch("/api/notification/{notificationId}/read", notificationId))
+        mockMvc.perform(patch("/api/notifications/{notificationId}/read", notificationId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.notificationId").value(readNotificationResponse.getNotificationId()))
                 .andExpect(jsonPath("$.data.isRead").value(true))

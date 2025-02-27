@@ -7,6 +7,8 @@ import io.crops.warmletter.domain.share.entity.SharePost;
 import io.crops.warmletter.domain.share.entity.ShareProposal;
 import io.crops.warmletter.domain.share.entity.ShareProposalLetter;
 import io.crops.warmletter.domain.share.enums.ProposalStatus;
+import io.crops.warmletter.domain.share.exception.ShareInvalidInputValue;
+import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException;
 import io.crops.warmletter.domain.share.repository.*;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
@@ -29,7 +31,7 @@ public class ShareProposalService {
     public ShareProposalResponse requestShareProposal(ShareProposalRequest request) {
         if (request.getRequesterId() == null || request.getRecipientId() == null ||
                 request.getLetters() == null || request.getLetters().isEmpty()) {
-            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+            throw new ShareInvalidInputValue();
         }
         ShareProposal shareProposal = shareProposalRepository.save(request.toEntity());
 
@@ -40,7 +42,7 @@ public class ShareProposalService {
 
         ShareProposalResponse response = shareProposalRepository.findShareProposalWithZipCode(shareProposal.getId());
         if (response == null) {
-            throw new BusinessException(ErrorCode.SHARE_POST_NOT_FOUND);
+            throw new ShareProposalNotFoundException();
         }
         return response;
 
@@ -49,7 +51,7 @@ public class ShareProposalService {
     @Transactional
     public ShareProposalStatusResponse approveShareProposal(Long shareProposalId) {
         ShareProposal shareProposal = shareProposalRepository.findById(shareProposalId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.SHARE_PROPOSAL_NOTFOUND));
+                .orElseThrow(() -> new ShareProposalNotFoundException());
 
         shareProposal.updateStatus(ProposalStatus.APPROVED);
 
@@ -70,7 +72,7 @@ public class ShareProposalService {
     @Transactional
     public ShareProposalStatusResponse rejectShareProposal(Long shareProposalId) {
         ShareProposal shareProposal = shareProposalRepository.findById(shareProposalId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.SHARE_PROPOSAL_NOTFOUND));
+                .orElseThrow(() -> new ShareProposalNotFoundException());
 
         shareProposal.updateStatus(ProposalStatus.REJECTED);
         return ShareProposalStatusResponse.builder()

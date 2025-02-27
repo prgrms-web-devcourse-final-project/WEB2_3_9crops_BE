@@ -1,9 +1,13 @@
 package io.crops.warmletter.domain.timeline.service;
 
 import io.crops.warmletter.domain.timeline.dto.response.NotificationResponse;
+import io.crops.warmletter.domain.timeline.dto.response.ReadNotificationResponse;
 import io.crops.warmletter.domain.timeline.entity.Timeline;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
+import io.crops.warmletter.domain.timeline.exception.NotificationNotFoundException;
 import io.crops.warmletter.domain.timeline.repository.TimelineRepository;
+import io.crops.warmletter.global.error.common.ErrorCode;
+import io.crops.warmletter.global.error.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,10 +21,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -145,7 +152,6 @@ class NotificationServiceTest {
     void create_sendEventToClient_success() throws IOException{
         long receiverId = 1L;
         String title = "12345님이 편지를 보냈습니다.";
-        String letterId = "1";
         AlarmType alarmType = AlarmType.LETTER;
 
         NotificationResponse notificationResponse = NotificationResponse.builder()
@@ -168,7 +174,6 @@ class NotificationServiceTest {
     void create_sendEventToClient_notExistsReceiverId() throws IOException {
         long receiverId = 1L;
         String title = "12345님이 편지를 보냈습니다.";
-        String letterId = "1";
         AlarmType alarmType = AlarmType.LETTER;
 
         NotificationResponse notificationResponse = NotificationResponse.builder()
@@ -180,4 +185,81 @@ class NotificationServiceTest {
 
         verify(emitter, never()).send(any(SseEmitter.SseEventBuilder.class));
     }
+
+    @Test
+    @DisplayName("알림 읽음 상태 변경 성공 - false 에서 true")
+    void update_notificationRead_success(){
+        //given
+        long notificationId = 1L;
+
+        Timeline timeline = Timeline.builder().memberId(1).title("제목").content("내용").alarmType(AlarmType.LETTER).build();
+        ReflectionTestUtils.setField(timeline, "id", notificationId);
+
+        when(timelineRepository.findById(any(Long.class))).thenReturn(Optional.of(timeline));
+
+        //when
+        ReadNotificationResponse readNotificationResponse = notificationService.updateNotificationRead(notificationId);
+
+        //then
+        assertEquals(notificationId, readNotificationResponse.getNotificationId());
+        assertTrue(readNotificationResponse.getIsRead());
+    }
+
+    @Test
+    @DisplayName("알림 읽음 상태 변경 성공 - 변경 없음")
+    void update_notificationAlreadyRead_success(){
+        //given
+        long notificationId = 1L;
+
+        Timeline timeline = Timeline.builder().memberId(1).title("제목").content("내용").alarmType(AlarmType.LETTER).build();
+        ReflectionTestUtils.setField(timeline, "id", notificationId);
+        ReflectionTestUtils.setField(timeline, "isRead", true);
+
+        when(timelineRepository.findById(any(Long.class))).thenReturn(Optional.of(timeline));
+
+        //when
+        ReadNotificationResponse readNotificationResponse = notificationService.updateNotificationRead(notificationId);
+
+        //then
+        assertEquals(notificationId, readNotificationResponse.getNotificationId());
+        assertTrue(readNotificationResponse.getIsRead());
+    }
+
+    @Test
+    @DisplayName("알림 읽음 상태 변경 실패 - 일치하는 notificaitonId 없음 ")
+    void update_notification_notFound(){
+        //given
+        when(timelineRepository.findById(any(Long.class))).thenThrow(new NotificationNotFoundException());
+
+        //when
+        BusinessException exception = assertThrows(NotificationNotFoundException.class, ()-> notificationService.updateNotificationRead(999));
+
+        //then
+        assertEquals(ErrorCode.NOTIFICATION_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("모든 알림 읽음 상태 변경 성공 - false 에서 true")
+    void update_notificationAllRead_success(){
+        //given
+
+        Timeline timeline1 = Timeline.builder().memberId(1).title("제목1").content("내용1").alarmType(AlarmType.LETTER).build();
+        ReflectionTestUtils.setField(timeline1, "id", 1);
+        Timeline timeline3 = Timeline.builder().memberId(1).title("제목3").content("내용3").alarmType(AlarmType.LETTER).build();
+        ReflectionTestUtils.setField(timeline3, "id", 3);
+
+        List<Timeline> timelines = Arrays.asList(timeline1, timeline3);
+
+        when(timelineRepository.findByMemberIdAndIsReadFalse(any(Long.class))).thenReturn(timelines);
+
+        //when
+        List<ReadNotificationResponse> readNotificationResponse = notificationService.updateNotificationAllRead();
+
+        //then
+        assertEquals(1, readNotificationResponse.get(0).getNotificationId());
+        assertTrue(readNotificationResponse.get(0).getIsRead());
+        assertEquals(3, readNotificationResponse.get(1).getNotificationId());
+        assertTrue(readNotificationResponse.get(1).getIsRead());
+    }
+
 }

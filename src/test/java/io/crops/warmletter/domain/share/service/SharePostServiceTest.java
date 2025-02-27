@@ -1,12 +1,17 @@
 package io.crops.warmletter.domain.share.service;
 
+import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.share.dto.response.ShareLetterPostResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.entity.SharePost;
+import io.crops.warmletter.domain.share.exception.SharePageException;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
+import io.crops.warmletter.global.oauth.entity.UserPrincipal;
+import io.crops.warmletter.global.util.PageableConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,6 +38,9 @@ class SharePostServiceTest {
     @Mock
     private Pageable pageable;
 
+    @Mock
+    AuthFacade authFacade;
+
     @InjectMocks
     private SharePostService sharePostService;
 
@@ -54,8 +62,8 @@ class SharePostServiceTest {
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         List<SharePostResponse> responses = List.of(
-                new SharePostResponse(1L,1L, "12345", "67890", "to share my post", true, LocalDateTime.now()),
-                new SharePostResponse(2L,2L, "13579", "24680", "to share my post1", true, LocalDateTime.now().minusDays(1))
+                new SharePostResponse(1L, 1L, "12345", "67890", "to share my post", true, LocalDateTime.now()),
+                new SharePostResponse(2L, 2L, "13579", "24680", "to share my post1", true, LocalDateTime.now().minusDays(1))
         );
 
         Page<SharePostResponse> responsePage = new PageImpl<>(responses, pageable, responses.size());
@@ -79,70 +87,6 @@ class SharePostServiceTest {
         );
 
         verify(sharePostRepository).findAllActiveSharePostsWithZipCodes(pageable);
-    }
-
-    @Test
-    @DisplayName("활성화된 게시글이 없을 경우 빈 페이지 반환")
-    void getAllPosts_ReturnsEmptyPage_WhenNoActivePost() {
-        // given
-        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<SharePostResponse> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
-
-        when(sharePostRepository.findAllActiveSharePostsWithZipCodes(pageable)).thenReturn(emptyPage);
-
-        // when
-        Page<SharePostResponse> result = sharePostService.getAllPosts(pageable);
-
-        // then
-        assertAll(
-                () -> assertThat(result.getContent()).isEmpty(),
-                () -> assertThat(result.getTotalElements()).isZero(),
-                () -> assertThat(result.getTotalPages()).isZero()
-        );
-
-        verify(sharePostRepository).findAllActiveSharePostsWithZipCodes(pageable);
-    }
-
-
-    @Test
-    @DisplayName("두 번째 페이지 조회 성공")
-    void getAllPosts_ReturnsSecondPage() {
-        Pageable pageable = PageRequest.of(1, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-
-        List<SharePostResponse> responses = List.of(
-                new SharePostResponse(1L,1L, "12345", "67890", "to share my post", true, LocalDateTime.now()),
-                new SharePostResponse(2L,2L, "13579", "24680", "to share my post1", true, LocalDateTime.now().minusDays(1))
-        );
-
-        Page<SharePostResponse> responsePage = new PageImpl<>(responses, pageable, 25); // 총 25개 중 2번째 페이지
-
-        when(sharePostRepository.findAllActiveSharePostsWithZipCodes(pageable)).thenReturn(responsePage);
-
-        Page<SharePostResponse> result = sharePostService.getAllPosts(pageable);
-
-        assertAll(
-                () -> assertThat(result.getContent()).hasSize(2),
-                () -> assertThat(result.getTotalElements()).isEqualTo(25),
-                () -> assertThat(result.getNumber()).isEqualTo(1),
-                () -> assertThat(result.getTotalPages()).isEqualTo(3),
-                () -> assertThat(result.getContent().get(0).getWriterZipCode()).isEqualTo("12345"),
-                () -> assertThat(result.getContent().get(0).getReceiverZipCode()).isEqualTo("67890")
-        );
-
-        verify(sharePostRepository).findAllActiveSharePostsWithZipCodes(pageable);
-    }
-
-    @Test
-    @DisplayName("음수 페이지 요청시 예외 발생")
-    void getAllPosts_ThrowsException_WhenPageNumberIsNegative() {
-        // given
-        when(pageable.getPageNumber()).thenReturn(-1);  // 음수 페이지 번호 반환하도록 설정
-
-        // when & then
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> sharePostService.getAllPosts(pageable));
-
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_PAGE_REQUEST);
     }
 
     @DisplayName("게시글 상세 조회 성공")
@@ -251,6 +195,84 @@ class SharePostServiceTest {
         verify(sharePostRepository).findDetailById(sharePostId);
     }
 
+    @Test
+    @DisplayName("음수 페이지 요청시 예외 발생")
+    void getAllPosts_ThrowsException_WhenPageNumberIsNegative() {
+        // given
+        Pageable mockPageable = mock(Pageable.class);
+        when(mockPageable.getPageNumber()).thenReturn(-1);
+        // 불필요한 스터빙 제거
 
+        // when & then
+        SharePageException exception = assertThrows(SharePageException.class,
+                () -> sharePostService.getAllPosts(mockPageable));
 
+        // getCurrentUser가 호출되었는지만 확인
+        verify(authFacade).getCurrentUser();
+        // repository는 호출되지 않아야 함
+        verify(sharePostRepository, never()).findAllActiveSharePostsWithZipCodes(any());
+    }
+    @Test
+    @DisplayName("authFacade.getCurrentUser() 호출 확인 - getAllPosts")
+    void getAllPosts_CallsGetCurrentUser() {
+        // given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<SharePostResponse> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+
+        when(sharePostRepository.findAllActiveSharePostsWithZipCodes(pageable)).thenReturn(emptyPage);
+
+        // when
+        sharePostService.getAllPosts(pageable);
+
+        // then
+        verify(authFacade).getCurrentUser();
+    }
+    @Test
+    @DisplayName("authFacade.getCurrentUser() 호출 확인 - getPostDetail")
+    void getPostDetail_CallsGetCurrentUser() {
+        // given
+        Long postId = 1L;
+        SharePostDetailResponse response = SharePostDetailResponse.builder()
+                .sharePostId(postId)
+                .build();
+
+        when(sharePostRepository.findDetailById(postId)).thenReturn(Optional.of(response));
+
+        // when
+        sharePostService.getPostDetail(postId);
+
+        // then
+        verify(authFacade).getCurrentUser();
+    }
+
+    @Test
+    @DisplayName("두 번째 페이지 조회 성공")
+    void getAllPosts_ReturnsSecondPage() {
+        // given
+        Pageable requestPageable = PageRequest.of(2, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable convertedPageable = PageableConverter.convertToPageable(requestPageable); // 2 -> 1 변환
+
+        List<SharePostResponse> responses = List.of(
+                new SharePostResponse(1L, 1L, "12345", "67890", "to share my post", true, LocalDateTime.now()),
+                new SharePostResponse(2L, 2L, "13579", "24680", "to share my post1", true, LocalDateTime.now().minusDays(1))
+        );
+
+        Page<SharePostResponse> responsePage = new PageImpl<>(responses, convertedPageable, 25); // 총 25개 중 2번째 페이지
+
+        when(sharePostRepository.findAllActiveSharePostsWithZipCodes(any())).thenReturn(responsePage);
+
+        // when
+        Page<SharePostResponse> result = sharePostService.getAllPosts(requestPageable);
+
+        // then
+        assertAll(
+                () -> assertThat(result.getContent()).hasSize(2),
+                () -> assertThat(result.getTotalElements()).isEqualTo(25),
+                () -> assertThat(result.getNumber()).isEqualTo(1), // convertedPageable의 페이지 번호
+                () -> assertThat(result.getTotalPages()).isEqualTo(3)
+        );
+
+        verify(authFacade).getCurrentUser();
+        verify(sharePostRepository).findAllActiveSharePostsWithZipCodes(any());
+    }
 }

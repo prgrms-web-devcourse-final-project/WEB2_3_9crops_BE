@@ -1,6 +1,4 @@
 package io.crops.warmletter.domain.share.dto.response;
-import io.crops.warmletter.domain.share.entity.SharePost;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -16,13 +14,6 @@ public class SharePostResponse {
     private String content;
     private boolean isActive;
     private LocalDateTime createdAt;
-
-    public SharePostResponse(SharePost sharePost) {
-        this.shareProposalId = sharePost.getShareProposalId();
-        this.content = sharePost.getContent();
-        this.isActive = sharePost.isActive();
-        this.createdAt = sharePost.getCreatedAt();
-    }
 
     public SharePostResponse(Long sharePostId, Long shareProposalId, String writerZipCode, String receiverZipCode,
                              String content, boolean isActive, LocalDateTime createdAt) {

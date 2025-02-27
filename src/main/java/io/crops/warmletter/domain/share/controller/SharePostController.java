@@ -7,7 +7,6 @@ import io.crops.warmletter.global.response.BaseResponse;
 import io.crops.warmletter.global.response.PageResponse;
 import io.crops.warmletter.global.util.PageableConverter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -23,13 +22,15 @@ public class SharePostController {
 
     private final SharePostService sharePostService;
 
+    /**
+     * BaseResponse요구
+     */
     @GetMapping("/share-posts")
-    public ResponseEntity<PageResponse<SharePostResponse>> getAllPosts(
+    public ResponseEntity<BaseResponse<PageResponse<SharePostResponse>>> getAllPosts(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new PageResponse<>(sharePostService.getAllPosts(PageableConverter.convertToPageable(pageable))));
+                .body(BaseResponse.of(new PageResponse<>(sharePostService.getAllPosts(PageableConverter.convertToPageable(pageable))), "공유 게시글 조회 성공"));
     }
 
     @GetMapping("/share-posts/{sharePostId}")
@@ -42,4 +43,3 @@ public class SharePostController {
 
 
 }
-

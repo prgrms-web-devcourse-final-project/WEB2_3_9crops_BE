@@ -9,10 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface SharePostRepository extends JpaRepository<SharePost,Long>, CustomSharePostRepository {
 
-    Page<SharePost> findAllByIsActiveTrue(Pageable pageable);
-
     @Query("SELECT new io.crops.warmletter.domain.share.dto.response.SharePostResponse(" +
-            "sp.shareProposalId, writer.zipCode, recipient.zipCode, sp.content, sp.isActive, sp.createdAt) " +
+            "sp.id, sp.shareProposalId, writer.zipCode, recipient.zipCode, sp.content, sp.isActive, sp.createdAt) " +
             "FROM SharePost sp " +
             "JOIN ShareProposal proposal ON sp.shareProposalId = proposal.id " +
             "JOIN Member writer ON proposal.requesterId = writer.id " +

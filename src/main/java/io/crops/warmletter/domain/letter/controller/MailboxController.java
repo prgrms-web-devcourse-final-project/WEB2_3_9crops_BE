@@ -37,6 +37,7 @@ public class MailboxController {
 
     /**
      * 편지함 상세 조회
+     * 시작이 1로 안하면 조건 수정 해야함~
      */
     @GetMapping("/{matchingId}/detail")
     public ResponseEntity<BaseResponse<PageResponse<MailboxDetailResponse>>> detailMailbox(

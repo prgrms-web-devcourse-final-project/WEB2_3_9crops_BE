@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.auth.controller;
 
 import io.crops.warmletter.domain.auth.dto.TokenResponse;
+import io.crops.warmletter.domain.auth.dto.TokenStorageResponse;
 import io.crops.warmletter.domain.auth.service.AuthService;
 import io.crops.warmletter.global.jwt.exception.InvalidAccessTokenException;
 import io.crops.warmletter.global.response.BaseResponse;
@@ -45,5 +46,12 @@ public class AuthController {
             authService.logout(bearerToken.substring(7), refreshToken, response);
         }
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/auth/token")
+    public ResponseEntity<BaseResponse<TokenStorageResponse>> getToken(@RequestParam("state") String stateToken) {
+        TokenStorageResponse response = authService.getTokenByState(stateToken);
+
+        return ResponseEntity.ok(BaseResponse.of(response, "임시 저장소 토큰 조회 완료"));
     }
 }

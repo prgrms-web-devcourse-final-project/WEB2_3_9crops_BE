@@ -28,4 +28,6 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
     List<RandomLetterResponse> findRandomLettersByCategory(@Param("category") Category category, Long currentUserId, Pageable pageable);
 
     Optional<Letter> findByIdAndReceiverId(Long id, Long receiverId);
+
+    Optional<Letter> findByIdAndWriterId(Long letterId, Long currentUserId);
 }

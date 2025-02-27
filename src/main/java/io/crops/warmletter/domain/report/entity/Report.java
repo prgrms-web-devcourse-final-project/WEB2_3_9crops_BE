@@ -11,7 +11,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Builder
+@Builder(toBuilder = true)
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -37,14 +37,16 @@ public class Report extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private ReportStatus reportStatus;
 
-    private Long memberId;
+    private String adminMemo;
 
+    private Long memberId;
 
     private Long letterId;
     private Long sharePostId;
     private Long eventCommentId;
 
-
-
-
+    public void resolveAutomatically() {
+        this.reportStatus = ReportStatus.RESOLVED;
+        this.adminMemo = "같은 대상의 신고가 처리되어 자동 승인됨.";
+    }
 }

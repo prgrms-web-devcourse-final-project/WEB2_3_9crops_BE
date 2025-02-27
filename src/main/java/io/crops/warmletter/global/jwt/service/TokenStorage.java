@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class TokenStorage {
     private final Map<String, TokenInfo> tokenStore = new ConcurrentHashMap<>();
-    private final long EXPIRY_TIME = 1000 * 60 * 3; // 3분
+    private final long EXPIRY_TIME = 1000L * 60 * 3; // 3분
 
     @Scheduled(fixedRate = 300000) // 5분마다 만료된 토큰 정리
     public void cleanupExpiredTokens() {

@@ -110,36 +110,30 @@ public class LetterService {
 
     }
 
-    public LetterResponse temporarySaveLetter(Long letterId, @Valid TemporarySaveLetterRequest request) {
+    @Transactional
+    public LetterResponse temporarySaveLetter(Long letterId, TemporarySaveLetterRequest request) {
+        Long writerId = authFacade.getCurrentUserId();
+        String writerZipCode = authFacade.getZipCode();
 
-        /**
-         * authFacade.getUserId, authFacade.getUserZipCode 필요
-         * 이후, 해당 하드코딩 되어 있는 부분에 매개변수 주시면 됩니다.
-         */
-        /**
-         * 편지 아이디가 !null
-         * 기존의 임시 저장 편지에 또 임시 저장을 할 때
-         * LetterId 값과 UserId 값이 이미 존재
-         */
         if (letterId != null) {
-            Letter letter = letterRepository.findByIdAndWriterId(letterId, 1L)
+            Letter letter = letterRepository.findByIdAndWriterId(letterId, writerId)
                     .orElseThrow(LetterNotBelongException::new);
 
-            letter.updateTemporarySave(request);
-            letterRepository.save(letter);
+            letter.updateTemporarySave(
+                    request.getReceiverId(),
+                    request.getParentLetterId(),
+                    request.getCategory(),
+                    request.getTitle(),
+                    request.getContent()
+            );
 
-            return LetterResponse.fromEntity(letter, "12345");
+            return LetterResponse.fromEntity(letter, writerZipCode);
         }
         else {
 
-            /**
-             *  편지 아이디가 null
-             *  새로운 편지에 임시 저장을 할 때,
-             *  LetterId값이 없는 상황 -> 임시저장시 Entity 생성이 필요하다
-             */
             Letter letter = Letter.builder()
-                    .writerId(1L)
-                    .receiverId(null)
+                    .writerId(writerId)
+                    .receiverId(request.getReceiverId())
                     .parentLetterId(request.getParentLetterId())
                     .letterType(LetterType.RANDOM)
                     .category(request.getCategory())
@@ -151,7 +145,7 @@ public class LetterService {
                     .build();
             letterRepository.save(letter);
 
-            return LetterResponse.fromEntity(letter, "12345");
+            return LetterResponse.fromEntity(letter, writerZipCode);
         }
     }
 

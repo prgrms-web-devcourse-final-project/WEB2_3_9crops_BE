@@ -87,14 +87,12 @@ public class Letter extends BaseTimeEntity {
         this.letterType = letterType;
     }
 
-    public void updateTemporarySave(TemporarySaveLetterRequest request) {
-        this.receiverId = request.getReceiverId();
-        this.parentLetterId = request.getParentLetterId();
-        this.category = request.getCategory();
-        this.title = request.getTitle();
-        this.content = request.getContent();
+    public void updateTemporarySave(Long receiverId, Long parentLetterId, Category category, String title, String content) {
+        this.receiverId = receiverId;
+        this.parentLetterId = parentLetterId;
+        this.category = category;
+        this.title = title;
+        this.content = content;
         this.status = Status.SAVED;
-        this.fontType = this.getFontType();
-        this.paperType = this.getPaperType();
     }
 }

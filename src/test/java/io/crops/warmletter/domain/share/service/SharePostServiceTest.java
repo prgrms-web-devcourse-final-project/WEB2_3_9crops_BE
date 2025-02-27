@@ -54,8 +54,8 @@ class SharePostServiceTest {
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         List<SharePostResponse> responses = List.of(
-                new SharePostResponse(1L, "12345", "67890", "to share my post", true, LocalDateTime.now()),
-                new SharePostResponse(2L, "13579", "24680", "to share my post1", true, LocalDateTime.now().minusDays(1))
+                new SharePostResponse(1L,1L, "12345", "67890", "to share my post", true, LocalDateTime.now()),
+                new SharePostResponse(2L,2L, "13579", "24680", "to share my post1", true, LocalDateTime.now().minusDays(1))
         );
 
         Page<SharePostResponse> responsePage = new PageImpl<>(responses, pageable, responses.size());
@@ -110,8 +110,8 @@ class SharePostServiceTest {
         Pageable pageable = PageRequest.of(1, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         List<SharePostResponse> responses = List.of(
-                new SharePostResponse(1L, "12345", "67890", "to share my post", true, LocalDateTime.now()),
-                new SharePostResponse(2L, "13579", "24680", "to share my post1", true, LocalDateTime.now().minusDays(1))
+                new SharePostResponse(1L,1L, "12345", "67890", "to share my post", true, LocalDateTime.now()),
+                new SharePostResponse(2L,2L, "13579", "24680", "to share my post1", true, LocalDateTime.now().minusDays(1))
         );
 
         Page<SharePostResponse> responsePage = new PageImpl<>(responses, pageable, 25); // 총 25개 중 2번째 페이지

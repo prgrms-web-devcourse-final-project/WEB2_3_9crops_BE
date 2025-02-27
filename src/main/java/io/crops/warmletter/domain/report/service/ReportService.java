@@ -119,7 +119,7 @@ public class ReportService {
         if (report.getLetterId() != null) {
             Letter letter = letterRepository.findById(report.getLetterId())
                     .orElseThrow(LetterNotFoundException::new);
-            letter.softDelete();
+            letter.inactive();
         } else if (report.getSharePostId() != null) {
             SharePost sharePost = sharePostRepository.findById(report.getSharePostId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.SHARE_POST_NOT_FOUND));

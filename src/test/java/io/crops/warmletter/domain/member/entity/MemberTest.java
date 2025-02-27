@@ -16,18 +16,15 @@ class MemberTest {
     void createMember() {
         //given
         String email = "test@test.com";
-        float temperature = 36.5f;
 
         Member member = Member.builder()
                 .email(email)
                 .password("password")
-                .temperature(temperature)
                 .role(Role.USER)
                 .build();
         
         //when & then
         assertThat(member.getEmail()).isEqualTo(email);
-        assertThat(member.getTemperature()).isEqualTo(temperature);
     }
 
 

@@ -90,7 +90,6 @@ class LettersControllerTest {
                 .email("user@example.com")
                 .zipCode("12345")
                 .password("hashedPassword")
-                .temperature(36.5f)
                 .preferredLetterCategory(Category.CONSOLATION)
                 .role(Role.USER)
                 .lastMatchedAt(LocalDateTime.now())

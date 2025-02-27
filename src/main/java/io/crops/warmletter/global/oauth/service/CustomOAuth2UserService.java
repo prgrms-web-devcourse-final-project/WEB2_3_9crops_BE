@@ -72,7 +72,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .email(email)
                     .socialUniqueId(socialUniqueId)
                     .role(Role.USER)
-                    .temperature(36.5f)  // 기본 온도 설정
                     .build();
 
             SocialAccount socialAccount = SocialAccount.builder()

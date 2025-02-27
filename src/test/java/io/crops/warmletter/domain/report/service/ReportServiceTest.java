@@ -72,7 +72,6 @@ class ReportServiceTest {
                 .email("test@email.com")
                 .zipCode("12345")
                 .password("password")
-                .temperature(36.5f)
                 .preferredLetterCategory(null)
                 .role(Role.USER)
                 .lastMatchedAt(LocalDateTime.now())
@@ -353,7 +352,7 @@ class ReportServiceTest {
 
         reportService.deactivateTarget(report);
 
-        verify(mockLetter, times(1)).softDelete();
+        verify(mockLetter, times(1)).inactive();
     }
 
     @Test

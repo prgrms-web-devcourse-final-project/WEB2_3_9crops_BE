@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.domain.eventpost.exception.EventCommentNotFoundException;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.report.dto.request.CreateReportRequest;
+import io.crops.warmletter.domain.report.dto.request.UpdateReportRequest;
 import io.crops.warmletter.domain.report.dto.response.ReportResponse;
 import io.crops.warmletter.domain.report.dto.response.ReportsResponse;
+import io.crops.warmletter.domain.report.dto.response.UpdateReportResponse;
 import io.crops.warmletter.domain.report.entity.Report;
 import io.crops.warmletter.domain.report.enums.ReasonType;
 import io.crops.warmletter.domain.report.enums.ReportStatus;
@@ -17,6 +19,7 @@ import io.crops.warmletter.global.error.exception.BusinessException;
 import io.crops.warmletter.global.error.handler.GlobalExceptionHandler;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -32,8 +35,7 @@ import java.util.List;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-
-
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -303,6 +305,7 @@ class ReportControllerTest {
                         "욕설 포함",                   // reason
                         "PENDING",                    // status
                         LocalDateTime.now(),          // reportedAt
+                        LocalDateTime.now(),
                         10L,                          // letterId
                         null,                         // sharePostId (게시글 신고가 아니므로 null)
                         null,                         // eventCommentId
@@ -318,6 +321,7 @@ class ReportControllerTest {
                         ReasonType.THREATS.name(),
                         "협박 관련 신고",
                         "RESOLVED",
+                        LocalDateTime.now(),
                         LocalDateTime.now(),
                         null,
                         null,
@@ -361,6 +365,34 @@ class ReportControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("신고 목록 조회 성공"))
                 .andExpect(jsonPath("$.data.content").isEmpty()); // 신고 목록이 비어 있어야 함
+    }
+
+    @Test
+    @DisplayName("신고 처리 - 성공")
+    void updateReport_Success() throws Exception {
+        // Given (입력 데이터 준비)
+        Long reportId = 1L;
+        int warningCount = 2;
+        UpdateReportRequest request = new UpdateReportRequest(ReportStatus.RESOLVED, "욕설 확인되어 경고 조치함.");
+
+        UpdateReportResponse response = new UpdateReportResponse(reportId, ReportStatus.RESOLVED, "욕설 확인되어 경고 조치함.", warningCount);
+
+        // reportService.updateReport()가 호출되면 response 반환하도록 Mock 설정
+        given(reportService.updateReport(eq(reportId), any(UpdateReportRequest.class)))
+                .willReturn(response);
+
+        // When & Then (MockMvc 요청 실행 & 검증)
+        mockMvc.perform(patch("/api/reports/{reportId}", reportId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))  // JSON 직렬화
+                .andExpect(status().isOk()) // HTTP 200 확인
+                .andExpect(jsonPath("$.data.id").value(reportId)) // 응답 검증
+                .andExpect(jsonPath("$.data.status").value("RESOLVED"))
+                .andExpect(jsonPath("$.data.adminMemo").value("욕설 확인되어 경고 조치함."))
+                .andExpect(jsonPath("$.message").value("신고 처리 완료")); // 메시지 검증
+
+        // 서비스 호출 여부 확인
+        Mockito.verify(reportService, Mockito.times(1)).updateReport(eq(reportId), any(UpdateReportRequest.class));
     }
 
 

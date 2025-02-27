@@ -63,7 +63,6 @@ class MailboxServiceTest {
                 .email("user@example.com")
                 .zipCode("12345")
                 .password("hashedPassword")
-                .temperature(36.5f)
                 .preferredLetterCategory(null)
                 .role(null)
                 .lastMatchedAt(null)

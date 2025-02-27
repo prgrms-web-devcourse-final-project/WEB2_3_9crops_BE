@@ -3,13 +3,16 @@ package io.crops.warmletter.domain.letter.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
+import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.LetterType;
 import io.crops.warmletter.domain.letter.enums.Status;
+import io.crops.warmletter.domain.letter.exception.LetterNotBelongException;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
+import io.crops.warmletter.domain.member.facade.MemberFacade;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,8 +28,9 @@ public class LetterService {
 
     private final LetterRepository letterRepository;
     private final MemberRepository memberRepository;
-    private final AuthFacade authFacade;
     private final BadWordService badWordService;
+    private final MemberFacade memberFacade;
+    private final AuthFacade authFacade;
 
     @Transactional
     public LetterResponse createLetter(CreateLetterRequest request) {
@@ -84,7 +88,7 @@ public class LetterService {
     @Transactional //더티채킹
     public void deleteLetter(Long letterId) {
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
-        letter.softDelete();
+        letter.inactive();
     }
 
 
@@ -92,5 +96,16 @@ public class LetterService {
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
         String zipCode = memberRepository.findById(letter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode(); //편지를 쓴 사람의 zipCode
         return LetterResponse.fromEntityForDetailView(letter, zipCode);
+    }
+
+    @Transactional
+    public void evaluateLetter(Long letterId, EvaluateLetterRequest request) {
+        Long receiverId = authFacade.getCurrentUserId();
+
+        Letter letter = letterRepository.findByIdAndReceiverId(letterId, receiverId)
+                                        .orElseThrow(LetterNotBelongException::new);
+
+        memberFacade.applyEvaluationTemperature(letter.getWriterId(), request.getEvaluation());
+
     }
 }

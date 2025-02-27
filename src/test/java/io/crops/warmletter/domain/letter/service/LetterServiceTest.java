@@ -3,12 +3,16 @@ package io.crops.warmletter.domain.letter.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
+import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.*;
+import io.crops.warmletter.domain.letter.exception.LetterNotBelongException;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.entity.Member;
+import io.crops.warmletter.domain.member.enums.Role;
+import io.crops.warmletter.domain.member.facade.MemberFacade;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,9 +23,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -42,6 +48,9 @@ class LetterServiceTest {
 
     @Mock
     private AuthFacade authFacade;
+
+    @Mock
+    private MemberFacade memberFacade;
 
     @InjectMocks
     private LetterService letterService;
@@ -354,5 +363,80 @@ class LetterServiceTest {
         verify(letterRepository).findById(savedRandomLetter.getId());
         verify(memberRepository).findById(savedRandomLetter.getWriterId());
 
+    }
+
+    @DisplayName("편지 평가 실패 - 편지에 대해 평가할 수 있는 권한 없음")
+    @Test
+    void evaluateLetter_WithNotBelongLetter_ShouldThrowException() throws Exception {
+        //given
+        Long memberId = 1L;
+        Long invalidLetterId = 1L;
+        EvaluateLetterRequest request = new EvaluateLetterRequest();
+        LetterEvaluation evaluation = LetterEvaluation.GOOD;
+
+        Field evaluationField = EvaluateLetterRequest.class.getDeclaredField("evaluation");
+        evaluationField.setAccessible(true);
+        evaluationField.set(request, evaluation);
+
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+        when(letterRepository.findByIdAndReceiverId(invalidLetterId, memberId)).thenReturn(Optional.empty());
+
+        //when & then
+        assertThrows(LetterNotBelongException.class,
+                () -> letterService.evaluateLetter(invalidLetterId, request));
+
+        verify(authFacade).getCurrentUserId();
+        verify(letterRepository).findByIdAndReceiverId(memberId, invalidLetterId);
+    }
+
+    @DisplayName("편지 평가 성공")
+    @Test
+    void evaluateLetter_Success() throws Exception {
+        //given
+        Long writerId = 2L;
+        Long receiverId = 1L;
+        Member member = Member.builder()
+                .socialUniqueId("GOOGLE_12345")
+                .zipCode("1AA2C")
+                .role(Role.USER)
+                .build();
+
+        // Reflection으로 id 설정
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, receiverId);
+
+        Long letterId = 1L;
+        Letter letter = Letter.builder()
+                .writerId(writerId)
+                .receiverId(receiverId)
+                .letterType(LetterType.DIRECT)
+                .category(Category.CONSULT)
+                .title("A사용자 2번 편지에 대한 답장")
+                .content("내용 2")
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .build();
+        // Reflection으로 id 설정
+        Field letterIdField = Letter.class.getDeclaredField("id");
+        letterIdField.setAccessible(true);
+        letterIdField.set(letter, letterId);
+
+
+        EvaluateLetterRequest request = new EvaluateLetterRequest();
+        LetterEvaluation evaluation = LetterEvaluation.GOOD;
+
+        Field evaluationField = EvaluateLetterRequest.class.getDeclaredField("evaluation");
+        evaluationField.setAccessible(true);
+        evaluationField.set(request, evaluation);
+
+        when(authFacade.getCurrentUserId()).thenReturn(receiverId);
+        when(letterRepository.findByIdAndReceiverId(letterId, receiverId)).thenReturn(Optional.of(letter));
+
+        //when
+        letterService.evaluateLetter(letterId, request);
+
+        //then
+        verify(memberFacade).applyEvaluationTemperature(writerId, evaluation);
     }
 }

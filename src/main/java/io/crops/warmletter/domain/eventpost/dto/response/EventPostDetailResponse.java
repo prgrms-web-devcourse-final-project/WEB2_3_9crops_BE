@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @Builder
 public class EventPostDetailResponse {
-    private long eventPostId;
+    private Long eventPostId;
     private String title;
     private List<EventCommentsResponse> eventPostComments;
 }

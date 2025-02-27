@@ -22,7 +22,7 @@ public class EventCommentService {
     private final EventCommentRepository eventCommentRepository;
     private final EventPostRepository eventPostRepository;
 
-    public EventCommentResponse createEventComment(CreateEventCommentRequest createEventCommentRequest, long eventPostId) {
+    public EventCommentResponse createEventComment(CreateEventCommentRequest createEventCommentRequest, Long eventPostId) {
         if(!eventPostRepository.existsById(eventPostId)) {
             throw new EventPostNotFoundException();
         }
@@ -41,7 +41,7 @@ public class EventCommentService {
                 .build();
     }
 
-    public Map<String,Long> deleteEventComment(long eventCommentId) {
+    public Map<String,Long> deleteEventComment(Long eventCommentId) {
         EventComment eventComment = eventCommentRepository.findById(eventCommentId).orElseThrow(EventCommentNotFoundException::new);
         if(!eventComment.isActive()){
             throw new EventCommentNotFoundException();

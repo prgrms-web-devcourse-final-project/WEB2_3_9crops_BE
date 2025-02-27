@@ -1,12 +1,15 @@
 package io.crops.warmletter.domain.auth.service;
 
 import io.crops.warmletter.domain.auth.dto.TokenResponse;
+import io.crops.warmletter.domain.auth.dto.TokenStorageResponse;
 import io.crops.warmletter.domain.auth.exception.UnauthorizedException;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.global.jwt.enums.TokenType;
 import io.crops.warmletter.global.jwt.exception.InvalidRefreshTokenException;
+import io.crops.warmletter.global.jwt.exception.InvalidTokenException;
 import io.crops.warmletter.global.jwt.provider.JwtTokenProvider;
 import io.crops.warmletter.global.jwt.service.TokenBlacklistService;
+import io.crops.warmletter.global.jwt.service.TokenStorage;
 import io.crops.warmletter.global.oauth.entity.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
@@ -28,6 +31,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final TokenBlacklistService tokenBlacklistService;
     private final RedisTemplate<String, String> redisTemplate;
+    private final TokenStorage tokenStorage;
     private final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 14; // 14일
     private final long REFRESH_TOKEN_REISSUE_TIME = REFRESH_TOKEN_EXPIRE_TIME / 2; // 7일
 
@@ -99,5 +103,20 @@ public class AuthService {
 
     public String getZipCode() {
         return getCurrentUser().getZipCode();
+    }
+
+    public TokenStorageResponse getTokenByState(String stateToken) {
+        TokenStorage.TokenInfo tokenInfo = tokenStorage.getTokenInfo(stateToken);
+
+        if (tokenInfo == null) {
+            throw new InvalidTokenException();
+        }
+
+        return TokenStorageResponse.builder()
+                .accessToken(tokenInfo.getAccessToken())
+                .hasZipCode(tokenInfo.getUserInfo().getZipCode() != null
+                        && !tokenInfo.getUserInfo().getZipCode().isEmpty())
+                .userId(tokenInfo.getUserInfo().getId())
+                .build();
     }
 }

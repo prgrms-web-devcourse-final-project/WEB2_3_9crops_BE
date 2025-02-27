@@ -20,7 +20,7 @@ public class TimelineService {
     public List<TimelineResponse> getTimelines(){
         long memberId = 1L; // TODO : authFacade.getCurrentUserId();
         // 알람이 없는(empty) 경우도 있어서 예외처리 X
-        List<TimelineResponse> timelineRespons = timeLineRepository.findByMemberId(memberId);
-        return timelineRespons;
+        List<TimelineResponse> timelineResponse = timeLineRepository.findByMemberId(memberId);
+        return timelineResponse;
     }
 }

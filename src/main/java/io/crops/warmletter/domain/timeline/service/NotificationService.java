@@ -18,10 +18,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 @Transactional
 public class NotificationService {
-    private final Map<Integer, SseEmitter> emitters = new ConcurrentHashMap<>();
+    private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
     private final TimelineRepository timelineRepository;
 
-    public SseEmitter subscribeNotification(int memberId){
+    public SseEmitter subscribeNotification(long memberId){
         SseEmitter emitter = new SseEmitter(600_000L); // 10분 후 타임아웃 설정
         emitters.put(memberId, emitter);
 
@@ -65,10 +65,10 @@ public class NotificationService {
                 .build();
 
         // 알림 전송
-        sendEventToClient((int)receiverId,notificationResponse);
+        sendEventToClient(receiverId,notificationResponse);
     }
 
-    public void sendEventToClient(int receiverId, NotificationResponse notificationResponse){
+    public void sendEventToClient(long receiverId, NotificationResponse notificationResponse){
         SseEmitter emitter = emitters.get(receiverId);
         if (emitter != null) {
             try {

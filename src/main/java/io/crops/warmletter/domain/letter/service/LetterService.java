@@ -10,6 +10,7 @@ import io.crops.warmletter.domain.letter.enums.LetterType;
 import io.crops.warmletter.domain.letter.enums.Status;
 import io.crops.warmletter.domain.letter.exception.LetterNotBelongException;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
+import io.crops.warmletter.domain.letter.exception.ParentLetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
@@ -44,7 +45,7 @@ public class LetterService {
                 .category(request.getCategory())
                 .title(request.getTitle())
                 .content(request.getContent())
-                .fontType(request.getFont())
+                .fontType(request.getFontType())
                 .paperType(request.getPaperType());
 
         //랜덤 편지로 가는 첫 편지 작성, 받는사람, 상위편지가 없으면 첫 편지 전송
@@ -52,14 +53,23 @@ public class LetterService {
             builder.receiverId(null)
                     .parentLetterId(null)
                     .letterType(LetterType.RANDOM)
-                    .status(Status.IN_DELIVERY);
+                    .status(Status.IN_DELIVERY)
+                    .matchingId(null);
         }
         //주고받는 답장편지, 랜덤편지에 대한 답장
         else {
             builder.receiverId(request.getReceiverId())
                     .parentLetterId(request.getParentLetterId())
                     .letterType(LetterType.DIRECT)
-                    .status(Status.IN_DELIVERY);
+                    .status(Status.IN_DELIVERY)
+                    .matchingId(request.getMatchingId());
+
+            //첫편지면 matchingId 넣어줌 , 받는사람도 넣어줌.
+            Letter firstLetter = letterRepository.findById(request.getParentLetterId()).orElseThrow(ParentLetterNotFoundException::new);
+            if(firstLetter.getParentLetterId() == null) { //todo 테스트 코드 작성해야함
+                firstLetter.updateMatchingId(request.getMatchingId());
+                firstLetter.updateReceiverId(writerId);
+            }
         }
         Letter letter = builder.build();
         Letter savedLetter = letterRepository.save(letter);

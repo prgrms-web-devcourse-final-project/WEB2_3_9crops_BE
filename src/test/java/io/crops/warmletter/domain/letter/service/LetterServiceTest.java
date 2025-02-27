@@ -9,6 +9,7 @@ import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.*;
 import io.crops.warmletter.domain.letter.exception.LetterNotBelongException;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
+import io.crops.warmletter.domain.letter.exception.ParentLetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.enums.Role;
@@ -95,7 +96,7 @@ class LetterServiceTest {
                 .content(randomLetterRequest.getContent())
                 .category(randomLetterRequest.getCategory())
                 .paperType(randomLetterRequest.getPaperType())
-                .fontType(randomLetterRequest.getFont())
+                .fontType(randomLetterRequest.getFontType())
                 .receiverId(randomLetterRequest.getReceiverId())
                 .parentLetterId(randomLetterRequest.getParentLetterId())
                 .status(Status.IN_DELIVERY)
@@ -109,7 +110,7 @@ class LetterServiceTest {
                 .content(directLetterRequest.getContent())
                 .category(directLetterRequest.getCategory())
                 .paperType(directLetterRequest.getPaperType())
-                .fontType(directLetterRequest.getFont())
+                .fontType(directLetterRequest.getFontType())
                 .receiverId(directLetterRequest.getReceiverId())
                 .parentLetterId(directLetterRequest.getParentLetterId())
                 .status(Status.IN_DELIVERY)
@@ -148,6 +149,28 @@ class LetterServiceTest {
     }
 
     @Test
+    @DisplayName("편지 작성 시 ParentLetterNotFoundException 에러")
+    void writeRandomLetter_fail() {
+        CreateLetterRequest request = CreateLetterRequest.builder()
+                .receiverId(2L)
+                .parentLetterId(12345L) // 존재하지 않는 부모 편지 ID
+                .title("답장 제목")
+                .content("답장 내용")
+                .category(Category.ETC)
+                .paperType(PaperType.PAPER)
+                .font(FontType.GYEONGGI)
+                .matchingId(100L)
+                .build();
+
+        when(authFacade.getCurrentUserId()).thenReturn(1L);
+        when(letterRepository.findById(12345L)).thenReturn(Optional.empty());
+
+        assertThrows(ParentLetterNotFoundException.class, () -> letterService.createLetter(request));
+
+    }
+
+
+    @Test
     @DisplayName("주고받는 답장 편지 작성 성공 테스트")
     void writeDirectLetter_success() {
         // given: repository.save()가 답장 편지 객체를 반환하도록 설정, save호출
@@ -155,6 +178,22 @@ class LetterServiceTest {
         //현재 로그인한 사용자 ID 및 ZipCode 설정
         when(authFacade.getCurrentUserId()).thenReturn(1L);
         when(authFacade.getZipCode()).thenReturn("12345");
+
+        // 부모 편지에 해당하는 객체 생성 (예: parentLetter)
+        Letter parentLetter = Letter.builder()
+                .writerId(2L)
+                .receiverId(1L)
+                .parentLetterId(null)
+                .letterType(LetterType.RANDOM)
+                .category(Category.CONSULT)
+                .title("부모 편지 제목")
+                .content("부모 편지 내용")
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .status(Status.DELIVERED) // 또는 적절한 상태
+                .build();
+        ReflectionTestUtils.setField(parentLetter, "id", 5L);
+        when(letterRepository.findById(directLetterRequest.getParentLetterId())).thenReturn(Optional.of(parentLetter));
 
         // when: 서비스 메서드 호출
         LetterResponse response = letterService.createLetter(directLetterRequest);

@@ -2,10 +2,13 @@ package io.crops.warmletter.domain.letter.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
+import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
+import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
+import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.LetterType;
@@ -13,6 +16,8 @@ import io.crops.warmletter.domain.letter.exception.AlreadyApprovedException;
 import io.crops.warmletter.domain.letter.exception.DuplicateLetterMatchException;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.exception.TemporaryMatchingNotFoundException;
+import io.crops.warmletter.domain.letter.facade.LetterFacade;
+import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.letter.repository.LetterTemporaryMatchingRepository;
 import io.crops.warmletter.domain.member.entity.Member;
@@ -39,9 +44,11 @@ public class RandomLetterService {
     private final LetterRepository letterRepository;
     private final MemberRepository memberRepository;
     private final AuthFacade authFacade;
+    private final LetterMatchingRepository letterMatchingRepository;
+    private final LetterFacade letterFacade;
 
     /**
-     *  랜덤 편지 리스트 찾기 5개씩 (수정필요)
+     *  랜덤 편지 리스트 찾기 5개씩
      */
     public List<RandomLetterResponse> findRandomLetters(Category category) {
         Long currentUserId = authFacade.getCurrentUserId();
@@ -140,8 +147,6 @@ public class RandomLetterService {
             throw new AlreadyApprovedException();
         }
 
-        Member member = memberRepository.findById(currentUserId).orElseThrow();
-
         LetterTemporaryMatching letterTemporaryMatching = LetterTemporaryMatching.builder()
                 .letterId(request.getLetterId())
                 .firstMemberId(request.getWriterId())
@@ -157,31 +162,35 @@ public class RandomLetterService {
 
         Letter letter = letterRepository.findById(letterTemporaryMatching.getLetterId()).orElseThrow(LetterNotFoundException::new);
         letter.updateLetterType(LetterType.DIRECT);
-        member.updateLastMatchedAt(letterTemporaryMatching.getMatchedAt());
     }
 
 
 
-    //lastMatchedAt 매칭시 시간 넣어주기.
-    //
-//    /**
-//     *  랜덤편지 매칭 로직
-//     */
-//    @Transactional
-//    public void letterMatching(RandomMatchingRequest request){
-//        Letter letter = letterRepository.findById(request.getLetterId()).orElseThrow(LetterNotFoundException::new);
-//        Long currentUserId = authFacade.getCurrentUserId();
-//
-//        letter.setReceiverId(currentUserId);
-//
-//        //그리고
-//        LetterMatching letterMatching = LetterMatching.builder()
-//                .letterId(letter.getId())
-//                .firstMemberId(letter.getWriterId())
-//                .secondMemberId(currentUserId)
-//                .build();
-//
-//        letterRepository.save(letter);
-//        letterMatchingRepository.save(letterMatching);
-//    }
+    /**
+     * 랜덤편지 매칭 로직
+     */
+    @Transactional
+    public LetterResponse completeLetterMatching(CreateLetterRequest request){
+        Long currentUserId = authFacade.getCurrentUserId();
+
+        LetterTemporaryMatching letterTemporaryMatching = letterTemporaryMatchingRepository.findByLetterId(request.getParentLetterId()).orElseThrow(TemporaryMatchingNotFoundException::new);  //편지 임시 매칭 //10번
+
+        LetterMatching letterMatching = LetterMatching.builder()
+                .letterId(letterTemporaryMatching.getLetterId())
+                .firstMemberId(letterTemporaryMatching.getFirstMemberId())
+                .secondMemberId(letterTemporaryMatching.getSecondMemberId())
+                .matchedAt(letterTemporaryMatching.getMatchedAt())
+                .build();
+        letterMatchingRepository.save(letterMatching);
+
+        letterTemporaryMatchingRepository.delete(letterTemporaryMatching); //임시테이블 제거
+
+        Member member = memberRepository.findById(currentUserId).orElseThrow(); // 맴버 찾고
+        member.updateLastMatchedAt(letterTemporaryMatching.getMatchedAt()); // 맴버 최종 매칭 시간 변경
+
+        //작성완료 버튼 눌렀을때 편지 생성
+        LetterResponse response = letterFacade.createLetter(request);
+
+        return response;
+    }
 }

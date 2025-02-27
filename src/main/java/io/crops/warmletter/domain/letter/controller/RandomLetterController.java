@@ -1,12 +1,15 @@
 package io.crops.warmletter.domain.letter.controller;
 
 import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
+import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
+import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.service.RandomLetterService;
 import io.crops.warmletter.global.response.BaseResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -71,13 +74,13 @@ public class RandomLetterController {
     }
 
 
-//    /**
-//     * 랜덤편지 매칭
-//     */
-//    @PostMapping("/api/random-letters/matching")
-//    public void letterMatching(@RequestBody RandomMatchingRequest request) {
-//        randomLetterService.letterMatching(request);
-//    }
-
-
+    /**
+     * 최종 랜덤편지 매칭 - 임시테이블 정보 최종 매칭 테이블로 옮기기, 임시테이블 삭제
+     */
+    @PostMapping("/matching")
+    public ResponseEntity<BaseResponse<LetterResponse>> completeLetterMatching(@RequestBody @Valid CreateLetterRequest request) {
+        LetterResponse letterResponse = randomLetterService.completeLetterMatching(request);
+        BaseResponse<LetterResponse> response = BaseResponse.of(letterResponse, "랜덤 편지 작성 완료");
+        return ResponseEntity.ok(response);
+    }
 }

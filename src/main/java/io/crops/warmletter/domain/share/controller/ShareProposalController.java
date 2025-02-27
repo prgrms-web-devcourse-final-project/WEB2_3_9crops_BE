@@ -6,6 +6,7 @@ import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalStatusResponse;
 import io.crops.warmletter.domain.share.service.ShareProposalService;
 import io.crops.warmletter.global.response.BaseResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class ShareProposalController {
 
     @PostMapping("/share-proposals")
     public ResponseEntity<BaseResponse<ShareProposalResponse>> requestShareProposal(
-            @RequestBody ShareProposalRequest request) {
+            @Valid @RequestBody ShareProposalRequest request) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new BaseResponse<>(shareProposalService.requestShareProposal(request), "요청 완료"));
     }

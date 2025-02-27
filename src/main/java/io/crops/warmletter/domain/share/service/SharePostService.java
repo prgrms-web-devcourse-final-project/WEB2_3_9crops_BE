@@ -3,6 +3,7 @@ package io.crops.warmletter.domain.share.service;
 import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.exception.ShareException;
+import io.crops.warmletter.domain.share.exception.SharePageException;
 import io.crops.warmletter.domain.share.exception.SharePostNotFoundException;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
@@ -23,7 +24,7 @@ public class SharePostService {
     @Transactional(readOnly = true)
     public Page<SharePostResponse> getAllPosts(Pageable pageable) {
         if (pageable.getPageNumber() < 0) {
-            throw new ShareException(ErrorCode.INVALID_PAGE_REQUEST);
+            throw new SharePageException();
         }
 
         return sharePostRepository.findAllActiveSharePostsWithZipCodes(pageable);

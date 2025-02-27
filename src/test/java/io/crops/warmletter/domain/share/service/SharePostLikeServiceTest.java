@@ -2,6 +2,7 @@ package io.crops.warmletter.domain.share.service;
 
 import io.crops.warmletter.domain.share.cache.PostLikeRedisManager;
 import io.crops.warmletter.domain.share.dto.response.SharePostLikeResponse;
+import io.crops.warmletter.domain.share.exception.ShareInvalidInputValue;
 import io.crops.warmletter.domain.share.exception.SharePostNotFoundException;
 import io.crops.warmletter.domain.share.repository.SharePostLikeRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -86,7 +87,7 @@ class SharePostLikeServiceTest {
         Long memberId = 1L;
 
         // when & then
-        assertThrows(SharePostNotFoundException.class, () -> {
+        assertThrows(ShareInvalidInputValue.class, () -> {
             sharePostLikeService.getLikeCountAndStatus(null, memberId);
         });
 

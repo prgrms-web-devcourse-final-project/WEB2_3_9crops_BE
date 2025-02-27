@@ -448,20 +448,16 @@ class LetterServiceTest {
         Long letterId = 1L;
         Long writerId = 1L;
 
-        // 기존 편지 객체 생성
-        Letter existingLetter = Letter.builder()
-                .writerId(writerId)
-                .receiverId(null)
-                .parentLetterId(null)
-                .letterType(LetterType.RANDOM)
-                .category(Category.CONSULT)
-                .title("기존 제목")
-                .content("기존 내용")
-                .status(Status.SAVED)
-                .fontType(FontType.HIMCHAN)
-                .paperType(PaperType.COMFORT)
-                .build();
-        ReflectionTestUtils.setField(existingLetter, "id", letterId);
+        // Letter를 mock으로 생성
+        Letter existingLetter = mock(Letter.class);
+        // mock 객체에 필요한 getter 메서드 동작 정의
+        when(existingLetter.getId()).thenReturn(letterId);
+        when(existingLetter.getTitle()).thenReturn("임시 저장 제목");
+        when(existingLetter.getContent()).thenReturn("임시 저장 내용");
+        when(existingLetter.getCategory()).thenReturn(Category.ETC);
+        when(existingLetter.getFontType()).thenReturn(FontType.HIMCHAN);
+        when(existingLetter.getPaperType()).thenReturn(PaperType.COMFORT);
+        when(existingLetter.getStatus()).thenReturn(Status.SAVED);
 
         // 임시 저장 요청 객체 생성
         TemporarySaveLetterRequest request = new TemporarySaveLetterRequest();
@@ -470,22 +466,38 @@ class LetterServiceTest {
         Field categoryField = TemporarySaveLetterRequest.class.getDeclaredField("category");
         Field fontField = TemporarySaveLetterRequest.class.getDeclaredField("font");
         Field paperTypeField = TemporarySaveLetterRequest.class.getDeclaredField("paperType");
+        Field receiverIdField = TemporarySaveLetterRequest.class.getDeclaredField("receiverId");
+        Field parentLetterIdField = TemporarySaveLetterRequest.class.getDeclaredField("parentLetterId");
 
         titleField.setAccessible(true);
         contentField.setAccessible(true);
         categoryField.setAccessible(true);
         fontField.setAccessible(true);
         paperTypeField.setAccessible(true);
+        receiverIdField.setAccessible(true);
+        parentLetterIdField.setAccessible(true);
 
         titleField.set(request, "임시 저장 제목");
         contentField.set(request, "임시 저장 내용");
         categoryField.set(request, Category.ETC);
-        fontField.set(request, FontType.HIMCHAN);  // 실제 값으로 변경
-        paperTypeField.set(request, PaperType.COMFORT);  // 실제 값으로 변경
+        fontField.set(request, FontType.HIMCHAN);
+        paperTypeField.set(request, PaperType.COMFORT);
+        receiverIdField.set(request, null);
+        parentLetterIdField.set(request, null);
 
-        // 서비스 메서드가 동작한 후의 예상 결과
+        // 서비스 메서드 모킹
         when(letterRepository.findByIdAndWriterId(letterId, writerId)).thenReturn(Optional.of(existingLetter));
-        when(letterRepository.save(any(Letter.class))).thenReturn(existingLetter); // 기존 편지 그대로 반환
+        when(authFacade.getCurrentUserId()).thenReturn(writerId);
+        when(authFacade.getZipCode()).thenReturn("12345");
+
+        // void 메서드 모킹 (doNothing 사용)
+        doNothing().when(existingLetter).updateTemporarySave(
+                request.getReceiverId(),
+                request.getParentLetterId(),
+                request.getCategory(),
+                request.getTitle(),
+                request.getContent()
+        );
 
         // when
         LetterResponse response = letterService.temporarySaveLetter(letterId, request);
@@ -497,14 +509,20 @@ class LetterServiceTest {
                 () -> assertEquals("임시 저장 제목", response.getTitle()),
                 () -> assertEquals("임시 저장 내용", response.getContent()),
                 () -> assertEquals(Category.ETC, response.getCategory()),
-                () -> assertEquals(FontType.HIMCHAN, response.getFontType()),    // 실제 값으로 변경
-                () -> assertEquals(PaperType.COMFORT, response.getPaperType()),  // 실제 값으로 변경
+                () -> assertEquals(FontType.HIMCHAN, response.getFontType()),
+                () -> assertEquals(PaperType.COMFORT, response.getPaperType()),
                 () -> assertEquals(Status.SAVED, response.getStatus()),
                 () -> assertEquals("12345", response.getZipCode())
         );
 
         verify(letterRepository).findByIdAndWriterId(letterId, writerId);
-        verify(letterRepository).save(any(Letter.class));
+        verify(existingLetter).updateTemporarySave(
+                request.getReceiverId(),
+                request.getParentLetterId(),
+                request.getCategory(),
+                request.getTitle(),
+                request.getContent()
+        );
     }
 
 
@@ -522,6 +540,7 @@ class LetterServiceTest {
         Field fontField = TemporarySaveLetterRequest.class.getDeclaredField("font");
         Field paperTypeField = TemporarySaveLetterRequest.class.getDeclaredField("paperType");
         Field parentLetterIdField = TemporarySaveLetterRequest.class.getDeclaredField("parentLetterId");
+        Field receiverIdField = TemporarySaveLetterRequest.class.getDeclaredField("receiverId");
 
         titleField.setAccessible(true);
         contentField.setAccessible(true);
@@ -529,6 +548,7 @@ class LetterServiceTest {
         fontField.setAccessible(true);
         paperTypeField.setAccessible(true);
         parentLetterIdField.setAccessible(true);
+        receiverIdField.setAccessible(true);
 
         titleField.set(request, "새 임시 저장 제목");
         contentField.set(request, "새 임시 저장 내용");
@@ -536,26 +556,19 @@ class LetterServiceTest {
         fontField.set(request, FontType.GYEONGGI);
         paperTypeField.set(request, PaperType.PAPER);
         parentLetterIdField.set(request, 5L); // 부모 편지 ID 설정
+        receiverIdField.set(request, null);
 
-        // 새로 생성될 편지
-        Letter newLetter = Letter.builder()
-                .writerId(writerId)
-                .receiverId(null)
-                .parentLetterId(5L)
-                .letterType(LetterType.RANDOM)
-                .category(Category.ETC)
-                .title("새 임시 저장 제목")
-                .content("새 임시 저장 내용")
-                .status(Status.SAVED)
-                .fontType(FontType.GYEONGGI)
-                .paperType(PaperType.PAPER)
-                .build();
+        // 서비스 메서드 모킹
+        when(authFacade.getCurrentUserId()).thenReturn(writerId);
+        when(authFacade.getZipCode()).thenReturn("12345");
 
-        // ID를 명시적으로 설정
-        ReflectionTestUtils.setField(newLetter, "id", newLetterId);
-
-        // save 메서드가 ID가 설정된 Letter 객체를 반환하도록 설정
-        when(letterRepository.save(any(Letter.class))).thenReturn(newLetter);
+        // 중요: letterRepository.save() 메서드가 호출될 때 Letter 객체를 캡처하고 ID를 설정한 후 반환
+        doAnswer(invocation -> {
+            Letter letterToSave = invocation.getArgument(0);
+            // 저장 시점에 ID 설정
+            ReflectionTestUtils.setField(letterToSave, "id", newLetterId);
+            return letterToSave;
+        }).when(letterRepository).save(any(Letter.class));
 
         // when
         LetterResponse response = letterService.temporarySaveLetter(null, request);
@@ -563,8 +576,7 @@ class LetterServiceTest {
         // then
         assertAll("새 편지 임시 저장 응답 검증",
                 () -> assertNotNull(response),
-                // ID가 null인 경우 테스트를 수정하거나 LetterResponse.fromEntity 메서드 구현을 확인
-                // () -> assertEquals(newLetterId, response.getLetterId()),
+                () -> assertEquals(newLetterId, response.getLetterId()),
                 () -> assertEquals("새 임시 저장 제목", response.getTitle()),
                 () -> assertEquals("새 임시 저장 내용", response.getContent()),
                 () -> assertEquals(Category.ETC, response.getCategory()),
@@ -575,6 +587,7 @@ class LetterServiceTest {
                 () -> assertEquals("12345", response.getZipCode())
         );
 
+        verify(authFacade).getCurrentUserId();
         verify(letterRepository).save(any(Letter.class));
     }
 }

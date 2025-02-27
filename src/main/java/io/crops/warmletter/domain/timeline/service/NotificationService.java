@@ -25,7 +25,7 @@ public class NotificationService {
     private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
     private final TimelineRepository timelineRepository;
 
-    public SseEmitter subscribeNotification(long memberId){
+    public SseEmitter subscribeNotification(Long memberId){
         SseEmitter emitter = new SseEmitter(600_000L); // 10분 후 타임아웃 설정
         emitters.put(memberId, emitter);
 
@@ -37,7 +37,7 @@ public class NotificationService {
     }
 
     // 편지 수신, 신고 조치, 공유 요청, 공유 게시글 등록 시 호출 필요
-    public void createNotification(String senderZipCode, long receiverId, AlarmType alarmType, String data){
+    public void createNotification(String senderZipCode, Long receiverId, AlarmType alarmType, String data){
         Timeline.TimelineBuilder builder = Timeline.builder()
                 .memberId(receiverId)
                 // data = LETTER: letterId / REPORT: adminMemo, 경고횟수 / SHARE: shareProposalId / POSTED: sharePostId
@@ -72,7 +72,7 @@ public class NotificationService {
         sendEventToClient(receiverId,notificationResponse);
     }
 
-    public void sendEventToClient(long receiverId, NotificationResponse notificationResponse){
+    public void sendEventToClient(Long receiverId, NotificationResponse notificationResponse){
         SseEmitter emitter = emitters.get(receiverId);
         if (emitter != null) {
             try {
@@ -86,7 +86,7 @@ public class NotificationService {
         }
     }
 
-    public ReadNotificationResponse updateNotificationRead(long notificationId){
+    public ReadNotificationResponse updateNotificationRead(Long notificationId){
         Timeline timeline = timelineRepository.findById(notificationId).orElseThrow(NotificationNotFoundException::new);
         if(!timeline.getIsRead()){
             timeline.notificationRead();
@@ -99,7 +99,7 @@ public class NotificationService {
     }
 
     public List<ReadNotificationResponse> updateNotificationAllRead(){
-        long memberId = 1L;
+        Long memberId = 1L;
         List<Timeline> timelines = timelineRepository.findByMemberIdAndIsReadFalse(memberId);
         List<ReadNotificationResponse> timelineResponses = new ArrayList<>();
         for(Timeline timeline : timelines ){

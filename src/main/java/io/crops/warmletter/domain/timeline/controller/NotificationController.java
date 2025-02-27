@@ -18,12 +18,12 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping(value = "/sub/{memberId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter subscribeNotification(@PathVariable long memberId) {
+    public SseEmitter subscribeNotification(@PathVariable Long memberId) {
         return notificationService.subscribeNotification(memberId);
     }
 
     @PatchMapping("/{notificationId}/read")
-    public ResponseEntity<BaseResponse<ReadNotificationResponse>> updateNotificationRead(@PathVariable long notificationId) {
+    public ResponseEntity<BaseResponse<ReadNotificationResponse>> updateNotificationRead(@PathVariable Long notificationId) {
         return ResponseEntity.ok(BaseResponse.of(notificationService.updateNotificationRead(notificationId),"알림 읽음 처리 성공"));
     }
 

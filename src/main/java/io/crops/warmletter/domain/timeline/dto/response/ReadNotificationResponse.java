@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ReadNotificationResponse {
-    private long notificationId;
+    private Long notificationId;
     private Boolean isRead;
 }

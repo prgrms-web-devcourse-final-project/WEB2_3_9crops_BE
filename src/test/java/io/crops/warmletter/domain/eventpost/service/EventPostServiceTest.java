@@ -69,7 +69,7 @@ class EventPostServiceTest {
     @DisplayName("게시판 삭제 성공")
     void delete_EventPost_success(){
         //given
-        long eventPostId = 1L;
+        Long eventPostId = 1L;
 
         EventPost eventPost = EventPost.builder().title("제목").build();
         ReflectionTestUtils.setField(eventPost, "id", eventPostId);
@@ -93,7 +93,7 @@ class EventPostServiceTest {
         when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.empty());
 
         // when & then
-        BusinessException exception = assertThrows(EventPostNotFoundException.class, () -> eventPostService.deleteEventPost(999));
+        BusinessException exception = assertThrows(EventPostNotFoundException.class, () -> eventPostService.deleteEventPost(999L));
 
         // then
         assertEquals(ErrorCode.EVENT_POST_NOT_FOUND, exception.getErrorCode());
@@ -103,7 +103,7 @@ class EventPostServiceTest {
     @DisplayName("사용중인 게시판 조회 성공")
     void get_UsedEventPost_success(){
         //given
-        long eventPostId = 1L;
+        Long eventPostId = 1L;
 
         EventPost eventPost = EventPost.builder().title("제목").build();
         ReflectionTestUtils.setField(eventPost, "id", eventPostId);
@@ -136,7 +136,7 @@ class EventPostServiceTest {
     void get_EventPost_success(){
         // given
         EventPost eventPost = EventPost.builder().title("제목").build();
-        ReflectionTestUtils.setField(eventPost, "id", 1);
+        ReflectionTestUtils.setField(eventPost, "id", 1L);
 
         List<EventCommentsResponse> eventCommentsResponses = new ArrayList<>();
         EventCommentsResponse comment1 = EventCommentsResponse.builder()
@@ -150,7 +150,7 @@ class EventPostServiceTest {
         when(eventCommentRepository.findEventCommentsWithZipCode(any(Long.class))).thenReturn(eventCommentsResponses);
 
         // when
-        EventPostDetailResponse eventPostDetailResponse = eventPostService.getEventPostDetail(1);
+        EventPostDetailResponse eventPostDetailResponse = eventPostService.getEventPostDetail(1L);
 
         // then
         assertEquals("제목", eventPostDetailResponse.getTitle());
@@ -171,7 +171,7 @@ class EventPostServiceTest {
         when(eventPostRepository.findById(any(Long.class))).thenThrow(new EventPostNotFoundException());
 
         //when
-        BusinessException exception = assertThrows(EventPostNotFoundException.class, ()-> eventPostService.getEventPostDetail(999));
+        BusinessException exception = assertThrows(EventPostNotFoundException.class, ()-> eventPostService.getEventPostDetail(999L));
 
         //then
         assertEquals(ErrorCode.EVENT_POST_NOT_FOUND, exception.getErrorCode());
@@ -181,7 +181,7 @@ class EventPostServiceTest {
     @DisplayName("게시판 사용여부 변경 성공 - 사용중에서 미사용")
     void update_EventPostIsUsedToFalse_success(){
         //given
-        long eventPostId = 1L;
+        Long eventPostId = 1L;
 
         EventPost eventPost = EventPost.builder().title("제목").build();
         ReflectionTestUtils.setField(eventPost, "id", eventPostId);
@@ -201,7 +201,7 @@ class EventPostServiceTest {
     @DisplayName("게시판 사용여부 변경 성공 - 미사용에서 사용중")
     void update_EventPostIsUsedToTrue_success(){
         //given
-        long eventPostId = 1L;
+        Long eventPostId = 1L;
 
         EventPost eventPost = EventPost.builder().title("제목").build();
         ReflectionTestUtils.setField(eventPost, "id", eventPostId);
@@ -221,7 +221,7 @@ class EventPostServiceTest {
     @DisplayName("게시판 사용여부 변경 실패 - 이미 사용중인 게시판이 있는 경우")
     void update_EventPostIsUsedToFalse_AlreadyInUsed(){
         //given
-        long eventPostId = 1L;
+        Long eventPostId = 1L;
 
         EventPost eventPost = EventPost.builder().title("제목").build();
         ReflectionTestUtils.setField(eventPost, "id", eventPostId);

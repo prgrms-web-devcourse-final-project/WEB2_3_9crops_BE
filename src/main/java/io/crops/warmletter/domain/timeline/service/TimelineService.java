@@ -18,7 +18,7 @@ public class TimelineService {
 
     @Transactional(readOnly = true)
     public List<TimelineResponse> getTimelines(){
-        long memberId = 1L; // TODO : authFacade.getCurrentUserId();
+        Long memberId = 1L; // TODO : authFacade.getCurrentUserId();
         // 알람이 없는(empty) 경우도 있어서 예외처리 X
         List<TimelineResponse> timelineResponse = timeLineRepository.findByMemberId(memberId);
         return timelineResponse;

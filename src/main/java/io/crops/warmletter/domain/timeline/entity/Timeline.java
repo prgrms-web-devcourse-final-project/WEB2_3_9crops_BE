@@ -15,10 +15,10 @@ import lombok.NoArgsConstructor;
 public class Timeline extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false)
-    private long memberId;
+    private Long memberId;
 
     @Column(nullable = false)
     private String title;

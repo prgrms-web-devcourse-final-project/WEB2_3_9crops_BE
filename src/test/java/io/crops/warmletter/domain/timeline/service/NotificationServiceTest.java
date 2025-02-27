@@ -232,7 +232,7 @@ class NotificationServiceTest {
         when(timelineRepository.findById(any(Long.class))).thenThrow(new NotificationNotFoundException());
 
         //when
-        BusinessException exception = assertThrows(NotificationNotFoundException.class, ()-> notificationService.updateNotificationRead(999));
+        BusinessException exception = assertThrows(NotificationNotFoundException.class, ()-> notificationService.updateNotificationRead(999L));
 
         //then
         assertEquals(ErrorCode.NOTIFICATION_NOT_FOUND, exception.getErrorCode());
@@ -243,10 +243,10 @@ class NotificationServiceTest {
     void update_notificationAllRead_success(){
         //given
 
-        Timeline timeline1 = Timeline.builder().memberId(1).title("제목1").content("내용1").alarmType(AlarmType.LETTER).build();
-        ReflectionTestUtils.setField(timeline1, "id", 1);
-        Timeline timeline3 = Timeline.builder().memberId(1).title("제목3").content("내용3").alarmType(AlarmType.LETTER).build();
-        ReflectionTestUtils.setField(timeline3, "id", 3);
+        Timeline timeline1 = Timeline.builder().memberId(1L).title("제목1").content("내용1").alarmType(AlarmType.LETTER).build();
+        ReflectionTestUtils.setField(timeline1, "id", 1L);
+        Timeline timeline3 = Timeline.builder().memberId(1L).title("제목3").content("내용3").alarmType(AlarmType.LETTER).build();
+        ReflectionTestUtils.setField(timeline3, "id", 3L);
 
         List<Timeline> timelines = Arrays.asList(timeline1, timeline3);
 
@@ -256,9 +256,9 @@ class NotificationServiceTest {
         List<ReadNotificationResponse> readNotificationResponse = notificationService.updateNotificationAllRead();
 
         //then
-        assertEquals(1, readNotificationResponse.get(0).getNotificationId());
+        assertEquals(1L, readNotificationResponse.get(0).getNotificationId());
         assertTrue(readNotificationResponse.get(0).getIsRead());
-        assertEquals(3, readNotificationResponse.get(1).getNotificationId());
+        assertEquals(3L, readNotificationResponse.get(1).getNotificationId());
         assertTrue(readNotificationResponse.get(1).getIsRead());
     }
 

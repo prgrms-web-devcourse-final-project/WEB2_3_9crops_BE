@@ -15,7 +15,7 @@ public interface TimelineRepository extends JpaRepository<Timeline, Long> {
             "tl.id, tl.title, tl.alarmType, tl.isRead)" +
             "FROM Timeline tl " +
             "WHERE tl.memberId = :memberId")
-    List<TimelineResponse> findByMemberId(long memberId);
+    List<TimelineResponse> findByMemberId(Long memberId);
 
-    List<Timeline> findByMemberIdAndIsReadFalse(long memberId);
+    List<Timeline> findByMemberIdAndIsReadFalse(Long memberId);
 }

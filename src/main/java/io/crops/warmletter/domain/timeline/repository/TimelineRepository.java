@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.timeline.repository;
 
+import io.crops.warmletter.domain.timeline.dto.response.ReadNotificationResponse;
 import io.crops.warmletter.domain.timeline.dto.response.TimelineResponse;
 import io.crops.warmletter.domain.timeline.entity.Timeline;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,4 +16,6 @@ public interface TimelineRepository extends JpaRepository<Timeline, Long> {
             "FROM Timeline tl " +
             "WHERE tl.memberId = :memberId")
     List<TimelineResponse> findByMemberId(long memberId);
+
+    List<Timeline> findByMemberIdAndIsReadFalse(long memberId);
 }

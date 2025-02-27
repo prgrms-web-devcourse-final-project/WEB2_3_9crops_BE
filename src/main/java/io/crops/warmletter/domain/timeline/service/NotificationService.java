@@ -1,8 +1,10 @@
 package io.crops.warmletter.domain.timeline.service;
 
 import io.crops.warmletter.domain.timeline.dto.response.NotificationResponse;
+import io.crops.warmletter.domain.timeline.dto.response.ReadNotificationResponse;
 import io.crops.warmletter.domain.timeline.entity.Timeline;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
+import io.crops.warmletter.domain.timeline.exception.NotificationNotFoundException;
 import io.crops.warmletter.domain.timeline.repository.TimelineRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -11,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -80,5 +84,32 @@ public class NotificationService {
                 emitters.remove(receiverId);
             }
         }
+    }
+
+    public ReadNotificationResponse updateNotificationRead(long notificationId){
+        Timeline timeline = timelineRepository.findById(notificationId).orElseThrow(NotificationNotFoundException::new);
+        if(!timeline.getIsRead()){
+            timeline.notificationRead();
+        }
+
+        return ReadNotificationResponse.builder()
+                .notificationId(timeline.getId())
+                .isRead(timeline.getIsRead())
+                .build();
+    }
+
+    public List<ReadNotificationResponse> updateNotificationAllRead(){
+        long memberId = 1L;
+        List<Timeline> timelines = timelineRepository.findByMemberIdAndIsReadFalse(memberId);
+        List<ReadNotificationResponse> timelineResponses = new ArrayList<>();
+        for(Timeline timeline : timelines ){
+            timeline.notificationRead();
+            timelineResponses.add(ReadNotificationResponse.builder()
+                    .notificationId(timeline.getId())
+                    .isRead(timeline.getIsRead())
+                    .build());
+        }
+
+        return timelineResponses;
     }
 }

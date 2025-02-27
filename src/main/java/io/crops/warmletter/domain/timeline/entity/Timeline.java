@@ -38,4 +38,8 @@ public class Timeline extends BaseTimeEntity {
         this.alarmType = alarmType;
         this.isRead = false;
     }
+
+    public void notificationRead(){
+        this.isRead = true;
+    }
 }

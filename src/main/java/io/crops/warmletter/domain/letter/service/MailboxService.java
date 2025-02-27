@@ -41,14 +41,12 @@ public class MailboxService {
     public List<MailboxResponse> getMailbox(){
         Long myId = authFacade.getCurrentUserId();
         List<Long> matchedMembers = letterMatchingRepository.findMatchedMembers(myId); //매칭되고 나 말고 상대방 (예를들어 id 2,3) 중복은 제거
-        log.info("Matched members: {}", matchedMembers);
         List<MailboxResponse> responses = new ArrayList<>();
 
 
         for (Long matchedMemberId : matchedMembers) {
             Member otherPerson= memberRepository.findById(matchedMemberId).orElseThrow(MemberNotFoundException::new);
             Long id = otherPerson.getId(); //상대방 A을 찾고
-            log.info("Matched member id: {}", id);
             String zipCode = otherPerson.getZipCode(); //상대방 A의 zipcode
 
             //상대방 a와 나와 나눴던 매칭 찾기 (여러번 매칭이 가능하니 여러 개 나옴)

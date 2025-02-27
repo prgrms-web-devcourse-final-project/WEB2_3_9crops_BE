@@ -10,6 +10,7 @@ import io.crops.warmletter.domain.letter.enums.LetterType;
 import io.crops.warmletter.domain.letter.enums.Status;
 import io.crops.warmletter.domain.letter.exception.LetterNotBelongException;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
+import io.crops.warmletter.domain.letter.exception.ParentLetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
@@ -64,7 +65,7 @@ public class LetterService {
                     .matchingId(request.getMatchingId());
 
             //첫편지면 matchingId 넣어줌 , 받는사람도 넣어줌.
-            Letter firstLetter = letterRepository.findById(request.getParentLetterId()).orElseThrow();
+            Letter firstLetter = letterRepository.findById(request.getParentLetterId()).orElseThrow(ParentLetterNotFoundException::new);
             if(firstLetter.getParentLetterId() == null) { //todo 테스트 코드 작성해야함
                 firstLetter.updateMatchingId(request.getMatchingId());
                 firstLetter.updateReceiverId(writerId);

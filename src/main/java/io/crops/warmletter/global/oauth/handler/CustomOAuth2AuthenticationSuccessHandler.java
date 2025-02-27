@@ -1,5 +1,6 @@
 package io.crops.warmletter.global.oauth.handler;
 
+import io.crops.warmletter.global.jwt.service.TokenStorage;
 import io.crops.warmletter.global.oauth.entity.UserPrincipal;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +13,7 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class CustomOAuth2AuthenticationSuccessHandler extends SavedRequestAwareA
     private String redirectUri;
 
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+    private final TokenStorage tokenStorage;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws ServletException, IOException {
@@ -28,21 +31,30 @@ public class CustomOAuth2AuthenticationSuccessHandler extends SavedRequestAwareA
 
         // Access Token을 Authorization 헤더에서 가져오기
         String accessToken = response.getHeader(HttpHeaders.AUTHORIZATION);
+        if (accessToken != null && accessToken.startsWith("Bearer ")) {
+            accessToken = accessToken.substring(7); // Bearer 부분 제거
+        }
 
-        // 추가적인 로직 처리 (zipCode 유무에 따라 리다이렉션)
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+
+        // 임시 상태 토큰 생성
+        String stateToken = UUID.randomUUID().toString();
+
+        // 토큰 저장소에 저장
+        tokenStorage.storeTemporaryToken(stateToken, accessToken, userPrincipal);
+
+        // 리다이렉션 URL 구성
         StringBuilder sb = new StringBuilder();
         sb.append(redirectUri);
+        sb.append("/auth-callback?state=").append(stateToken);
 
+        // 리다이렉션 대상 페이지 정보 추가
         if (userPrincipal.getZipCode() == null || userPrincipal.getZipCode().isEmpty()) {
-            sb.append("/onboarding"); // zipCode가 없으면 onboarding 페이지로
+            sb.append("&redirect=onboarding");
         } else {
-            sb.append("/home"); // zipCode가 있으면 home 페이지로
+            sb.append("&redirect=home");
         }
-        sb.append("?accessToken=" + accessToken);
 
-        String redirectUrl = sb.toString();
-
-        getRedirectStrategy().sendRedirect(request, response, redirectUrl); // 리다이렉션
+        getRedirectStrategy().sendRedirect(request, response, sb.toString());
     }
 }

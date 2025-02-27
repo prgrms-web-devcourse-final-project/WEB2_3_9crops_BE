@@ -40,7 +40,7 @@ public class EventPostService {
                 .build();
     }
 
-    public Map<String, Long> deleteEventPost(long eventPostId) {
+    public Map<String, Long> deleteEventPost(Long eventPostId) {
         EventPost eventPost = eventPostRepository.findById(eventPostId).orElseThrow(EventPostNotFoundException::new);
         eventPost.softDelete();
         return Map.of("eventPostId", eventPost.getId());
@@ -57,7 +57,7 @@ public class EventPostService {
     }
 
     @Transactional(readOnly = true)
-    public EventPostDetailResponse getEventPostDetail(long eventPostId) {
+    public EventPostDetailResponse getEventPostDetail(Long eventPostId) {
 
         EventPost eventPost = eventPostRepository.findById(eventPostId)
                 .orElseThrow(EventPostNotFoundException::new);
@@ -71,7 +71,7 @@ public class EventPostService {
                 .build();
     }
 
-    public EventPostStatusResponse updateEventPostIsUsed(long eventPostId) {
+    public EventPostStatusResponse updateEventPostIsUsed(Long eventPostId) {
         // true -> fasle (문제 없음)
         // false -> true(true 값을 가진 eventPostId가 있으면 예외처리)
         try {

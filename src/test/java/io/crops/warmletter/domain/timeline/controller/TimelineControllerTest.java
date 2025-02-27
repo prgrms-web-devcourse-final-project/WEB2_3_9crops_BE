@@ -1,6 +1,5 @@
 package io.crops.warmletter.domain.timeline.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.config.TestConfig;
 import io.crops.warmletter.domain.timeline.dto.response.TimelineResponse;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
@@ -32,9 +31,6 @@ class TimelineControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockitoBean
     private TimelineService timeLineService;
     
@@ -43,8 +39,8 @@ class TimelineControllerTest {
     void get_timelines_success() throws Exception {
         // given
         List<TimelineResponse> timelines = new ArrayList<>();
-        TimelineResponse timeline1 = TimelineResponse.builder().timelineId(1).title("1111번 편지").alarmType(AlarmType.LETTER).isRead(false).build();
-        TimelineResponse timeline2 = TimelineResponse.builder().timelineId(2).title("1111번 공유 요청").alarmType(AlarmType.SHARE).isRead(false).build();
+        TimelineResponse timeline1 = TimelineResponse.builder().timelineId(1L).title("1111번 편지").alarmType(AlarmType.LETTER).isRead(false).build();
+        TimelineResponse timeline2 = TimelineResponse.builder().timelineId(2L).title("1111번 공유 요청").alarmType(AlarmType.SHARE).isRead(false).build();
         timelines.add(timeline1);
         timelines.add(timeline2);
 

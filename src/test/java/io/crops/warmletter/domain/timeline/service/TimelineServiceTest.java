@@ -32,8 +32,8 @@ class TimelineServiceTest {
     void get_EventPost_success(){
         // given
         List<TimelineResponse> timelines = new ArrayList<>();
-        TimelineResponse timeline1 = TimelineResponse.builder().timelineId(1).title("1111번 편지").alarmType(AlarmType.LETTER).isRead(false).build();
-        TimelineResponse timeline2 = TimelineResponse.builder().timelineId(2).title("1111번 공유 요청").alarmType(AlarmType.SHARE).isRead(false).build();
+        TimelineResponse timeline1 = TimelineResponse.builder().timelineId(1L).title("1111번 편지").alarmType(AlarmType.LETTER).isRead(false).build();
+        TimelineResponse timeline2 = TimelineResponse.builder().timelineId(2L).title("1111번 공유 요청").alarmType(AlarmType.SHARE).isRead(false).build();
         timelines.add(timeline1);
         timelines.add(timeline2);
 

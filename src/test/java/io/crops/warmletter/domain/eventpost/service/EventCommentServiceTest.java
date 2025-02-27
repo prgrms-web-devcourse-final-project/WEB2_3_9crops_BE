@@ -3,10 +3,8 @@ package io.crops.warmletter.domain.eventpost.service;
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventCommentRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.EventCommentResponse;
 import io.crops.warmletter.domain.eventpost.entity.EventComment;
-import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.exception.EventCommentNotFoundException;
 import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException;
-import io.crops.warmletter.domain.eventpost.exception.UsedEventPostNotFoundException;
 import io.crops.warmletter.domain.eventpost.repository.EventCommentRepository;
 import io.crops.warmletter.domain.eventpost.repository.EventPostRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
@@ -25,7 +23,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
 
 @ActiveProfiles("test")
@@ -89,7 +86,7 @@ class EventCommentServiceTest {
     @DisplayName("게시판 댓글 삭제 성공")
     void delete_eventComment_success(){
         //given
-        long eventCommentId = 1L;
+        Long eventCommentId = 1L;
 
         EventComment eventComment = EventComment.builder()
                 .eventPostId(eventCommentId)
@@ -115,7 +112,7 @@ class EventCommentServiceTest {
         when(eventCommentRepository.findById(any(Long.class))).thenReturn(Optional.empty());
 
         // when & then
-        BusinessException exception = assertThrows(EventCommentNotFoundException.class, () -> eventCommentService.deleteEventComment(999));
+        BusinessException exception = assertThrows(EventCommentNotFoundException.class, () -> eventCommentService.deleteEventComment(999L));
 
         // then
         assertEquals(ErrorCode.EVENT_COMMENT_NOT_FOUND, exception.getErrorCode());
@@ -125,7 +122,7 @@ class EventCommentServiceTest {
     @DisplayName("게시판 댓글 삭제 실패 - 이미 삭제한 댓글")
     void update_EventPostIsUsedToFalse_AlreadyInUsed(){
         //given
-        long eventCommentId = 1L;
+        Long eventCommentId = 1L;
 
         EventComment eventComment = EventComment.builder()
                 .eventPostId(1L)

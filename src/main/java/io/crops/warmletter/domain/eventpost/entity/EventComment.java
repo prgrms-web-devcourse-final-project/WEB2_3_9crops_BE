@@ -14,13 +14,13 @@ import lombok.NoArgsConstructor;
 public class EventComment extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false)
-    private long eventPostId;
+    private Long eventPostId;
 
     @Column(nullable = false)
-    private long writerId;
+    private Long writerId;
 
     @Column(nullable = false)
     private String content;
@@ -29,7 +29,7 @@ public class EventComment extends BaseEntity {
     private boolean isActive;
 
     @Builder
-    public EventComment(long eventPostId, long writerId, String content) {
+    public EventComment(Long eventPostId, Long writerId, String content) {
         this.eventPostId = eventPostId;
         this.writerId = writerId;
         this.content = content;

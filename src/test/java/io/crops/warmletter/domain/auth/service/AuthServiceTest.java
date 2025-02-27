@@ -1,15 +1,17 @@
 package io.crops.warmletter.domain.auth.service;
 
 import io.crops.warmletter.domain.auth.dto.TokenResponse;
+import io.crops.warmletter.domain.auth.dto.TokenStorageResponse;
 import io.crops.warmletter.domain.auth.exception.UnauthorizedException;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.global.jwt.enums.TokenType;
 import io.crops.warmletter.global.jwt.exception.InvalidRefreshTokenException;
+import io.crops.warmletter.global.jwt.exception.InvalidTokenException;
 import io.crops.warmletter.global.jwt.provider.JwtTokenProvider;
 import io.crops.warmletter.global.jwt.service.TokenBlacklistService;
+import io.crops.warmletter.global.jwt.service.TokenStorage;
 import io.crops.warmletter.global.oauth.entity.UserPrincipal;
 import io.jsonwebtoken.Claims;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +31,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,6 +56,9 @@ class AuthServiceTest {
 
     @Mock
     private RedisTemplate<String, String> redisTemplate;
+
+    @Mock
+    private TokenStorage tokenStorage;
 
     @DisplayName("리프레시 토큰 재발급 - 만료 임박하지 않은 경우")
     @Test
@@ -232,5 +238,76 @@ class AuthServiceTest {
 
         // then
         assertThat(currentZipCode).isEqualTo(zipCode);
+    }
+
+    @DisplayName("토큰 스토리지 조회 실패 - 토큰 정보 없음")
+    @Test
+    void getTokenByState_WithNotFoundTokenInfo_ShouldThrowException() {
+        //given
+        String invalidStateToken = "invalid.state.token";
+
+        when(tokenStorage.getTokenInfo(invalidStateToken)).thenReturn(null);
+        //when & then
+        assertThrows(InvalidTokenException.class,
+                () -> authService.getTokenByState(invalidStateToken));
+
+        verify(tokenStorage).getTokenInfo(invalidStateToken);
+    }
+
+    @DisplayName("토큰 스토리지 조회 성공 - zipCode 존재")
+    @Test
+    void getTokenByState_Success_ExistZipCode() {
+        //given
+        String validStateToken = "valid.state.token";
+        String accessToken = "access.token";
+        Long memberId = 1L;
+        String zipCode = "1A2A4";
+        long createdAt = System.currentTimeMillis();
+        UserPrincipal userInfo = UserPrincipal.builder()
+                .id(memberId)
+                .zipCode(zipCode)
+                .build();
+
+        TokenStorage.TokenInfo validTokenInfo = new TokenStorage.TokenInfo(accessToken, userInfo, createdAt);
+
+        when(tokenStorage.getTokenInfo(validStateToken)).thenReturn(validTokenInfo);
+
+        //when
+        TokenStorageResponse tokenResponse = authService.getTokenByState(validStateToken);
+
+        //then
+        assertThat(accessToken).isEqualTo(tokenResponse.getAccessToken());
+        assertThat(memberId).isEqualTo(tokenResponse.getUserId());
+        assertThat(tokenResponse.isHasZipCode()).isTrue();
+
+        verify(tokenStorage).getTokenInfo(validStateToken);
+    }
+
+    @DisplayName("토큰 스토리지 조회 성공 - zipCode 존재 안함")
+    @Test
+    void getTokenByState_Success_NotExistZipCode() {
+        //given
+        String validStateToken = "valid.state.token";
+        String accessToken = "access.token";
+        Long memberId = 1L;
+        long createdAt = System.currentTimeMillis();
+        UserPrincipal userInfo = UserPrincipal.builder()
+                .id(memberId)
+                .zipCode(null)
+                .build();
+
+        TokenStorage.TokenInfo validTokenInfo = new TokenStorage.TokenInfo(accessToken, userInfo, createdAt);
+
+        when(tokenStorage.getTokenInfo(validStateToken)).thenReturn(validTokenInfo);
+
+        //when
+        TokenStorageResponse tokenResponse = authService.getTokenByState(validStateToken);
+
+        //then
+        assertThat(accessToken).isEqualTo(tokenResponse.getAccessToken());
+        assertThat(memberId).isEqualTo(tokenResponse.getUserId());
+        assertThat(tokenResponse.isHasZipCode()).isFalse();
+
+        verify(tokenStorage).getTokenInfo(validStateToken);
     }
 }

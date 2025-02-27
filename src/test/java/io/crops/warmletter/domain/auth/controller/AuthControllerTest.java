@@ -1,10 +1,12 @@
 package io.crops.warmletter.domain.auth.controller;
 
 import io.crops.warmletter.domain.auth.dto.TokenResponse;
+import io.crops.warmletter.domain.auth.dto.TokenStorageResponse;
 import io.crops.warmletter.domain.auth.service.AuthService;
 import io.crops.warmletter.global.config.CorsConfig;
 import io.crops.warmletter.global.config.TestSecurityConfig;
 import io.crops.warmletter.global.jwt.exception.InvalidRefreshTokenException;
+import io.crops.warmletter.global.jwt.exception.InvalidTokenException;
 import io.crops.warmletter.global.jwt.provider.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
@@ -148,5 +152,49 @@ class AuthControllerTest {
                 .andExpect(status().isOk());
 
         verify(authService, never()).logout(any(), any(), any());
+    }
+    
+    @DisplayName("임시 토큰 저장소 조회 API 호출 실패 - 조회된 토큰 없음")
+    @Test
+    void getToken_Fail_NotFoundTemporaryToken() throws Exception {
+        //given
+        String stateToken = "state.token";
+
+        when(authService.getTokenByState(stateToken)).thenThrow(new InvalidTokenException());
+        //when & then
+        mockMvc.perform(get("/api/auth/token")
+                        .param("state",stateToken))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("AUTH-006"))
+                .andExpect(jsonPath("$.message").value("유효하지 않은 토큰입니다."))
+                .andExpect(jsonPath("$.timestamp").exists());
+
+        verify(authService).getTokenByState(stateToken);
+    }
+
+    @DisplayName("임시 토큰 저장소 조회 API 호출 성공")
+    @Test
+    void getToken_Success() throws Exception {
+        // given
+        String stateToken = "test.state.token";
+        TokenStorageResponse tokenResponse = TokenStorageResponse.builder()
+                .accessToken("access.token")
+                .hasZipCode(true)
+                .userId(1L)
+                .build();
+
+        when(authService.getTokenByState(stateToken)).thenReturn(tokenResponse);
+
+        // when & then
+        mockMvc.perform(get("/api/auth/token")
+                        .param("state", stateToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").value("access.token"))
+                .andExpect(jsonPath("$.data.hasZipCode").value(true))
+                .andExpect(jsonPath("$.data.userId").value(1L))
+                .andExpect(jsonPath("$.message").value("임시 저장소 토큰 조회 완료"));
+
+        verify(authService).getTokenByState(stateToken);
     }
 }

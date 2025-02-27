@@ -367,14 +367,15 @@ class RandomLetterServiceTest {
 
         when(letterFacade.createLetter(request)).thenReturn(expectedResponse);
 
-        LetterMatching savedLetterMatching = LetterMatching.builder()
+        LetterMatching dummyMatching = LetterMatching.builder()
                 .letterId(tempMatching.getLetterId())
                 .firstMemberId(tempMatching.getFirstMemberId())
                 .secondMemberId(tempMatching.getSecondMemberId())
                 .matchedAt(tempMatching.getMatchedAt())
                 .build();
 
-        when(letterMatchingRepository.save(any(LetterMatching.class))).thenReturn(savedLetterMatching);
+        when(letterMatchingRepository.save(any(LetterMatching.class)))
+                .thenReturn(dummyMatching);
 
         LetterResponse actualResponse = randomLetterService.completeLetterMatching(request);
 

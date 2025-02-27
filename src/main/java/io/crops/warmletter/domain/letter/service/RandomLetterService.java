@@ -181,13 +181,14 @@ public class RandomLetterService {
                 .secondMemberId(letterTemporaryMatching.getSecondMemberId())
                 .matchedAt(letterTemporaryMatching.getMatchedAt())
                 .build();
-        letterMatchingRepository.save(letterMatching);
+        LetterMatching savedLetterMatching = letterMatchingRepository.save(letterMatching); //편지함 상세 조회 시 필요
 
         letterTemporaryMatchingRepository.delete(letterTemporaryMatching); //임시테이블 제거
 
         Member member = memberRepository.findById(currentUserId).orElseThrow(); // 맴버 찾고
         member.updateLastMatchedAt(letterTemporaryMatching.getMatchedAt()); // 맴버 최종 매칭 시간 변경
 
+        request.updateMatchingId(savedLetterMatching.getId()); //편지함 상세 조회 시 필요
         //작성완료 버튼 눌렀을때 편지 생성
         LetterResponse response = letterFacade.createLetter(request);
 

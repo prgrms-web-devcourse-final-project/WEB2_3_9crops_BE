@@ -1,6 +1,8 @@
 package io.crops.warmletter.domain.letter.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
+import io.crops.warmletter.domain.letter.dto.response.MailboxDetailResponse;
 import io.crops.warmletter.domain.letter.dto.response.MailboxResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterMatching;
@@ -15,6 +17,8 @@ import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,6 +74,35 @@ public class MailboxService {
         responses.sort(Comparator.comparing(MailboxResponse::getLetterMatchingId).reversed()); //아이디로 정렬 (시간순)
         return responses;
 
+    }
+
+    public Page<MailboxDetailResponse> detailMailbox(Long matchingId, Pageable pageable) {
+        // 1. 현재 로그인된 사용자 ID 조회
+        Long myId = authFacade.getCurrentUserId();
+
+        // 2. matchingId로 LetterMatching 조회 (존재하지 않으면 MatchingNotFoundException 발생)
+        LetterMatching matching = letterMatchingRepository.findById(matchingId)
+                .orElseThrow(MatchingNotFoundException::new);
+
+        // 3. 현재 사용자가 해당 매칭의 사용자 중 하나인지 검증
+        if (!matching.getFirstMemberId().equals(myId) && !matching.getSecondMemberId().equals(myId)) {
+            throw new MatchingNotBelongException();
+        }
+
+        // 4. LetterRepository에서 matchingId에 해당하는 편지들을 조회(정렬 및 페이징 적용)
+        Page<Letter> letterPage = letterRepository.findByMatchingIdOrderByIdDesc(matchingId, pageable);
+
+        // 5. 조회된 Letter 엔티티들을 MailboxDetailResponse DTO로 변환
+        Page<MailboxDetailResponse> responses = letterPage.map(letter ->
+                MailboxDetailResponse.builder()
+                        .letterId(letter.getId())
+                        .title(letter.getTitle())
+                        .myLetter(letter.getWriterId().equals(myId))
+                        .active(matching.isActive())
+                        .createdAt(letter.getCreatedAt())
+                        .build()
+        );
+        return responses;
     }
 
     @Transactional

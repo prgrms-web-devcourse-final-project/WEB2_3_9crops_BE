@@ -46,6 +46,8 @@ public class LetterResponse {
 
     private final LocalDateTime deliveryCompletedAt;
 
+    private final Long matchingId;
+
 
     //공통 변환
     public static LetterResponse fromEntity(Letter letter, String zipCode) {
@@ -63,6 +65,7 @@ public class LetterResponse {
                 .status(letter.getStatus())
                 .deliveryStartedAt(letter.getDeliveryStartedAt())
                 .deliveryCompletedAt(letter.getDeliveryCompletedAt())
+                .matchingId(letter.getMatchingId())
                 .build();
     }
 

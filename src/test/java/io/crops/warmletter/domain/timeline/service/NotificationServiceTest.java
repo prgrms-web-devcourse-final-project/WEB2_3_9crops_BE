@@ -36,7 +36,7 @@ class NotificationServiceTest {
     @Mock
     private SseEmitter emitter;
 
-    private Map<Integer, SseEmitter> emitters;
+    private Map<Long, SseEmitter> emitters;
 
     @BeforeEach
     void setUp() {
@@ -54,7 +54,7 @@ class NotificationServiceTest {
     @Test
     @DisplayName("알림 구독 생성 성공")
     void get_notificationSub_success() {
-        int memberId1 = 1;
+        long memberId1 = 1L;
 
         SseEmitter sseEmitter = notificationService.subscribeNotification(memberId1);
 
@@ -65,7 +65,7 @@ class NotificationServiceTest {
     @DisplayName("알림 생성 성공 - LETTER")
     void create_notificationLETTER_success() {
         String zipCode = "12345";
-        int receiverId = 1;
+        long receiverId = 1L;
         AlarmType alarmType = AlarmType.LETTER;
         String letterId = "1";
 
@@ -85,7 +85,7 @@ class NotificationServiceTest {
     @DisplayName("알림 생성 성공 - REPORT")
     void create_notificationREPORT_success() {
         String zipCode = "12345";
-        int receiverId = 1;
+        long receiverId = 1L;
         AlarmType alarmType = AlarmType.REPORT;
         String letterId = "1";
 
@@ -104,7 +104,7 @@ class NotificationServiceTest {
     @DisplayName("알림 생성 성공 - SHARE")
     void create_notificationSHARE_success() {
         String zipCode = "12345";
-        int receiverId = 1;
+        long receiverId = 1L;
         AlarmType alarmType = AlarmType.SHARE;
         String letterId = "1";
 
@@ -124,7 +124,7 @@ class NotificationServiceTest {
     @DisplayName("알림 생성 성공 - POSTED")
     void create_notificationPOSTED_success() {
         String zipCode = "12345";
-        int receiverId = 1;
+        long receiverId = 1L;
         AlarmType alarmType = AlarmType.POSTED;
         String letterId = "1";
 
@@ -143,7 +143,7 @@ class NotificationServiceTest {
     @Test
     @DisplayName("알림 전송 성공")
     void create_sendEventToClient_success() throws IOException{
-        int receiverId = 1;
+        long receiverId = 1L;
         String title = "12345님이 편지를 보냈습니다.";
         String letterId = "1";
         AlarmType alarmType = AlarmType.LETTER;
@@ -166,7 +166,7 @@ class NotificationServiceTest {
     @Test
     @DisplayName("알림 전송 실패 - 일치하는 receiverId 없음")
     void create_sendEventToClient_notExistsReceiverId() throws IOException {
-        int receiverId = 1;
+        long receiverId = 1L;
         String title = "12345님이 편지를 보냈습니다.";
         String letterId = "1";
         AlarmType alarmType = AlarmType.LETTER;

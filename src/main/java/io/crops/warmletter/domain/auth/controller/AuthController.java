@@ -4,7 +4,6 @@ import io.crops.warmletter.domain.auth.dto.TokenResponse;
 import io.crops.warmletter.domain.auth.dto.TokenStorageResponse;
 import io.crops.warmletter.domain.auth.service.AuthService;
 import io.crops.warmletter.global.jwt.exception.InvalidAccessTokenException;
-import io.crops.warmletter.global.jwt.service.TokenStorage;
 import io.crops.warmletter.global.response.BaseResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-    private final TokenStorage tokenStorage;
 
     // Access 토큰이 만료되었을 때 호출
     @PostMapping("/reissue")

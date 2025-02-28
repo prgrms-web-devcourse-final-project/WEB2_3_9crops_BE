@@ -67,7 +67,7 @@ public class LetterService {
 
             //첫편지면 matchingId 넣어줌 , 받는사람도 넣어줌.
             Letter firstLetter = letterRepository.findById(request.getParentLetterId()).orElseThrow(ParentLetterNotFoundException::new);
-            if(firstLetter.getParentLetterId() == null) { //todo 테스트 코드 작성해야함
+            if(firstLetter.getParentLetterId() == null) {
                 firstLetter.updateMatchingId(request.getMatchingId());
                 firstLetter.updateReceiverId(writerId);
             }

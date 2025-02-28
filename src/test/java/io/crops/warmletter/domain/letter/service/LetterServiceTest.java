@@ -6,10 +6,13 @@ import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
+import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.enums.*;
 import io.crops.warmletter.domain.letter.exception.LetterNotBelongException;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
+import io.crops.warmletter.domain.letter.exception.MatchingNotBelongException;
 import io.crops.warmletter.domain.letter.exception.ParentLetterNotFoundException;
+import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.enums.Role;
@@ -46,6 +49,9 @@ class LetterServiceTest {
 
     @Mock
     private MemberRepository memberRepository;
+
+    @Mock
+    private LetterMatchingRepository letterMatchingRepository;
 
     @Mock
     private AuthFacade authFacade;
@@ -373,22 +379,26 @@ class LetterServiceTest {
     }
 
     @Test
-    @DisplayName("letterId로 편지 단건 조회 ")
+    @DisplayName("letterId로 편지 단건 조회 성공")
     void getLetter_success() {
-        ReflectionTestUtils.setField(savedRandomLetter, "id", 1L);
-
-        when(letterRepository.findById(savedRandomLetter.getId())).thenReturn(Optional.of(savedRandomLetter));
-
         Member member = Member.builder()
                 .zipCode("12345")
                 .build();
-        // savedRandomLetter의 writerId와 동일한 값으로 설정 (예를 들어 1L)
         ReflectionTestUtils.setField(member, "id", savedRandomLetter.getWriterId());
+        ReflectionTestUtils.setField(savedRandomLetter, "id", 1L);
+
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(member.getId())
+                .secondMemberId(99L).build();
+
+        when(authFacade.getCurrentUserId()).thenReturn(member.getId());
+        when(letterRepository.findById(savedRandomLetter.getId())).thenReturn(Optional.of(savedRandomLetter));
         when(memberRepository.findById(savedRandomLetter.getWriterId())).thenReturn(Optional.of(member));
+        when(letterMatchingRepository.findById(savedRandomLetter.getMatchingId())).thenReturn(Optional.ofNullable(matching));
 
         LetterResponse response = letterService.getLetterById(savedRandomLetter.getId());
 
-        // then: 반환된 응답 DTO 검증
+        // then
         assertAll("답장 조회 응답 검증",
                 () -> assertNotNull(response),
                 () -> assertNotNull(response.getLetterId()),
@@ -397,12 +407,30 @@ class LetterServiceTest {
                 () -> assertEquals(PaperType.COMFORT, response.getPaperType()),
                 () -> assertEquals(FontType.HIMCHAN, response.getFontType())
         );
-
-        //verify 메서드로 letterRepository.save() 메서드가 정확히 1번 호출되었는지 확인
         verify(letterRepository).findById(savedRandomLetter.getId());
         verify(memberRepository).findById(savedRandomLetter.getWriterId());
-
     }
+
+    @Test
+    @DisplayName("letterId로 편지 단건 조회 실패 ")
+    void getLetter_fail() {
+        ReflectionTestUtils.setField(savedRandomLetter, "id", 1L);
+        ReflectionTestUtils.setField(savedRandomLetter, "matchingId", 100L);
+
+        when(authFacade.getCurrentUserId()).thenReturn(10L);
+
+        when(letterRepository.findById(1L)).thenReturn(Optional.of(savedRandomLetter));
+
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(22L)
+                .secondMemberId(99L)
+                .build();
+        ReflectionTestUtils.setField(matching, "id", 100L);
+        when(letterMatchingRepository.findById(100L)).thenReturn(Optional.of(matching));
+
+        assertThrows(MatchingNotBelongException.class, () -> letterService.getLetterById(1L));
+    }
+
 
     @DisplayName("편지 평가 실패 - 편지에 대해 평가할 수 있는 권한 없음")
     @Test

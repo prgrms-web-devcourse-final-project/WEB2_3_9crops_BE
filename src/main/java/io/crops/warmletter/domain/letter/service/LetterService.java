@@ -83,8 +83,16 @@ public class LetterService {
     }
 
     public List<LetterResponse> getPreviousLetters(Long letterId) {
+        Long myId = authFacade.getCurrentUserId();
+
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
         Long parentLetterId = letter.getParentLetterId(); //답장하는 편지의 부모 id
+
+        Long matchingId = letter.getMatchingId();
+        LetterMatching letterMatching = letterMatchingRepository.findById(matchingId).orElseThrow(MatchingNotFoundException::new);
+        if (!letterMatching.getFirstMemberId().equals(myId) && !letterMatching.getSecondMemberId().equals(myId)) {
+            throw new MatchingNotBelongException();
+        }
 
         List<Letter> lettersByParentId = letterRepository.findLettersByParentLetterId(parentLetterId); //부모아이디로 편지 찾기
 

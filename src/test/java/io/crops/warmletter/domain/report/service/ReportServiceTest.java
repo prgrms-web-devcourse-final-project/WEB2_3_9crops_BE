@@ -26,6 +26,8 @@ import io.crops.warmletter.domain.report.exception.ReportNotFoundException;
 import io.crops.warmletter.domain.report.repository.ReportRepository;
 import io.crops.warmletter.domain.share.entity.SharePost;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
+import io.crops.warmletter.domain.timeline.enums.AlarmType;
+import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -59,6 +61,7 @@ class ReportServiceTest {
     @Mock private SharePostRepository sharePostRepository;
     @Mock private EventCommentRepository eventCommentRepository;
     @Mock private AuthFacade authFacade;
+    @Mock private NotificationFacade notificationFacade;
     @Mock private MemberRepository memberRepository;
     private Report report;
     private Member reportedMember;
@@ -295,7 +298,7 @@ class ReportServiceTest {
         // Then
         assertThat(response.getStatus()).isEqualTo(ReportStatus.RESOLVED);
         assertThat(reportedMember.getWarningCount()).isEqualTo(1); // increaseWarningCount 호출됨
-
+        verify(notificationFacade, times(1)).sendNotification(any(), any(), any(), any());
         verify(reportRepository, times(1)).save(any(Report.class));
         verify(memberRepository, times(1)).save(any(Member.class));
     }

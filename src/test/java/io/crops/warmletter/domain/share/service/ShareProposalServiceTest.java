@@ -9,6 +9,8 @@ import io.crops.warmletter.domain.share.enums.ProposalStatus;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalLetterRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalRepository;
+import io.crops.warmletter.domain.timeline.enums.AlarmType;
+import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import org.junit.jupiter.api.DisplayName;
@@ -40,6 +42,9 @@ class ShareProposalServiceTest {
 
     @Mock
     private SharePostRepository sharePostRepository;
+
+    @Mock
+    private NotificationFacade notificationFacade;
 
     @InjectMocks
     private ShareProposalService shareProposalService;
@@ -212,6 +217,7 @@ class ShareProposalServiceTest {
 
         // then
         assertThat(response.getShareProposalId()).isEqualTo(shareProposalId);
+        verify(notificationFacade, times(2)).sendNotification(any(), any(), any(), any());
     }
 
     @Test

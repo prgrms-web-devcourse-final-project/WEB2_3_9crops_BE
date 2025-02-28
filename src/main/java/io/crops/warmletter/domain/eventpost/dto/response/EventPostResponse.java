@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class EventPostResponse {
-    private long eventPostId;
+    private Long eventPostId;
     private String title;
 }

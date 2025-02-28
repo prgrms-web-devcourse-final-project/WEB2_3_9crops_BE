@@ -12,7 +12,11 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "letter_temporary_matchings")
+@Table(
+        name = "letter_temporary_matchings",
+        uniqueConstraints = @UniqueConstraint(columnNames = "letter_id")
+//@UniqueConstraint(columnNames = "secondMemberId")
+)
 public class LetterTemporaryMatching extends BaseTimeEntity {
 
     @Id

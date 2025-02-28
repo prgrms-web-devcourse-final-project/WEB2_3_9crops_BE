@@ -1,10 +1,9 @@
 package io.crops.warmletter.domain.timeline.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.config.TestConfig;
-import io.crops.warmletter.domain.timeline.dto.response.TimeLineResponse;
+import io.crops.warmletter.domain.timeline.dto.response.TimelineResponse;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
-import io.crops.warmletter.domain.timeline.service.TimeLineService;
+import io.crops.warmletter.domain.timeline.service.TimelineService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,19 +31,16 @@ class TimelineControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockitoBean
-    private TimeLineService timeLineService;
+    private TimelineService timeLineService;
     
     @Test
     @DisplayName("GET 타임라인 조회 성공")
     void get_timelines_success() throws Exception {
         // given
-        List<TimeLineResponse> timelines = new ArrayList<>();
-        TimeLineResponse timeline1 = TimeLineResponse.builder().timelineId(1).title("1111번 편지").alarmType(AlarmType.LETTER).isRead(false).build();
-        TimeLineResponse timeline2 = TimeLineResponse.builder().timelineId(2).title("1111번 공유 요청").alarmType(AlarmType.SHARE).isRead(false).build();
+        List<TimelineResponse> timelines = new ArrayList<>();
+        TimelineResponse timeline1 = TimelineResponse.builder().timelineId(1L).title("1111번 편지").alarmType(AlarmType.LETTER).isRead(false).build();
+        TimelineResponse timeline2 = TimelineResponse.builder().timelineId(2L).title("1111번 공유 요청").alarmType(AlarmType.SHARE).isRead(false).build();
         timelines.add(timeline1);
         timelines.add(timeline2);
 

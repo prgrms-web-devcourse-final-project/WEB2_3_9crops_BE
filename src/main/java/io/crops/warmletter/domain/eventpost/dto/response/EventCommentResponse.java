@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class EventCommentResponse {
-    private long commentId;
+    private Long commentId;
     private String content;
 }

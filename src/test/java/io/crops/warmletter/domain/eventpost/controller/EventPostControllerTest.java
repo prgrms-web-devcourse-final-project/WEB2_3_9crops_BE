@@ -7,7 +7,6 @@ import io.crops.warmletter.domain.eventpost.dto.response.EventCommentsResponse;
 import io.crops.warmletter.domain.eventpost.dto.response.EventPostDetailResponse;
 import io.crops.warmletter.domain.eventpost.dto.response.EventPostResponse;
 import io.crops.warmletter.domain.eventpost.dto.response.EventPostStatusResponse;
-import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException;
 import io.crops.warmletter.domain.eventpost.service.EventPostService;
 import org.junit.jupiter.api.DisplayName;
@@ -93,7 +92,7 @@ class EventPostControllerTest {
     @DisplayName("DELETE 게시판 삭제 성공")
     void delete_eventPost_success() throws Exception {
         // given
-        long eventPostId = 1L;
+        Long eventPostId = 1L;
 
         when(eventPostService.deleteEventPost(eventPostId)).thenReturn(Map.of("eventPostId", eventPostId));
 
@@ -109,7 +108,7 @@ class EventPostControllerTest {
     @DisplayName("DELETE 게시판 삭제 실패 - 일치하는 eventPostId 없음")
     void delete_eventPost_notFound() throws Exception {
         // given
-        long eventPostId = 999L;
+        Long eventPostId = 999L;
 
         when(eventPostService.deleteEventPost(eventPostId)).thenThrow(new EventPostNotFoundException());
 
@@ -143,11 +142,11 @@ class EventPostControllerTest {
     @Test
     @DisplayName("GET 게시판 개별 조회 성공")
     void get_eventPost_success() throws Exception {
-        long eventPostId = 1L;
+        Long eventPostId = 1L;
 
         List<EventCommentsResponse> comments = new ArrayList<>();
-        EventCommentsResponse comment1 = EventCommentsResponse.builder().commentId(1).zipCode("11111").content("내용1").build();
-        EventCommentsResponse comment2 = EventCommentsResponse.builder().commentId(2).zipCode("22222").content("내용2").build();
+        EventCommentsResponse comment1 = EventCommentsResponse.builder().commentId(1L).zipCode("11111").content("내용1").build();
+        EventCommentsResponse comment2 = EventCommentsResponse.builder().commentId(2L).zipCode("22222").content("내용2").build();
         comments.add(comment1);
         comments.add(comment2);
 
@@ -179,7 +178,7 @@ class EventPostControllerTest {
     @DisplayName("PATCH 게시판 사용여부 변경 성공 - true에서 false")
     void update_eventPostIsUsedToFalse_success() throws Exception {
         // given
-        long eventPostId = 1L;
+        Long eventPostId = 1L;
 
         EventPostStatusResponse eventPostStatusResponse = EventPostStatusResponse.builder()
                 .eventPostId(1L)

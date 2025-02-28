@@ -46,6 +46,10 @@ public class LetterResponse {
 
     private final LocalDateTime deliveryCompletedAt;
 
+    private final boolean matched; //편지 조회
+
+    private final Long matchingId; //편지 조회
+
 
     //공통 변환
     public static LetterResponse fromEntity(Letter letter, String zipCode) {
@@ -63,6 +67,7 @@ public class LetterResponse {
                 .status(letter.getStatus())
                 .deliveryStartedAt(letter.getDeliveryStartedAt())
                 .deliveryCompletedAt(letter.getDeliveryCompletedAt())
+                .matchingId(letter.getMatchingId())
                 .build();
     }
 
@@ -77,7 +82,7 @@ public class LetterResponse {
     }
 
     //단건조회에 사용
-    public static LetterResponse fromEntityForDetailView(Letter letter, String zipCode) {
+    public static LetterResponse fromEntityForDetailView(Letter letter, String zipCode, boolean matched) {
         return LetterResponse.builder()
                 .letterId(letter.getId())
                 .zipCode(zipCode)
@@ -86,6 +91,8 @@ public class LetterResponse {
                 .category(letter.getCategory())
                 .paperType(letter.getPaperType())
                 .fontType(letter.getFontType())
+                .matched(matched)
+                .matchingId(letter.getMatchingId())
                 .build();
     }
 }

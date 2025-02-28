@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.eventpost.service;
 
+import io.crops.warmletter.domain.auth.exception.UnauthorizedException;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventCommentRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.EventCommentResponse;
@@ -22,14 +23,16 @@ public class EventCommentService {
     private final EventCommentRepository eventCommentRepository;
     private final EventPostRepository eventPostRepository;
 
-    public EventCommentResponse createEventComment(CreateEventCommentRequest createEventCommentRequest, long eventPostId) {
+    public EventCommentResponse createEventComment(CreateEventCommentRequest createEventCommentRequest, Long eventPostId) {
         if(!eventPostRepository.existsById(eventPostId)) {
             throw new EventPostNotFoundException();
         }
 
+        Long writerId = authFacade.getCurrentUserId();
+
         EventComment eventComment = EventComment.builder()
                 .eventPostId(eventPostId)
-                .writerId(1L)   // TODO: authFacade.getCurrentUserId();
+                .writerId(writerId)
                 .content(createEventCommentRequest.getContent())
                 .build();
 
@@ -41,12 +44,12 @@ public class EventCommentService {
                 .build();
     }
 
-    public Map<String,Long> deleteEventComment(long eventCommentId) {
-        EventComment eventComment = eventCommentRepository.findById(eventCommentId).orElseThrow(EventCommentNotFoundException::new);
+    public Map<String,Long> deleteEventComment(Long eventCommentId) {
+        Long writerId = authFacade.getCurrentUserId();
+        EventComment eventComment = eventCommentRepository.findByIdAndWriterId(eventCommentId,writerId).orElseThrow(EventCommentNotFoundException::new);
         if(!eventComment.isActive()){
             throw new EventCommentNotFoundException();
         }
-
         eventComment.softDelete();
         return Map.of("commentId",eventComment.getId());
     }

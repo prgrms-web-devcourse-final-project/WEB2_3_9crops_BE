@@ -6,8 +6,8 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class TimeLineResponse {
-    private long timelineId;
+public class TimelineResponse {
+    private Long timelineId;
     private String title;
     private AlarmType alarmType;
     private boolean isRead;

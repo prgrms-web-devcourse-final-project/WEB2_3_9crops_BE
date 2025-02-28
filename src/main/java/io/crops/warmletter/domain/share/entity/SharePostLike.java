@@ -27,10 +27,6 @@ public class SharePostLike extends BaseEntity {
     @Column(nullable = false)
     private boolean isLiked;
 
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
-
     @Builder
     public SharePostLike(Long sharePostId, Long memberId, boolean isLiked) {
         this.sharePostId = sharePostId;

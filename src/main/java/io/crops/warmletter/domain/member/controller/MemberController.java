@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.member.controller;
 
+import io.crops.warmletter.domain.member.docs.MemberControllerDocs;
 import io.crops.warmletter.domain.member.dto.response.MeResponse;
 import io.crops.warmletter.domain.member.dto.response.ZipCodeResponse;
 import io.crops.warmletter.domain.member.service.MemberService;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/members")
 @RequiredArgsConstructor
-public class MemberController {
+public class MemberController implements MemberControllerDocs {
 
     private final MemberService memberService;
 

@@ -15,10 +15,10 @@ import lombok.NoArgsConstructor;
 public class Timeline extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false)
-    private long memberId;
+    private Long memberId;
 
     @Column(nullable = false)
     private String title;
@@ -37,5 +37,9 @@ public class Timeline extends BaseTimeEntity {
         this.content = content;
         this.alarmType = alarmType;
         this.isRead = false;
+    }
+
+    public void notificationRead(){
+        this.isRead = true;
     }
 }

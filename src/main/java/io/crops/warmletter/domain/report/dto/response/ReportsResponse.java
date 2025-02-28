@@ -1,10 +1,10 @@
 package io.crops.warmletter.domain.report.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-
 @Getter
 @AllArgsConstructor
 public class ReportsResponse {
@@ -18,6 +18,7 @@ public class ReportsResponse {
     private final String reason;
     private final String status;
     private final LocalDateTime reportedAt;
+    private final LocalDateTime updatedAt;
     private final Long letterId;
     private final Long sharePostId;
     private final Long eventCommentId;
@@ -25,7 +26,8 @@ public class ReportsResponse {
 
     public ReportsResponse(
             Long id, Long reporterId, String reporterEmail, Long targetId, String targetEmail,
-            String reportType, String reasonType, String reason, String status, LocalDateTime reportedAt,
+            String reportType, String reasonType, String reason, String status,
+            LocalDateTime reportedAt, LocalDateTime updatedAt,
             Long letterId, Long sharePostId, Long eventCommentId, ContentDetail contentDetail
     ) {
         this.id = id;
@@ -38,12 +40,12 @@ public class ReportsResponse {
         this.reason = reason;
         this.status = status;
         this.reportedAt = reportedAt;
+        this.updatedAt = updatedAt;
         this.letterId = letterId;
         this.sharePostId = sharePostId;
         this.eventCommentId = eventCommentId;
         this.contentDetail = contentDetail;
     }
-
 
     @Getter
     @AllArgsConstructor

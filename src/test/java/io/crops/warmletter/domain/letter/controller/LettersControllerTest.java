@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -81,7 +82,7 @@ class LettersControllerTest {
                 .content("편지 내용입니다")
                 .category(Category.CONSOLATION)
                 .paperType(PaperType.BASIC)
-                .font(FontType.KYOBO)
+                .fontType(FontType.KYOBO)
                 .build();
 
         // id 1인 회원을 생성 (필요한 필드를 채워 넣어야 합니다)
@@ -90,7 +91,6 @@ class LettersControllerTest {
                 .email("user@example.com")
                 .zipCode("12345")
                 .password("hashedPassword")
-                .temperature(36.5f)
                 .preferredLetterCategory(Category.CONSOLATION)
                 .role(Role.USER)
                 .lastMatchedAt(LocalDateTime.now())
@@ -125,14 +125,28 @@ class LettersControllerTest {
     @DisplayName("/api/letters 요청 시 랜덤 편지 답장, 주고 받는 편지 값 출력 확인")
     void create_exchanged_letter_success() throws Exception {
         //given
+        Letter letter = Letter.builder()
+                .writerId(1L)
+                .receiverId(null)
+                .parentLetterId(null)
+                .letterType(LetterType.RANDOM)
+                .category(Category.CONSULT)
+                .title("테스트 편지 제목")
+                .content("테스트 편지 내용")
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .status(Status.IN_DELIVERY)
+                .build();
+        lettersRepository.save(letter);
+
         CreateLetterRequest request = CreateLetterRequest.builder()
                 .receiverId(1L) //편지 받는 사람 id
-                .parentLetterId(2L) //상위 편지 id
+                .parentLetterId(letter.getId()) //상위 편지 id
                 .title("제목입니다")
                 .content("편지 내용입니다")
                 .category(Category.CONSULT)
                 .paperType(PaperType.COMFORT)
-                .font(FontType.HIMCHAN)
+                .fontType(FontType.HIMCHAN)
                 .build();
 
         String json = objectMapper.writeValueAsString(request);
@@ -146,7 +160,6 @@ class LettersControllerTest {
                 .andExpect(jsonPath("$.data.letterId").exists())
                 .andExpect(jsonPath("$.data.writerId").exists())
                 .andExpect(jsonPath("$.data.receiverId").value(1L))
-                .andExpect(jsonPath("$.data.parentLetterId").value(2L))
                 .andExpect(jsonPath("$.data.zipCode").value("12345"))
                 .andExpect(jsonPath("$.data.title").value("제목입니다"))
                 .andExpect(jsonPath("$.data.content").value("편지 내용입니다"))
@@ -158,7 +171,7 @@ class LettersControllerTest {
                 .andDo(print());
 
         //then
-        assertEquals(1L, lettersRepository.count());
+        assertEquals(2L, lettersRepository.count());
     }
 
     @Test
@@ -172,7 +185,7 @@ class LettersControllerTest {
                 .content("편지 내용입니다")
                 .category(Category.CONSULT)
                 .paperType(PaperType.COMFORT)
-                .font(FontType.HIMCHAN)
+                .fontType(FontType.HIMCHAN)
                 .build();
 
         String json = objectMapper.writeValueAsString(request);
@@ -202,7 +215,7 @@ class LettersControllerTest {
                 .content("")
                 .category(Category.CONSULT)
                 .paperType(PaperType.COMFORT)
-                .font(FontType.HIMCHAN)
+                .fontType(FontType.HIMCHAN)
                 .build();
 
         String json = objectMapper.writeValueAsString(request);

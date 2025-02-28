@@ -1,10 +1,18 @@
 package io.crops.warmletter.domain.letter.controller;
 
+import io.crops.warmletter.domain.letter.controller.docs.MailboxControllerDocs;
+import io.crops.warmletter.domain.letter.dto.response.MailboxDetailResponse;
 import io.crops.warmletter.domain.letter.dto.response.MailboxResponse;
 import io.crops.warmletter.domain.letter.service.MailboxService;
 import io.crops.warmletter.global.response.BaseResponse;
+import io.crops.warmletter.global.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/mailbox")
 @RequiredArgsConstructor
-public class MailboxController {
+public class MailboxController implements MailboxControllerDocs {
 
     private final MailboxService mailBoxService;
 
@@ -27,6 +35,30 @@ public class MailboxController {
         return BaseResponse.of(mailbox, "편지함 조회 완료");
     }
 
+
+    /**
+     * 편지함 상세 조회
+     * 시작이 1로 안하면 조건 수정 해야함~
+     */
+    @GetMapping("/{matchingId}/detail")
+    public ResponseEntity<BaseResponse<PageResponse<MailboxDetailResponse>>> detailMailbox(
+            @PathVariable Long matchingId,
+            @PageableDefault(size = 5, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        Pageable adjustedPageable = PageRequest.of(
+                pageable.getPageNumber() > 0 ? pageable.getPageNumber() - 1 : 0,
+                pageable.getPageSize(),
+                pageable.getSort()
+        );
+        Page<MailboxDetailResponse> mailboxPage = mailBoxService.detailMailbox(matchingId, adjustedPageable);
+        PageResponse<MailboxDetailResponse> pageResponse = new PageResponse<>(mailboxPage);
+        BaseResponse<PageResponse<MailboxDetailResponse>> response = BaseResponse.of(pageResponse, "편지함 상세 조회 성공");
+        return ResponseEntity.ok(response);
+    }
+
+
+    /**
+     * 편지 마무리
+     */
     @PostMapping("/{matchingId}/disconnect")
     public ResponseEntity<BaseResponse<Void>> disconnectMatching(@PathVariable Long matchingId) {
         mailBoxService.disconnectMatching(matchingId);

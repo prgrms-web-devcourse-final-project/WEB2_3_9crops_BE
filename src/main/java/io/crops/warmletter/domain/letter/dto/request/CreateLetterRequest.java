@@ -31,16 +31,25 @@ public class CreateLetterRequest {
 
     private PaperType paperType;
 
-    private FontType font;
+    private FontType fontType;
+
+    private Long matchingId;
 
     @Builder
-    public CreateLetterRequest(Long receiverId, Long parentLetterId, String title, String content, Category category, PaperType paperType, FontType font) {
+    public CreateLetterRequest(Long receiverId, Long parentLetterId, String title,
+                               String content, Category category,
+                               PaperType paperType, FontType fontType, Long matchingId) {
         this.receiverId = receiverId;
         this.parentLetterId = parentLetterId;
         this.title = title;
         this.content = content;
         this.category = category;
         this.paperType = paperType;
-        this.font = font;
+        this.fontType = fontType;
+        this.matchingId = matchingId;
+    }
+
+    public void updateMatchingId(Long matchingId) {
+        this.matchingId = matchingId;
     }
 }

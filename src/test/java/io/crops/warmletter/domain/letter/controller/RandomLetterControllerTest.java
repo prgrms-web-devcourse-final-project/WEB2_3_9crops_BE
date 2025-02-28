@@ -1,12 +1,16 @@
 package io.crops.warmletter.domain.letter.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
+import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
+import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.FontType;
 import io.crops.warmletter.domain.letter.enums.PaperType;
+import io.crops.warmletter.domain.letter.service.LetterService;
 import io.crops.warmletter.domain.letter.service.RandomLetterService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +25,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(RandomLetterController.class)
 @AutoConfigureMockMvc(addFilters = false)
-class LetterMatchingControllerTest {
+class RandomLetterControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -38,7 +44,10 @@ class LetterMatchingControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private RandomLetterService letterMatchingService;
+    private RandomLetterService randomLetterService;
+
+    @MockitoBean
+    LetterService letterService;
 
 
     @Test
@@ -49,31 +58,27 @@ class LetterMatchingControllerTest {
         List<RandomLetterResponse> randomLetters = List.of(
                 RandomLetterResponse.builder()
                         .letterId(1L)
-                        .content("편지 내용 1")
+                        .title("편지 제목 1")
                         .zipCode("1A2A3")
                         .category(Category.CONSOLATION)
-                        .paperType(PaperType.PAPER)
-                        .fontType(FontType.KYOBO)
                         .createdAt(LocalDateTime.now())
                         .build(),
                 RandomLetterResponse.builder()
                         .letterId(2L)
-                        .content("편지 내용 2")
+                        .title("편지 제목 2")
                         .zipCode("33DDD")
                         .category(Category.CONSOLATION)
-                        .paperType(PaperType.PAPER)
-                        .fontType(FontType.KYOBO)
                         .createdAt(LocalDateTime.now())
                         .build()
 
         );
-        when(letterMatchingService.findRandomLetters(category)).thenReturn(randomLetters);
+        when(randomLetterService.findRandomLetters(category)).thenReturn(randomLetters);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/random-letters/" + category)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].letterId").value(1L))
-                .andExpect(jsonPath("$.data[0].content").value("편지 내용 1"))
+                .andExpect(jsonPath("$.data[0].title").value("편지 제목 1"))
                 .andExpect(jsonPath("$.data[0].zipCode").value("1A2A3"))
                 .andExpect(jsonPath("$.data[0].category").value("CONSOLATION"))
                 .andDo(print());
@@ -86,7 +91,7 @@ class LetterMatchingControllerTest {
                 .canSend(true)
                 .build();
 
-        when(letterMatchingService.checkLastMatched()).thenReturn(response);
+        when(randomLetterService.checkLastMatched()).thenReturn(response);
 
         mockMvc.perform(post("/api/random-letters/valid")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -104,7 +109,7 @@ class LetterMatchingControllerTest {
                 .isTemporary(false)
                 .build();
 
-        when(letterMatchingService.checkTemporaryMatchedTable()).thenReturn(response);
+        when(randomLetterService.checkTemporaryMatchedTable()).thenReturn(response);
 
         mockMvc.perform(post("/api/random-letters/valid-table")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -127,7 +132,7 @@ class LetterMatchingControllerTest {
                 .isTemporary(true)
                 .build();
 
-        when(letterMatchingService.checkTemporaryMatchedTable()).thenReturn(response);
+        when(randomLetterService.checkTemporaryMatchedTable()).thenReturn(response);
 
         mockMvc.perform(post("/api/random-letters/valid-table")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -139,14 +144,74 @@ class LetterMatchingControllerTest {
     }
 
     @Test
-    @DisplayName("Delete /api/random-letters/matching/cancel  - 매칭취소")
+    @DisplayName("Delete /api/random-letters/matching/cancel - 매칭취소")
         void matchingCancel() throws Exception {
+
+        doNothing().when(randomLetterService).matchingCancel();
 
         mockMvc.perform(delete("/api/random-letters/matching/cancel")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.data").value("매칭 취소 성공"))
+                .andExpect(jsonPath("$.data").isEmpty())
                 .andExpect(jsonPath("$.message").value("랜덤 편지 매칭이 취소되었습니다."))
                 .andExpect(status().isOk())
                 .andDo(print());
-        }
     }
+
+    @Test
+    @DisplayName("POST /api/random-letters/approve - 랜덤 편지 승인")
+    void approveLetter() throws Exception {
+        // given
+        ApproveLetterRequest request = ApproveLetterRequest.builder()
+                .letterId(1L)
+                .writerId(2L)
+                .build();
+        doNothing().when(randomLetterService).approveLetter(any(ApproveLetterRequest.class));
+
+        // when,then
+        mockMvc.perform(post("/api/random-letters/approve")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isEmpty())
+                .andExpect(jsonPath("$.message").value("랜덤 편지 승인 완료"))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("POST /api/random-letters/matching - 최종 랜덤 편지 매칭(작성 완료 버튼)")
+    void completeLetterMatching() throws Exception {
+        CreateLetterRequest request = CreateLetterRequest.builder()
+                .receiverId(10L)
+                .parentLetterId(1L)
+                .title("요청 제목이다~~")
+                .content("요청 응답이다~~")
+                .category(Category.CELEBRATION)
+                .paperType(PaperType.PAPER)
+                .fontType(FontType.KYOBO)
+                .build();
+
+        LetterResponse response = LetterResponse.builder()
+                .letterId(2L)
+                .writerId(10L)
+                .receiverId(1L)
+                .parentLetterId(1L)
+                .zipCode("12345")
+                .title("요청 제목이다~~")
+                .content("요청 응답이다~~")
+                .category(Category.CELEBRATION)
+                .paperType(PaperType.PAPER)
+                .fontType(FontType.KYOBO)
+                .build();
+
+        when(randomLetterService.completeLetterMatching(any(CreateLetterRequest.class))).thenReturn(response);
+
+        mockMvc.perform(post("/api/random-letters/matching")
+                        .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.letterId").value(2))
+                .andExpect(jsonPath("$.data.parentLetterId").value(1))
+                .andExpect(jsonPath("$.data.zipCode").value("12345"))
+                .andDo(print());
+    }
+}

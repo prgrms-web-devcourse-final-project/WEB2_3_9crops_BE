@@ -4,6 +4,7 @@ import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
+import io.crops.warmletter.domain.letter.dto.request.TemporarySaveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.LetterType;
@@ -15,6 +16,7 @@ import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -101,7 +103,6 @@ public class LetterService {
         letter.inactive();
     }
 
-
     public LetterResponse getLetterById(Long letterId) {
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
         String zipCode = memberRepository.findById(letter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode(); //편지를 쓴 사람의 zipCode
@@ -118,4 +119,42 @@ public class LetterService {
         memberFacade.applyEvaluationTemperature(letter.getWriterId(), request.getEvaluation());
 
     }
+
+    @Transactional
+    public LetterResponse temporarySaveLetter(Long letterId, TemporarySaveLetterRequest request) {
+        Long writerId = authFacade.getCurrentUserId();
+        String writerZipCode = authFacade.getZipCode();
+
+        if (letterId != null) {
+            Letter letter = letterRepository.findByIdAndWriterId(letterId, writerId)
+                    .orElseThrow(LetterNotBelongException::new);
+
+            letter.updateTemporarySave(
+                    request.getReceiverId(),
+                    request.getParentLetterId(),
+                    request.getCategory(),
+                    request.getTitle(),
+                    request.getContent()
+            );
+
+            return LetterResponse.fromEntity(letter, writerZipCode);
+        }
+        else {
+
+            Letter letter = Letter.builder()
+                    .writerId(writerId)
+                    .letterType(LetterType.RANDOM)
+                    .category(request.getCategory())
+                    .title(request.getTitle())
+                    .content(request.getContent())
+                    .status(Status.SAVED)
+                    .fontType(request.getFontType())
+                    .paperType(request.getPaperType())
+                    .build();
+            letterRepository.save(letter);
+
+            return LetterResponse.fromEntity(letter, writerZipCode);
+        }
+    }
+
 }

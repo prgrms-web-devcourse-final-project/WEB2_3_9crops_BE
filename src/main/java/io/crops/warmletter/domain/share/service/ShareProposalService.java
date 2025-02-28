@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.share.service;
 
+import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalStatusResponse;
@@ -28,15 +29,19 @@ public class ShareProposalService {
     private final ShareProposalRepository shareProposalRepository;
     private final ShareProposalLetterRepository shareProposalLetterRepository;
     private final SharePostRepository sharePostRepository;
+    private final AuthFacade authFacade;
 
     private final NotificationFacade notificationFacade;
 
     @Transactional
     public ShareProposalResponse requestShareProposal(ShareProposalRequest request) {
-        if (request.getRequesterId() == null || request.getRecipientId() == null ||
-                request.getLetters() == null || request.getLetters().isEmpty()) {
+
+        Long currentUserId = authFacade.getCurrentUserId();
+
+        if (!currentUserId.equals(request.getRequesterId())) {
             throw new ShareInvalidInputValue();
         }
+
         ShareProposal shareProposal = shareProposalRepository.save(request.toEntity());
 
         List<ShareProposalLetter> letters = request.getLetters().stream()
@@ -51,13 +56,20 @@ public class ShareProposalService {
         // 알림 전송 TODO : 배포 후 테스트 예정
         notificationFacade.sendNotification(response.getZipCode(), request.getRecipientId(), AlarmType.SHARE, response.getShareProposalId().toString());
         return response;
-
     }
 
     @Transactional
     public ShareProposalStatusResponse approveShareProposal(Long shareProposalId) {
+
+        Long memberId = authFacade.getCurrentUserId();
+
         ShareProposal shareProposal = shareProposalRepository.findById(shareProposalId)
                 .orElseThrow(() -> new ShareProposalNotFoundException());
+
+        if (!memberId.equals(shareProposal.getRecipientId())) {
+            throw new ShareProposalNotFoundException();
+        }
+
 
         shareProposal.updateStatus(ProposalStatus.APPROVED);
 
@@ -79,16 +91,20 @@ public class ShareProposalService {
 
     @Transactional
     public ShareProposalStatusResponse rejectShareProposal(Long shareProposalId) {
+
+        Long memberId = authFacade.getCurrentUserId();
+
         ShareProposal shareProposal = shareProposalRepository.findById(shareProposalId)
                 .orElseThrow(() -> new ShareProposalNotFoundException());
+
+        if (!memberId.equals(shareProposal.getRecipientId())) {
+            throw new ShareProposalNotFoundException();
+        }
 
         shareProposal.updateStatus(ProposalStatus.REJECTED);
         return ShareProposalStatusResponse.builder()
                 .shareProposalId(shareProposal.getId())
                 .status(shareProposal.getStatus())
                 .build();
-
     }
-
-
 }

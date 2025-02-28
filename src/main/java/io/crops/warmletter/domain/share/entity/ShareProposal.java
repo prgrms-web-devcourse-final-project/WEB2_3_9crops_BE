@@ -37,10 +37,6 @@ public class ShareProposal extends BaseEntity {
     @Column(nullable = false)
     private String message;
 
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
-
     @Builder
     public ShareProposal(Long requesterId, Long recipientId, String message) {
         this.requesterId = requesterId;

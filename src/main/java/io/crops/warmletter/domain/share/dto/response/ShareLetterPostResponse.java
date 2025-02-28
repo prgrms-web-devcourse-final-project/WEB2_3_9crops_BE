@@ -1,7 +1,6 @@
 package io.crops.warmletter.domain.share.dto.response;
 
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Getter

@@ -24,8 +24,6 @@ public class ShareProposalLetter extends BaseEntity {
     @Column(nullable = false)
     private long letterId;
 
-    private LocalDateTime createdAt;
-
     @Builder
     public ShareProposalLetter(Long proposalId, long letterId) {
         this.proposalId = proposalId;

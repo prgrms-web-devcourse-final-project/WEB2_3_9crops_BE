@@ -30,11 +30,11 @@ class SharePostLikeControllerTest {
     void toggleLike() {
         // given
         Long sharePostId = 1L;
-        SharePostLikeRequest request = new SharePostLikeRequest(1L);
+        Long memberId = 1L;
 
         // when
         ResponseEntity<BaseResponse<Void>> response =
-                sharePostLikeController.toggleLike(sharePostId, request);
+                sharePostLikeController.toggleLike(sharePostId);
 
         // then
         assertAll(
@@ -43,8 +43,9 @@ class SharePostLikeControllerTest {
                 () -> assertEquals("좋아요 요청 성공", response.getBody().getMessage())
         );
 
-        verify(sharePostLikeService).toggleLike(sharePostId, request.getMemberId());
+        verify(sharePostLikeService).toggleLike(sharePostId);
     }
+
 
     @Test
     @DisplayName("좋아요 개수 요청 호출 성공")
@@ -52,7 +53,7 @@ class SharePostLikeControllerTest {
         // given
         Long sharePostId = 1L;
         SharePostLikeResponse mockResponse = new SharePostLikeResponse(5L, true);
-        when(sharePostLikeService.getLikeCountAndStatus(sharePostId, 1L))
+        when(sharePostLikeService.getLikeCountAndStatus(sharePostId))
                 .thenReturn(mockResponse);
 
         // when
@@ -67,6 +68,6 @@ class SharePostLikeControllerTest {
                 () -> assertEquals(true, response.getBody().isLiked())
         );
 
-        verify(sharePostLikeService).getLikeCountAndStatus(sharePostId, 1L);
+        verify(sharePostLikeService).getLikeCountAndStatus(sharePostId);
     }
 }

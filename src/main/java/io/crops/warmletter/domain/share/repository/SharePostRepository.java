@@ -15,7 +15,6 @@ public interface SharePostRepository extends JpaRepository<SharePost,Long>, Cust
             "JOIN ShareProposal proposal ON sp.shareProposalId = proposal.id " +
             "JOIN Member writer ON proposal.requesterId = writer.id " +
             "JOIN Member recipient ON proposal.recipientId = recipient.id " +
-            "WHERE sp.isActive = true " +
-            "ORDER BY sp.createdAt DESC")
+            "WHERE sp.isActive = true ")
     Page<SharePostResponse> findAllActiveSharePostsWithZipCodes(Pageable pageable);
 }

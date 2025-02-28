@@ -26,5 +26,5 @@ public class TemporarySaveLetterRequest {
 
     private PaperType paperType;
 
-    private FontType font;
+    private FontType fontType;
 }

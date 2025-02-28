@@ -192,7 +192,7 @@ class LettersControllerUnitTest {
         request.setContent("임시 저장할 내용입니다.");
         request.setCategory(Category.ETC);
         request.setPaperType(PaperType.PAPER);
-        request.setFont(FontType.GYEONGGI);
+        request.setFontType(FontType.GYEONGGI);
 
         LetterResponse expectedResponse = LetterResponse.builder()
                 .letterId(letterId)

@@ -464,7 +464,7 @@ class LetterServiceTest {
         Field titleField = TemporarySaveLetterRequest.class.getDeclaredField("title");
         Field contentField = TemporarySaveLetterRequest.class.getDeclaredField("content");
         Field categoryField = TemporarySaveLetterRequest.class.getDeclaredField("category");
-        Field fontField = TemporarySaveLetterRequest.class.getDeclaredField("font");
+        Field fontField = TemporarySaveLetterRequest.class.getDeclaredField("fontType");
         Field paperTypeField = TemporarySaveLetterRequest.class.getDeclaredField("paperType");
         Field receiverIdField = TemporarySaveLetterRequest.class.getDeclaredField("receiverId");
         Field parentLetterIdField = TemporarySaveLetterRequest.class.getDeclaredField("parentLetterId");
@@ -537,7 +537,7 @@ class LetterServiceTest {
         Field titleField = TemporarySaveLetterRequest.class.getDeclaredField("title");
         Field contentField = TemporarySaveLetterRequest.class.getDeclaredField("content");
         Field categoryField = TemporarySaveLetterRequest.class.getDeclaredField("category");
-        Field fontField = TemporarySaveLetterRequest.class.getDeclaredField("font");
+        Field fontField = TemporarySaveLetterRequest.class.getDeclaredField("fontType");
         Field paperTypeField = TemporarySaveLetterRequest.class.getDeclaredField("paperType");
         Field parentLetterIdField = TemporarySaveLetterRequest.class.getDeclaredField("parentLetterId");
         Field receiverIdField = TemporarySaveLetterRequest.class.getDeclaredField("receiverId");
@@ -555,7 +555,7 @@ class LetterServiceTest {
         categoryField.set(request, Category.ETC);
         fontField.set(request, FontType.GYEONGGI);
         paperTypeField.set(request, PaperType.PAPER);
-        parentLetterIdField.set(request, 5L); // 부모 편지 ID 설정
+        parentLetterIdField.set(request, null);
         receiverIdField.set(request, null);
 
         // 서비스 메서드 모킹
@@ -583,7 +583,7 @@ class LetterServiceTest {
                 () -> assertEquals(FontType.GYEONGGI, response.getFontType()),
                 () -> assertEquals(PaperType.PAPER, response.getPaperType()),
                 () -> assertEquals(Status.SAVED, response.getStatus()),
-                () -> assertEquals(5L, response.getParentLetterId()),
+                () -> assertNull(response.getParentLetterId()),
                 () -> assertEquals("12345", response.getZipCode())
         );
 

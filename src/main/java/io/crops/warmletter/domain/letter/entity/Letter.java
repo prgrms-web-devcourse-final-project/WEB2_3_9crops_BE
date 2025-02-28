@@ -55,7 +55,6 @@ public class Letter extends BaseTimeEntity {
 
     private boolean isActive;        // 활성화 여부
 
-
     //빌더에 receiverId, parentLetterId가 있으면 편지 아이디 받고, 이걸 parentLetterId 에 넣자  / 상위편지아이디가 현재 편지아이디로 넣어짐
     @Builder
     public Letter(Long writerId, Long receiverId,

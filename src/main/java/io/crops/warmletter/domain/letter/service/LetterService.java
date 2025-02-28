@@ -133,14 +133,12 @@ public class LetterService {
 
             Letter letter = Letter.builder()
                     .writerId(writerId)
-                    .receiverId(request.getReceiverId())
-                    .parentLetterId(request.getParentLetterId())
                     .letterType(LetterType.RANDOM)
                     .category(request.getCategory())
                     .title(request.getTitle())
                     .content(request.getContent())
                     .status(Status.SAVED)
-                    .fontType(request.getFont())
+                    .fontType(request.getFontType())
                     .paperType(request.getPaperType())
                     .build();
             letterRepository.save(letter);

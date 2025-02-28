@@ -29,5 +29,5 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
 
     Optional<Letter> findByIdAndReceiverId(Long id, Long receiverId);
 
-    Optional<Letter> findByIdAndWriterId(Long letterId, Long currentUserId);
+    Optional<Letter> findByIdAndWriterId(Long letterId, Long writerId);
 }

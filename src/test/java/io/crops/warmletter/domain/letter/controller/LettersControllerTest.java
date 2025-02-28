@@ -82,7 +82,7 @@ class LettersControllerTest {
                 .content("편지 내용입니다")
                 .category(Category.CONSOLATION)
                 .paperType(PaperType.BASIC)
-                .font(FontType.KYOBO)
+                .fontType(FontType.KYOBO)
                 .build();
 
         // id 1인 회원을 생성 (필요한 필드를 채워 넣어야 합니다)
@@ -146,7 +146,7 @@ class LettersControllerTest {
                 .content("편지 내용입니다")
                 .category(Category.CONSULT)
                 .paperType(PaperType.COMFORT)
-                .font(FontType.HIMCHAN)
+                .fontType(FontType.HIMCHAN)
                 .build();
 
         String json = objectMapper.writeValueAsString(request);
@@ -185,7 +185,7 @@ class LettersControllerTest {
                 .content("편지 내용입니다")
                 .category(Category.CONSULT)
                 .paperType(PaperType.COMFORT)
-                .font(FontType.HIMCHAN)
+                .fontType(FontType.HIMCHAN)
                 .build();
 
         String json = objectMapper.writeValueAsString(request);
@@ -215,7 +215,7 @@ class LettersControllerTest {
                 .content("")
                 .category(Category.CONSULT)
                 .paperType(PaperType.COMFORT)
-                .font(FontType.HIMCHAN)
+                .fontType(FontType.HIMCHAN)
                 .build();
 
         String json = objectMapper.writeValueAsString(request);

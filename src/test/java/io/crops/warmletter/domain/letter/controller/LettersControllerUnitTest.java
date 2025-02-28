@@ -102,7 +102,7 @@ class LettersControllerUnitTest {
     @DisplayName("GET /api/letters/{letterId} - 편지 조회 성공 테스트")
     void getLetter_success() throws Exception {
         String zipCode = "12345";
-        LetterResponse letterResponse = LetterResponse.fromEntityForDetailView(letter, zipCode);
+        LetterResponse letterResponse = LetterResponse.fromEntityForDetailView(letter, zipCode, true);
 
         when(letterService.getLetterById(letter.getId())).thenReturn(letterResponse);
 

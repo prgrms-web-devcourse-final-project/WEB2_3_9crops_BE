@@ -13,8 +13,6 @@ import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException
 import io.crops.warmletter.domain.share.repository.*;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
-import io.crops.warmletter.global.error.common.ErrorCode;
-import io.crops.warmletter.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

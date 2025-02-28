@@ -12,7 +12,6 @@ import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalLetterRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalRepository;
-import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;

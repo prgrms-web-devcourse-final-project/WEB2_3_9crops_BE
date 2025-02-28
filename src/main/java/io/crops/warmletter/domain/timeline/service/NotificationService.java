@@ -1,5 +1,8 @@
 package io.crops.warmletter.domain.timeline.service;
 
+import io.crops.warmletter.domain.auth.exception.UnauthorizedException;
+import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.auth.service.AuthService;
 import io.crops.warmletter.domain.timeline.dto.response.NotificationResponse;
 import io.crops.warmletter.domain.timeline.dto.response.ReadNotificationResponse;
 import io.crops.warmletter.domain.timeline.entity.Timeline;
@@ -23,10 +26,13 @@ import java.util.concurrent.ConcurrentHashMap;
 @Transactional
 public class NotificationService {
     private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
+    private final AuthFacade authFacade;
     private final TimelineRepository timelineRepository;
 
-    public SseEmitter subscribeNotification(Long memberId){
+    public SseEmitter subscribeNotification(){
         SseEmitter emitter = new SseEmitter(600_000L); // 10분 후 타임아웃 설정
+        Long memberId = authFacade.getCurrentUserId();
+
         emitters.put(memberId, emitter);
 
         emitter.onCompletion(() -> emitters.remove(memberId)); // 연결 종료 시 제거
@@ -87,7 +93,8 @@ public class NotificationService {
     }
 
     public ReadNotificationResponse updateNotificationRead(Long notificationId){
-        Timeline timeline = timelineRepository.findById(notificationId).orElseThrow(NotificationNotFoundException::new);
+        Long memberId = authFacade.getCurrentUserId();
+        Timeline timeline = timelineRepository.findByIdAndMemberId(notificationId, memberId).orElseThrow(NotificationNotFoundException::new);
         if(!timeline.getIsRead()){
             timeline.notificationRead();
         }
@@ -99,7 +106,7 @@ public class NotificationService {
     }
 
     public List<ReadNotificationResponse> updateNotificationAllRead(){
-        Long memberId = 1L;
+        Long memberId = authFacade.getCurrentUserId();
         List<Timeline> timelines = timelineRepository.findByMemberIdAndIsReadFalse(memberId);
         List<ReadNotificationResponse> timelineResponses = new ArrayList<>();
         for(Timeline timeline : timelines ){

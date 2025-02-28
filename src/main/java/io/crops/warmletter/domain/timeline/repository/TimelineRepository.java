@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TimelineRepository extends JpaRepository<Timeline, Long> {
@@ -18,4 +19,6 @@ public interface TimelineRepository extends JpaRepository<Timeline, Long> {
     List<TimelineResponse> findByMemberId(Long memberId);
 
     List<Timeline> findByMemberIdAndIsReadFalse(Long memberId);
+
+    Optional<Timeline> findByIdAndMemberId(Long id, Long memberId);
 }

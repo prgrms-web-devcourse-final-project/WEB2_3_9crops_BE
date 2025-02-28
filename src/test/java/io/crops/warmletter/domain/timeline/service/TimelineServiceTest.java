@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.timeline.service;
 
+import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.timeline.dto.response.TimelineResponse;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import io.crops.warmletter.domain.timeline.repository.TimelineRepository;
@@ -24,6 +25,9 @@ class TimelineServiceTest {
     @Mock
     private TimelineRepository timeLineRepository;
 
+    @Mock
+    private AuthFacade authFacade;
+
     @InjectMocks
     private TimelineService timeLineService;
 
@@ -31,6 +35,9 @@ class TimelineServiceTest {
     @DisplayName("타임라인 조회 성공")
     void get_EventPost_success(){
         // given
+        Long memberId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+
         List<TimelineResponse> timelines = new ArrayList<>();
         TimelineResponse timeline1 = TimelineResponse.builder().timelineId(1L).title("1111번 편지").alarmType(AlarmType.LETTER).isRead(false).build();
         TimelineResponse timeline2 = TimelineResponse.builder().timelineId(2L).title("1111번 공유 요청").alarmType(AlarmType.SHARE).isRead(false).build();

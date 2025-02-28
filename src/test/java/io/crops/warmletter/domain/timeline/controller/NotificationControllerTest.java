@@ -41,14 +41,12 @@ class NotificationControllerTest {
     @DisplayName("GET 알림 구독 성공")
     void get_notificationSub_success() throws Exception {
         // given
-        Long memberId = 1L;
-
         SseEmitter mockEmitter = mock(SseEmitter.class);
 
-        when(notificationService.subscribeNotification(memberId)).thenReturn(mockEmitter);
+        when(notificationService.subscribeNotification()).thenReturn(mockEmitter);
 
         // SSE 구독 API 호출
-        mockMvc.perform(get("/api/notifications/sub/{memberId}", memberId)
+        mockMvc.perform(get("/api/notifications/sub")
                         .accept("text/event-stream"))  // accept 헤더에 text/event-stream 추가
                 .andExpect(status().isOk());
     }

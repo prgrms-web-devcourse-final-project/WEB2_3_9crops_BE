@@ -29,10 +29,6 @@ public class EventCommentService {
         }
 
         Long writerId = authFacade.getCurrentUserId();
-        // TODO:
-        if(writerId == null) {
-            throw new UnauthorizedException();
-        }
 
         EventComment eventComment = EventComment.builder()
                 .eventPostId(eventPostId)

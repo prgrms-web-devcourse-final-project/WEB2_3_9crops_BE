@@ -32,10 +32,7 @@ public class NotificationService {
     public SseEmitter subscribeNotification(){
         SseEmitter emitter = new SseEmitter(600_000L); // 10분 후 타임아웃 설정
         Long memberId = authFacade.getCurrentUserId();
-        // TODO:
-        if(memberId == null){
-            throw new UnauthorizedException();
-        }
+
         emitters.put(memberId, emitter);
 
         emitter.onCompletion(() -> emitters.remove(memberId)); // 연결 종료 시 제거
@@ -110,7 +107,6 @@ public class NotificationService {
 
     public List<ReadNotificationResponse> updateNotificationAllRead(){
         Long memberId = authFacade.getCurrentUserId();
-
         List<Timeline> timelines = timelineRepository.findByMemberIdAndIsReadFalse(memberId);
         List<ReadNotificationResponse> timelineResponses = new ArrayList<>();
         for(Timeline timeline : timelines ){

@@ -9,5 +9,4 @@ import java.util.Optional;
 @Repository
 public interface ShareProposalRepository extends JpaRepository<ShareProposal,Long >, ShareProposalRepositoryCustom {
 
-    Optional<ShareProposal> findByIdAndRecipientId(Long shareProposalId, Long memberId);
 }

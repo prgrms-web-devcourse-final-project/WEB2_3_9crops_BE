@@ -1,5 +1,4 @@
 package io.crops.warmletter.domain.share.service;
-
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.cache.PostLikeRedisManager;
 import io.crops.warmletter.domain.share.dto.response.SharePostLikeResponse;

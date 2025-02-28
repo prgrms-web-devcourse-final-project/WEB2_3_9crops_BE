@@ -1,5 +1,4 @@
 package io.crops.warmletter.domain.share.service;
-
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
@@ -20,6 +19,7 @@ public class SharePostService {
 
     private final SharePostRepository sharePostRepository;
     private final AuthFacade authFacade;
+
     @Transactional(readOnly = true)
     public Page<SharePostResponse> getAllPosts(Pageable pageable) {
         authFacade.getCurrentUser();

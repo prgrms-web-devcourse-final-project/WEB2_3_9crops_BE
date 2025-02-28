@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.letter.controller;
 
+import io.crops.warmletter.domain.letter.controller.docs.LetterControllerDocs;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
@@ -17,7 +18,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
-public class LetterController {
+public class LetterController implements LetterControllerDocs {
 
     private final LetterService letterService;
 

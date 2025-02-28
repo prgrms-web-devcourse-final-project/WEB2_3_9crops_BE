@@ -55,12 +55,16 @@ public class Letter extends BaseTimeEntity {
 
     private boolean isActive;        // 활성화 여부
 
+
+    //편지매칭아이디 추가
+    private Long matchingId;
+
     //빌더에 receiverId, parentLetterId가 있으면 편지 아이디 받고, 이걸 parentLetterId 에 넣자  / 상위편지아이디가 현재 편지아이디로 넣어짐
     @Builder
     public Letter(Long writerId, Long receiverId,
                    Long parentLetterId, LetterType letterType,
                    Category category, String title, String content,Status status,
-                   FontType fontType, PaperType paperType) {
+                   FontType fontType, PaperType paperType, Long matchingId) {
 
         this.writerId = writerId;
         this.receiverId = receiverId;
@@ -76,6 +80,7 @@ public class Letter extends BaseTimeEntity {
         this.fontType = fontType;
         this.paperType = paperType;
         this.isActive = true; // 기본값: 활성 상태
+        this.matchingId = matchingId;
     }
 
     public void inactive() {
@@ -86,6 +91,7 @@ public class Letter extends BaseTimeEntity {
         this.letterType = letterType;
     }
 
+
     public void updateTemporarySave(Long receiverId, Long parentLetterId, Category category, String title, String content) {
         this.receiverId = receiverId;
         this.parentLetterId = parentLetterId;
@@ -94,4 +100,13 @@ public class Letter extends BaseTimeEntity {
         this.content = content;
         this.status = Status.SAVED;
     }
+
+    public void updateMatchingId(Long matchingId) {
+        this.matchingId = matchingId;
+    }
+
+    public void updateReceiverId(Long receiverId) {
+        this.receiverId = receiverId;
+    }
+
 }

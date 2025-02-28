@@ -26,6 +26,8 @@ import io.crops.warmletter.domain.report.repository.ReportRepository;
 import io.crops.warmletter.domain.share.entity.SharePost;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalRepository;
+import io.crops.warmletter.domain.timeline.enums.AlarmType;
+import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import jakarta.transaction.Transactional;
@@ -35,7 +37,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,7 +52,7 @@ public class ReportService {
     private final ShareProposalRepository shareProposalRepository;
 
     private final AuthFacade authFacde;
-
+    private final NotificationFacade notificationFacade;
 
     @Transactional
     public UpdateReportResponse updateReport(Long reportId, UpdateReportRequest request) {
@@ -74,6 +75,8 @@ public class ReportService {
             reportedMember.increaseWarningCount();
             memberRepository.save(reportedMember);
             resolvePendingReports(report);
+            // targetMemberId로 알림 전송 TODO : 배포 후 테스트 예정
+            notificationFacade.sendNotification(null, targetMemberId, AlarmType.REPORT, report.getAdminMemo()+", "+reportedMember.getWarningCount());
         }
         return new UpdateReportResponse(report,reportedMember);
     }

@@ -108,7 +108,12 @@ public class NotificationService {
     public List<ReadNotificationResponse> updateNotificationAllRead(){
         Long memberId = authFacade.getCurrentUserId();
         List<Timeline> timelines = timelineRepository.findByMemberIdAndIsReadFalse(memberId);
+
+        // 추후 try catch 로 예외 처리 예정
+        timelineRepository.updateIsReadByMemberIdAndIsReadFalse(memberId);
+
         List<ReadNotificationResponse> timelineResponses = new ArrayList<>();
+
         for(Timeline timeline : timelines ){
             timeline.notificationRead();
             timelineResponses.add(ReadNotificationResponse.builder()

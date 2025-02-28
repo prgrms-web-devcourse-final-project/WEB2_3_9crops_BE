@@ -11,6 +11,8 @@ import io.crops.warmletter.domain.share.enums.ProposalStatus;
 import io.crops.warmletter.domain.share.exception.ShareInvalidInputValue;
 import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException;
 import io.crops.warmletter.domain.share.repository.*;
+import io.crops.warmletter.domain.timeline.enums.AlarmType;
+import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,8 @@ public class ShareProposalService {
     private final ShareProposalLetterRepository shareProposalLetterRepository;
     private final SharePostRepository sharePostRepository;
     private final AuthFacade authFacade;
+
+    private final NotificationFacade notificationFacade;
 
     @Transactional
     public ShareProposalResponse requestShareProposal(ShareProposalRequest request) {
@@ -47,6 +51,8 @@ public class ShareProposalService {
         if (response == null) {
             throw new ShareProposalNotFoundException();
         }
+        // 알림 전송 TODO : 배포 후 테스트 예정
+        notificationFacade.sendNotification(response.getZipCode(), request.getRecipientId(), AlarmType.SHARE, response.getShareProposalId().toString());
         return response;
     }
 
@@ -70,8 +76,10 @@ public class ShareProposalService {
                 .content(shareProposal.getMessage())
                 .isActive(true)
                 .build();
-        sharePostRepository.save(sharePost);
-
+        sharePost = sharePostRepository.save(sharePost);
+        // 알림 전송(양쪽다) / 인가 값이 없어서 일단 우편번호는 임시값으로 대체 TODO : 배포 후 테스트 예정
+        notificationFacade.sendNotification("승인요청자", shareProposal.getRequesterId(), AlarmType.POSTED, sharePost.getId().toString());
+        notificationFacade.sendNotification("승인수락자", shareProposal.getRecipientId(), AlarmType.POSTED, sharePost.getId().toString());
         return ShareProposalStatusResponse.builder()
                 .shareProposalId(shareProposal.getId())
                 .status(shareProposal.getStatus())

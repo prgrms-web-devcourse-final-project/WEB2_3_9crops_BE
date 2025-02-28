@@ -12,6 +12,7 @@ import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalLetterRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalRepository;
+import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import org.junit.jupiter.api.DisplayName;
@@ -44,6 +45,9 @@ class ShareProposalServiceTest {
 
     @Mock
     private SharePostRepository sharePostRepository;
+
+    @Mock
+    private NotificationFacade notificationFacade;
 
     @Mock
     private AuthFacade authFacade;
@@ -288,6 +292,7 @@ class ShareProposalServiceTest {
         // then
         assertThat(response).isNotNull();
         assertThat(response.getShareProposalId()).isEqualTo(shareProposalId);
+        verify(notificationFacade, times(2)).sendNotification(any(), any(), any(), any());
         assertThat(response.getStatus()).isEqualTo(ProposalStatus.APPROVED);
         assertThat(response.getSharePostId()).isEqualTo(sharePostId);
 

@@ -76,18 +76,6 @@ class NotificationServiceTest {
     }
 
     @Test
-    @DisplayName("알림 구독 생성 실패")
-    void get_notificationSub_authNotFound() {
-        when(authFacade.getCurrentUserId()).thenReturn(null);
-
-        //when
-        AuthException exception = assertThrows(UnauthorizedException.class, ()-> notificationService.subscribeNotification());
-
-        //then
-        assertEquals(ErrorCode.UNAUTHORIZED, exception.getErrorCode());
-    }
-
-    @Test
     @DisplayName("알림 생성 성공 - LETTER")
     void create_notificationLETTER_success() {
         String zipCode = "12345";

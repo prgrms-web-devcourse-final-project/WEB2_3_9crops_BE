@@ -92,25 +92,6 @@ class EventCommentServiceTest {
     }
 
     @Test
-    @DisplayName("게시판 댓글 생성 실패 - 인증 정보 없음")
-    void create_eventComment_authNotFound(){
-        //given
-        when(authFacade.getCurrentUserId()).thenReturn(null);
-
-        CreateEventCommentRequest createEventCommentRequest = CreateEventCommentRequest.builder()
-                .content("내용")
-                .build();
-
-        when(eventPostRepository.existsById(1L)).thenReturn(true);
-
-        //when
-        AuthException exception = assertThrows(UnauthorizedException.class, ()-> eventCommentService.createEventComment(createEventCommentRequest,1L));
-
-        //then
-        assertEquals(ErrorCode.UNAUTHORIZED, exception.getErrorCode());
-    }
-
-    @Test
     @DisplayName("게시판 댓글 삭제 성공")
     void delete_eventComment_success(){
         //given

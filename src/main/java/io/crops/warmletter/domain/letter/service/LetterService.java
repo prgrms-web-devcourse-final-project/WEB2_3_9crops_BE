@@ -70,6 +70,8 @@ public class LetterService {
             if(firstLetter.getParentLetterId() == null) {
                 firstLetter.updateMatchingId(request.getMatchingId());
                 firstLetter.updateReceiverId(writerId);
+                firstLetter.updateLetterType(LetterType.DIRECT);
+                firstLetter.updateIsRead(true);
             }
         }
         Letter letter = builder.build();
@@ -102,6 +104,7 @@ public class LetterService {
     }
 
 
+    @Transactional
     public LetterResponse getLetterById(Long letterId) {
         Long myId = authFacade.getCurrentUserId();
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
@@ -114,7 +117,11 @@ public class LetterService {
         }
 
         String zipCode = memberRepository.findById(letter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode(); //편지를 쓴 사람의 zipCode
-        return LetterResponse.fromEntityForDetailView(letter, zipCode);
+
+        letter.updateIsRead(true); //편지 조회 시 읽기
+        letterRepository.save(letter);
+
+        return LetterResponse.fromEntityForDetailView(letter, zipCode, letterMatching.isActive());
     }
 
     @Transactional

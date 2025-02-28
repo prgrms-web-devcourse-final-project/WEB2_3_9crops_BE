@@ -98,4 +98,8 @@ public class Letter extends BaseTimeEntity {
         this.receiverId = receiverId;
     }
 
+    public void updateIsRead(boolean isRead) {
+        this.isRead = isRead;
+    }
+
 }

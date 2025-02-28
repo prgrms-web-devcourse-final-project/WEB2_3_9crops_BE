@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.letter.controller;
 
+import io.crops.warmletter.domain.letter.controller.docs.MailboxControllerDocs;
 import io.crops.warmletter.domain.letter.dto.response.MailboxDetailResponse;
 import io.crops.warmletter.domain.letter.dto.response.MailboxResponse;
 import io.crops.warmletter.domain.letter.service.MailboxService;
@@ -21,7 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/mailbox")
 @RequiredArgsConstructor
-public class MailboxController {
+public class MailboxController implements MailboxControllerDocs {
 
     private final MailboxService mailBoxService;
 

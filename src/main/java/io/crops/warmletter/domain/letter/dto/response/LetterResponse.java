@@ -89,6 +89,7 @@ public class LetterResponse {
                 .category(letter.getCategory())
                 .paperType(letter.getPaperType())
                 .fontType(letter.getFontType())
+                .matchingId(letter.getMatchingId())
                 .build();
     }
 }

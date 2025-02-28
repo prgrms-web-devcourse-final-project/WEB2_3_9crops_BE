@@ -6,11 +6,11 @@ import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
+import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.enums.LetterType;
 import io.crops.warmletter.domain.letter.enums.Status;
-import io.crops.warmletter.domain.letter.exception.LetterNotBelongException;
-import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
-import io.crops.warmletter.domain.letter.exception.ParentLetterNotFoundException;
+import io.crops.warmletter.domain.letter.exception.*;
+import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
@@ -27,6 +27,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class LetterService {
 
+    private final LetterMatchingRepository letterMatchingRepository;
     private final LetterRepository letterRepository;
     private final MemberRepository memberRepository;
     private final BadWordService badWordService;
@@ -80,7 +81,6 @@ public class LetterService {
     }
 
     public List<LetterResponse> getPreviousLetters(Long letterId) {
-
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
         Long parentLetterId = letter.getParentLetterId(); //답장하는 편지의 부모 id
 
@@ -103,7 +103,16 @@ public class LetterService {
 
 
     public LetterResponse getLetterById(Long letterId) {
+        Long myId = authFacade.getCurrentUserId();
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
+
+        Long matchingId = letter.getMatchingId();
+        LetterMatching letterMatching = letterMatchingRepository.findById(matchingId).orElseThrow(MatchingNotFoundException::new);
+
+        if (!letterMatching.getFirstMemberId().equals(myId) && !letterMatching.getSecondMemberId().equals(myId)) {
+            throw new MatchingNotBelongException();
+        }
+
         String zipCode = memberRepository.findById(letter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode(); //편지를 쓴 사람의 zipCode
         return LetterResponse.fromEntityForDetailView(letter, zipCode);
     }

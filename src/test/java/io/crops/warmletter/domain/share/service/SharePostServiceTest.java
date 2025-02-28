@@ -1,9 +1,11 @@
 package io.crops.warmletter.domain.share.service;
 
+import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.dto.response.ShareLetterPostResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.entity.SharePost;
+import io.crops.warmletter.domain.share.exception.SharePageException;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
@@ -33,6 +35,9 @@ class SharePostServiceTest {
     @Mock
     private Pageable pageable;
 
+    @Mock
+    AuthFacade authFacade;
+
     @InjectMocks
     private SharePostService sharePostService;
 
@@ -48,14 +53,91 @@ class SharePostServiceTest {
     }
 
     @Test
+    @DisplayName("여러 페이지가 있는 경우 마지막 페이지 조회 성공")
+    void getAllPosts_ReturnsLastPage() {
+        // given
+        Pageable lastPageable = PageRequest.of(2, 5, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        List<SharePostResponse> responses = List.of(
+                new SharePostResponse(9L, 5L, "55555", "66666", "마지막 페이지 게시글", true, LocalDateTime.now())
+        );
+
+        // 총 11개 게시글 중 마지막 페이지(3페이지, 인덱스 2)에 1개의 게시글이 있는 상황
+        Page<SharePostResponse> responsePage = new PageImpl<>(responses, lastPageable, 11);
+
+        when(sharePostRepository.findAllActiveSharePostsWithZipCodes(lastPageable)).thenReturn(responsePage);
+
+        // when
+        Page<SharePostResponse> result = sharePostService.getAllPosts(lastPageable);
+
+        // then
+        assertAll(
+                () -> assertThat(result.getContent()).hasSize(1),
+                () -> assertThat(result.getContent().get(0).getContent()).isEqualTo("마지막 페이지 게시글"),
+                () -> assertThat(result.getTotalElements()).isEqualTo(11),
+                () -> assertThat(result.getNumber()).isEqualTo(2),
+                () -> assertThat(result.getTotalPages()).isEqualTo(3)
+        );
+
+        verify(sharePostRepository).findAllActiveSharePostsWithZipCodes(lastPageable);
+    }
+
+    @Test
+    @DisplayName("특정 페이지가 비어있는 경우 빈 페이지 반환")
+    void getAllPosts_ReturnsEmptyPage_WhenSpecificPageIsEmpty() {
+        // given
+        // 존재하지 않는 페이지 번호로 요청
+        Pageable emptyPageable = PageRequest.of(5, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        // 총 게시글은 20개이지만 요청한 페이지는 범위를 벗어남
+        Page<SharePostResponse> emptyPage = new PageImpl<>(Collections.emptyList(), emptyPageable, 20);
+
+        when(sharePostRepository.findAllActiveSharePostsWithZipCodes(emptyPageable)).thenReturn(emptyPage);
+
+        // when
+        Page<SharePostResponse> result = sharePostService.getAllPosts(emptyPageable);
+
+        // then
+        assertAll(
+                () -> assertThat(result.getContent()).isEmpty(),
+                () -> assertThat(result.getTotalElements()).isEqualTo(20),
+                () -> assertThat(result.getNumber()).isEqualTo(5),
+                () -> assertThat(result.getTotalPages()).isEqualTo(2) // 10개씩 페이징하면 총 2페이지
+        );
+
+        verify(sharePostRepository).findAllActiveSharePostsWithZipCodes(emptyPageable);
+    }
+
+    @Test
+    @DisplayName("활성화된 게시글이 없을 경우 빈 페이지 반환")
+    void getAllPosts_ReturnsEmptyPage_WhenNoActivePost() {
+        // given
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<SharePostResponse> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        when(sharePostRepository.findAllActiveSharePostsWithZipCodes(pageable)).thenReturn(emptyPage);
+
+        // when
+        Page<SharePostResponse> result = sharePostService.getAllPosts(pageable);
+
+        // then
+        assertAll(
+                () -> assertThat(result.getContent()).isEmpty(),
+                () -> assertThat(result.getTotalElements()).isZero(),
+                () -> assertThat(result.getTotalPages()).isZero()
+        );
+
+        verify(sharePostRepository).findAllActiveSharePostsWithZipCodes(pageable);
+    }
+
+    @Test
     @DisplayName("활성화된 게시글 목록 페이징 조회 성공")
     void getAllPosts_ReturnsActivePosts() {
         // given
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         List<SharePostResponse> responses = List.of(
-                new SharePostResponse(1L,1L, "12345", "67890", "to share my post", true, LocalDateTime.now()),
-                new SharePostResponse(2L,2L, "13579", "24680", "to share my post1", true, LocalDateTime.now().minusDays(1))
+                new SharePostResponse(1L, 1L, "12345", "67890", "to share my post", true, LocalDateTime.now()),
+                new SharePostResponse(2L, 2L, "13579", "24680", "to share my post1", true, LocalDateTime.now().minusDays(1))
         );
 
         Page<SharePostResponse> responsePage = new PageImpl<>(responses, pageable, responses.size());
@@ -79,70 +161,6 @@ class SharePostServiceTest {
         );
 
         verify(sharePostRepository).findAllActiveSharePostsWithZipCodes(pageable);
-    }
-
-    @Test
-    @DisplayName("활성화된 게시글이 없을 경우 빈 페이지 반환")
-    void getAllPosts_ReturnsEmptyPage_WhenNoActivePost() {
-        // given
-        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<SharePostResponse> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
-
-        when(sharePostRepository.findAllActiveSharePostsWithZipCodes(pageable)).thenReturn(emptyPage);
-
-        // when
-        Page<SharePostResponse> result = sharePostService.getAllPosts(pageable);
-
-        // then
-        assertAll(
-                () -> assertThat(result.getContent()).isEmpty(),
-                () -> assertThat(result.getTotalElements()).isZero(),
-                () -> assertThat(result.getTotalPages()).isZero()
-        );
-
-        verify(sharePostRepository).findAllActiveSharePostsWithZipCodes(pageable);
-    }
-
-
-    @Test
-    @DisplayName("두 번째 페이지 조회 성공")
-    void getAllPosts_ReturnsSecondPage() {
-        Pageable pageable = PageRequest.of(1, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-
-        List<SharePostResponse> responses = List.of(
-                new SharePostResponse(1L,1L, "12345", "67890", "to share my post", true, LocalDateTime.now()),
-                new SharePostResponse(2L,2L, "13579", "24680", "to share my post1", true, LocalDateTime.now().minusDays(1))
-        );
-
-        Page<SharePostResponse> responsePage = new PageImpl<>(responses, pageable, 25); // 총 25개 중 2번째 페이지
-
-        when(sharePostRepository.findAllActiveSharePostsWithZipCodes(pageable)).thenReturn(responsePage);
-
-        Page<SharePostResponse> result = sharePostService.getAllPosts(pageable);
-
-        assertAll(
-                () -> assertThat(result.getContent()).hasSize(2),
-                () -> assertThat(result.getTotalElements()).isEqualTo(25),
-                () -> assertThat(result.getNumber()).isEqualTo(1),
-                () -> assertThat(result.getTotalPages()).isEqualTo(3),
-                () -> assertThat(result.getContent().get(0).getWriterZipCode()).isEqualTo("12345"),
-                () -> assertThat(result.getContent().get(0).getReceiverZipCode()).isEqualTo("67890")
-        );
-
-        verify(sharePostRepository).findAllActiveSharePostsWithZipCodes(pageable);
-    }
-
-    @Test
-    @DisplayName("음수 페이지 요청시 예외 발생")
-    void getAllPosts_ThrowsException_WhenPageNumberIsNegative() {
-        // given
-        when(pageable.getPageNumber()).thenReturn(-1);  // 음수 페이지 번호 반환하도록 설정
-
-        // when & then
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> sharePostService.getAllPosts(pageable));
-
-        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_PAGE_REQUEST);
     }
 
     @DisplayName("게시글 상세 조회 성공")
@@ -251,6 +269,20 @@ class SharePostServiceTest {
         verify(sharePostRepository).findDetailById(sharePostId);
     }
 
+    @Test
+    @DisplayName("음수 페이지 요청시 예외 발생")
+    void getAllPosts_ThrowsException_WhenPageNumberIsNegative() {
+        // given
+        Pageable mockPageable = mock(Pageable.class);
+        when(mockPageable.getPageNumber()).thenReturn(-1);
+
+        // when & then
+        SharePageException exception = assertThrows(SharePageException.class,
+                () -> sharePostService.getAllPosts(mockPageable));
+
+        // repository는 호출되지 않아야 함
+        verify(sharePostRepository, never()).findAllActiveSharePostsWithZipCodes(any());
+    }
 
 
 }

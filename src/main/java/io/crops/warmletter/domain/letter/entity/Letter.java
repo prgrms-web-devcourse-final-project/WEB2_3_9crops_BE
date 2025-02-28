@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.letter.entity;
 
+import io.crops.warmletter.domain.letter.dto.request.TemporarySaveLetterRequest;
 import io.crops.warmletter.domain.letter.enums.*;
 import io.crops.warmletter.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
@@ -54,9 +55,9 @@ public class Letter extends BaseTimeEntity {
 
     private boolean isActive;        // 활성화 여부
 
+
     //편지매칭아이디 추가
     private Long matchingId;
-
 
     //빌더에 receiverId, parentLetterId가 있으면 편지 아이디 받고, 이걸 parentLetterId 에 넣자  / 상위편지아이디가 현재 편지아이디로 넣어짐
     @Builder
@@ -88,6 +89,16 @@ public class Letter extends BaseTimeEntity {
 
     public void updateLetterType(LetterType letterType) {
         this.letterType = letterType;
+    }
+
+
+    public void updateTemporarySave(Long receiverId, Long parentLetterId, Category category, String title, String content) {
+        this.receiverId = receiverId;
+        this.parentLetterId = parentLetterId;
+        this.category = category;
+        this.title = title;
+        this.content = content;
+        this.status = Status.SAVED;
     }
 
     public void updateMatchingId(Long matchingId) {

@@ -48,10 +48,12 @@ class SharePostControllerTest {
     private SharePostResponse sharePostResponse2;
     @BeforeEach
     void createSharePost() {
-        SharePost sharePost = new SharePost(1L,  "to share my post",true);
-        SharePost sharePost1 = new SharePost(2L, "to share my post1",true);
-        sharePostResponse1 = new SharePostResponse(sharePost);
-        sharePostResponse2 = new SharePostResponse(sharePost1);
+        // 테스트에서 사용되는 값을 고정
+        LocalDateTime fixedCreatedAt = LocalDateTime.of(2025, 2, 28, 12, 0, 0, 0);
+
+        // SharePostResponse 객체를 새 생성자를 사용하여 생성
+        sharePostResponse1 = new SharePostResponse(1L, 1L, "12345", "67890", "to share my post", true, fixedCreatedAt);
+        sharePostResponse2 = new SharePostResponse(2L, 2L, "12345", "67890", "to share my post1", true, fixedCreatedAt);
     }
 
     @Test
@@ -63,16 +65,17 @@ class SharePostControllerTest {
         Page<SharePostResponse> postPage = new PageImpl<>(posts, pageable, posts.size());
         when(sharePostService.getAllPosts(any(Pageable.class))).thenReturn(postPage);
 
-        //when
+        // when
         mockMvc.perform(get("/api/share-posts")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content",hasSize(2)))
-                .andExpect(jsonPath("$.content[0].content").value("to share my post"))
-                .andExpect(jsonPath("$.content[1].content").value("to share my post1"))
-                .andExpect(jsonPath("$.currentPage").value(1))
-                .andExpect(jsonPath("$.totalElements").value(2))
-                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.data.content", hasSize(2)))
+                .andExpect(jsonPath("$.data.content[0].content").value("to share my post"))
+                .andExpect(jsonPath("$.data.content[1].content").value("to share my post1"))
+                .andExpect(jsonPath("$.data.currentPage").value(1))
+                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.size").value(10))
+                .andExpect(jsonPath("$.message").value("공유 게시글 조회 성공"))
                 .andDo(print());
     }
 
@@ -80,19 +83,20 @@ class SharePostControllerTest {
     @DisplayName("페이지 파라미터에 따라서 해당 페이지 반환 ")
     void getAllPosts_ReturnsSpecificPage() throws Exception {
         // given
-        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt")); // 수정: 1 -> 0
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<SharePostResponse> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 20);
 
         when(sharePostService.getAllPosts(any(Pageable.class))).thenReturn(emptyPage);
 
         // when & then
         mockMvc.perform(get("/api/share-posts")
-                        .param("page", "1") // 프론트엔드는 여전히 1을 보냄
+                        .param("page", "1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.currentPage").value(1)) // 수정: 2 -> 1 (BackendPage 0 + 1)
-                .andExpect(jsonPath("$.totalElements").value(20))
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.currentPage").value(1))
+                .andExpect(jsonPath("$.data.totalElements").value(20))
+                .andExpect(jsonPath("$.message").value("공유 게시글 조회 성공"))
                 .andDo(print());
     }
 

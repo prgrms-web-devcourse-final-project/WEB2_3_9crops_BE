@@ -187,7 +187,7 @@ class RandomLetterControllerTest {
                 .content("요청 응답이다~~")
                 .category(Category.CELEBRATION)
                 .paperType(PaperType.PAPER)
-                .font(FontType.KYOBO)
+                .fontType(FontType.KYOBO)
                 .build();
 
         LetterResponse response = LetterResponse.builder()

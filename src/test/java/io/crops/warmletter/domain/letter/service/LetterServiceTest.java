@@ -7,10 +7,10 @@ import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.TemporarySaveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
+import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.enums.*;
-import io.crops.warmletter.domain.letter.exception.LetterNotBelongException;
-import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
-import io.crops.warmletter.domain.letter.exception.ParentLetterNotFoundException;
+import io.crops.warmletter.domain.letter.exception.*;
+import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.enums.Role;
@@ -27,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,6 +48,9 @@ class LetterServiceTest {
 
     @Mock
     private MemberRepository memberRepository;
+
+    @Mock
+    private LetterMatchingRepository letterMatchingRepository;
 
     @Mock
     private AuthFacade authFacade;
@@ -75,7 +79,7 @@ class LetterServiceTest {
                 .content("랜덤 편지 내용")
                 .category(Category.CONSULT)
                 .paperType(PaperType.COMFORT)
-                .font(FontType.HIMCHAN)
+                .fontType(FontType.HIMCHAN)
                 .build();
 
         //받는사람(receiverId)과 상위 편지(parentLetterId)가 있으면 주고받는 답장 편지(DIRECT)로 작성됨
@@ -86,7 +90,7 @@ class LetterServiceTest {
                 .content("답장 편지 내용")
                 .category(Category.ETC)
                 .paperType(PaperType.PAPER)
-                .font(FontType.GYEONGGI)
+                .fontType(FontType.GYEONGGI)
                 .build();
 
         // repository.save()가 반환할 Letter 객체 미리 준비 (랜덤편지에 간 편지에 대한 첫 답장)
@@ -151,6 +155,21 @@ class LetterServiceTest {
     }
 
     @Test
+    @DisplayName("편지 작성 시 비속어 검사 호출 테스트")
+    void createLetter_badWordValidation() {
+        // given
+        when(letterRepository.save(any(Letter.class))).thenReturn(savedRandomLetter);
+        when(authFacade.getZipCode()).thenReturn("12345");
+
+        // when
+        letterService.createLetter(randomLetterRequest);
+
+        // then
+        verify(badWordService).validateText(randomLetterRequest.getTitle());
+        verify(badWordService).validateText(randomLetterRequest.getContent());
+    }
+
+    @Test
     @DisplayName("편지 작성 시 ParentLetterNotFoundException 에러")
     void writeRandomLetter_fail() {
         CreateLetterRequest request = CreateLetterRequest.builder()
@@ -160,7 +179,7 @@ class LetterServiceTest {
                 .content("답장 내용")
                 .category(Category.ETC)
                 .paperType(PaperType.PAPER)
-                .font(FontType.GYEONGGI)
+                .fontType(FontType.GYEONGGI)
                 .matchingId(100L)
                 .build();
 
@@ -171,6 +190,148 @@ class LetterServiceTest {
 
     }
 
+    @Test
+    @DisplayName("편지 작성 시 첫편지일때 matchingId가 잘 들어가는지 확인")
+    void createLetter_directLetter_updatesParentLetter() {
+        // given: 답장 편지 요청 (receiverId가 null이 아니므로 답장편지로 처리됨)
+        CreateLetterRequest request = CreateLetterRequest.builder()
+                .receiverId(3L)         // 답장을 받는 사용자 ID
+                .parentLetterId(10L)      // 부모 편지 ID (존재해야 함)
+                .title("답장 제목")
+                .content("답장 내용")
+                .category(Category.ETC)
+                .paperType(PaperType.PAPER)
+                .fontType(FontType.GYEONGGI)
+                .matchingId(100L)         // 업데이트할 매칭 ID
+                .build();
+
+        // 현재 로그인한 사용자 ID는 1L라고 가정 (작성자)
+        when(authFacade.getCurrentUserId()).thenReturn(1L);
+
+        // 부모 편지 (firstLetter) 생성: 부모 편지의 parentLetterId가 null이면 첫 편지이므로 업데이트 로직이 실행됨.
+        Letter firstLetter = Letter.builder()
+                .writerId(2L)
+                .receiverId(null)
+                .parentLetterId(null)   // 부모 편지이므로 null
+                .letterType(LetterType.RANDOM)
+                .title("첫 편지 제목")
+                .content("첫 편지 내용")
+                .category(Category.CONSULT)
+                .paperType(PaperType.BASIC)
+                .fontType(FontType.HIMCHAN)
+                .status(Status.IN_DELIVERY)
+                .build();
+        ReflectionTestUtils.setField(firstLetter, "id", 10L); // 부모 편지 ID 설정
+
+        // spy 객체로 wrapping하여 update 메서드 호출 여부를 검증
+        when(letterRepository.findById(request.getParentLetterId())).thenReturn(Optional.of(firstLetter));
+
+        // 새 편지 저장 시, 답장 편지로 생성된 편지를 반환하도록 설정
+        Letter newLetter = Letter.builder()
+                .writerId(1L)
+                .receiverId(request.getReceiverId())
+                .parentLetterId(request.getParentLetterId())
+                .letterType(LetterType.DIRECT)
+                .title(request.getTitle())
+                .content(request.getContent())
+                .category(request.getCategory())
+                .paperType(request.getPaperType())
+                .fontType(request.getFontType())
+                .status(Status.IN_DELIVERY)
+                .matchingId(request.getMatchingId())
+                .build();
+        ReflectionTestUtils.setField(newLetter, "id", 50L);
+        when(letterRepository.save(any(Letter.class))).thenReturn(newLetter);
+
+        when(authFacade.getZipCode()).thenReturn("12345");
+
+        // when: 서비스 메서드 호출
+        LetterResponse response = letterService.createLetter(request);
+
+        // then: spyFirstLetter의 업데이트 메서드들이 호출되었는지 검증
+
+        // 그리고 반환된 LetterResponse가 새로 저장된 편지 정보를 반영하는지도 검증
+        assertAll("답장 편지 응답 검증",
+                () -> assertNotNull(response),
+                () -> assertEquals(50L, response.getLetterId()),
+                () -> assertEquals("답장 제목", response.getTitle()),
+                () -> assertEquals("답장 내용", response.getContent()),
+                () -> assertEquals(Category.ETC, response.getCategory()),
+                () -> assertEquals(PaperType.PAPER, response.getPaperType()),
+                () -> assertEquals(FontType.GYEONGGI, response.getFontType())
+        );
+    }
+
+    @Test
+    @DisplayName("답장 편지 작성 시 부모 편지가 이미 답장인 경우 부모 업데이트 로직 미실행")
+    void createLetter_directLetter_noParentUpdate() {
+        // given: 답장 편지 요청 (부모 편지의 parentLetterId가 이미 null이 아님)
+        CreateLetterRequest request = CreateLetterRequest.builder()
+                .receiverId(3L)
+                .parentLetterId(10L)
+                .title("답장 제목")
+                .content("답장 내용")
+                .category(Category.ETC)
+                .paperType(PaperType.PAPER)
+                .fontType(FontType.GYEONGGI)
+                .matchingId(100L)
+                .build();
+
+        // 현재 로그인한 사용자 ID 설정
+        when(authFacade.getCurrentUserId()).thenReturn(1L);
+
+        // 부모 편지 생성: 이미 답장 편지인 경우이므로 parentLetterId는 null이 아님
+        Letter parentLetter = Letter.builder()
+                .writerId(2L)
+                .receiverId(3L)
+                .parentLetterId(99L) // null이 아니므로 업데이트 로직이 실행되지 않아야 함
+                .letterType(LetterType.DIRECT)
+                .title("부모 편지 제목")
+                .content("부모 편지 내용")
+                .category(Category.ETC)
+                .paperType(PaperType.PAPER)
+                .fontType(FontType.GYEONGGI)
+                .status(Status.DELIVERED)
+                .build();
+        ReflectionTestUtils.setField(parentLetter, "id", 10L);
+
+        // 부모 편지 객체를 spy로 wrapping하여 update 메서드 호출 여부를 검증
+        Letter parentLetterSpy = spy(parentLetter);
+        when(letterRepository.findById(request.getParentLetterId())).thenReturn(Optional.of(parentLetterSpy));
+
+        // 새 편지 저장을 위한 설정
+        Letter newLetter = Letter.builder()
+                .writerId(1L)
+                .receiverId(request.getReceiverId())
+                .parentLetterId(request.getParentLetterId())
+                .letterType(LetterType.DIRECT)
+                .title(request.getTitle())
+                .content(request.getContent())
+                .category(request.getCategory())
+                .paperType(request.getPaperType())
+                .fontType(request.getFontType())
+                .status(Status.IN_DELIVERY)
+                .matchingId(request.getMatchingId())
+                .build();
+        ReflectionTestUtils.setField(newLetter, "id", 50L);
+
+        when(letterRepository.save(any(Letter.class))).thenReturn(newLetter);
+        when(authFacade.getZipCode()).thenReturn("12345");
+
+        // when: 서비스 메서드 호출
+        LetterResponse response = letterService.createLetter(request);
+
+        // then: 반환된 응답 검증
+        assertAll("답장 편지 응답 검증",
+                () -> assertNotNull(response),
+                () -> assertEquals(50L, response.getLetterId()),
+                () -> assertEquals("답장 제목", response.getTitle()),
+                () -> assertEquals("답장 내용", response.getContent())
+        );
+
+        // then: 부모 편지에 대한 업데이트 메서드가 호출되지 않았음을 검증
+        verify(parentLetterSpy, never()).updateIsRead(anyBoolean());
+    }
 
     @Test
     @DisplayName("주고받는 답장 편지 작성 성공 테스트")
@@ -224,107 +385,154 @@ class LetterServiceTest {
     @Test
     @DisplayName("이전 편지 목록 조회 성공 테스트")
     void getPreviousLetters_success() {
+        // 현재 사용자 ID 설정
+        Long myId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(myId);
 
-        // 최초의 편지 A사용자
-        Letter currentLetter = Letter.builder()
-                .writerId(1L)
-                .receiverId(null)
-                .parentLetterId(null)
-                .letterType(LetterType.RANDOM)
-                .category(Category.ETC)
-                .title("현재 편지 제목")
-                .content("현재 편지 내용")
-                .fontType(FontType.GYEONGGI)
-                .paperType(PaperType.PAPER)
+        Long replyLetterId = 5L;
+        Long parentLetterId = 10L;
+        Long matchingId = 100L;
+        Letter replyLetter = Letter.builder()
+                .writerId(myId) // 답장 쓴 사람이 현재 사용자라고 가정
+                .parentLetterId(parentLetterId)
+                .matchingId(matchingId)
+                .title("답장 제목")
+                .content("답장 내용")
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .status(Status.DELIVERED)
                 .build();
-        ReflectionTestUtils.setField(currentLetter, "id", 1L);
+        ReflectionTestUtils.setField(replyLetter, "id", replyLetterId);
 
-        //B 사용자
-        Letter previousLetter1 = Letter.builder()
+        // 부모 편지: 답장 편지의 부모 편지 (부모 편지의 정보는 이전 편지 목록 조회에 사용)
+        Letter parentLetter = Letter.builder()
                 .writerId(2L)
-                .receiverId(1L)
-                .parentLetterId(currentLetter.getId())
-                .letterType(LetterType.DIRECT)
-                .category(Category.CONSULT)
-                .title("B 사용자 1번 편지에 대한 답장")
-                .content("내용 1")
-                .fontType(FontType.HIMCHAN)
-                .paperType(PaperType.COMFORT)
+                .title("부모 편지 제목")
+                .content("부모 편지 내용")
+                .fontType(FontType.KYOBO)
+                .paperType(PaperType.BASIC)
+                .status(Status.DELIVERED)
                 .build();
-        ReflectionTestUtils.setField(previousLetter1, "id", 2L);
+        ReflectionTestUtils.setField(parentLetter, "id", parentLetterId);
 
-        //B 사용자
-        Letter previousLetter2 = Letter.builder()
+        // 매칭 정보
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(myId)
+                .secondMemberId(2L)
+                .build();
+        ReflectionTestUtils.setField(matching, "id", matchingId);
+
+        // 이전 편지 목록: 부모 편지를 기준으로 조회된 편지들
+        Letter previousLetter = Letter.builder()
                 .writerId(2L)
-                .receiverId(1L)
-                .parentLetterId(currentLetter.getId())
+                .receiverId(myId)
+                .parentLetterId(parentLetterId)
                 .letterType(LetterType.DIRECT)
-                .category(Category.CONSULT)
-                .title("B사용자 1번 편지에 대한 2번째 답장")
-                .content("내용 2")
+                .title("이전 편지 제목")
+                .content("이전 편지 내용")
                 .fontType(FontType.HIMCHAN)
                 .paperType(PaperType.COMFORT)
+                .status(Status.DELIVERED)
                 .build();
-        ReflectionTestUtils.setField(previousLetter2, "id", 3L);
+        ReflectionTestUtils.setField(previousLetter, "id", 11L);
+        List<Letter> previousLetters = List.of(previousLetter);
 
-        //A 사용자
-        Letter previousLetter3 = Letter.builder()
-                .writerId(1L)
-                .receiverId(2L)
-                .parentLetterId(previousLetter1.getId())
-                .letterType(LetterType.DIRECT)
-                .category(Category.CONSULT)
-                .title("A사용자 1번 편지에 대한 답장")
-                .content("내용 2")
-                .fontType(FontType.HIMCHAN)
-                .paperType(PaperType.COMFORT)
-                .build();
-        ReflectionTestUtils.setField(previousLetter3, "id", 4L);
-
-        //A 사용자
-        Letter previousLetter4 = Letter.builder()
-                .writerId(1L)
-                .receiverId(2L)
-                .parentLetterId(previousLetter2.getId())
-                .letterType(LetterType.DIRECT)
-                .category(Category.CONSULT)
-                .title("A사용자 2번 편지에 대한 답장")
-                .content("내용 2")
-                .fontType(FontType.HIMCHAN)
-                .paperType(PaperType.COMFORT)
-                .build();
-        ReflectionTestUtils.setField(previousLetter4, "id", 5L);
-
-        List<Letter> previousLetters = List.of(previousLetter4);
-
-        //zipCode 추가로 맴버 추가
-        Member member = Member.builder()
-                .zipCode("12345")
-                .build();
-        ReflectionTestUtils.setField(member, "id", 1L); //아이디
-
-        // repository: letterId에 해당하는 편지와, 부모 ID로 이전 편지 목록 조회
-        when(letterRepository.findById(previousLetter4.getId())).thenReturn(Optional.of(previousLetter4));
-        when(letterRepository.findLettersByParentLetterId(previousLetter4.getParentLetterId())).thenReturn(previousLetters);
-        when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+        when(letterRepository.findById(replyLetterId)).thenReturn(Optional.of(replyLetter));
+        when(letterRepository.findLettersByParentLetterId(parentLetterId)).thenReturn(previousLetters);
+        when(letterMatchingRepository.findById(matchingId)).thenReturn(Optional.of(matching));
+        when(memberRepository.findById(2L)).thenReturn(Optional.of(Member.builder().zipCode("12345").build()));
 
         // when
-        List<LetterResponse> responses = letterService.getPreviousLetters(previousLetter4.getId());
+        List<LetterResponse> responses = letterService.getPreviousLetters(replyLetterId);
 
         // then
         assertAll("이전 편지 목록 검증",
                 () -> assertNotNull(responses),
                 () -> assertEquals(1, responses.size()),
-                () -> assertEquals("A사용자 2번 편지에 대한 답장", responses.get(0).getTitle()),
-                () -> assertEquals("내용 2", responses.get(0).getContent()),
-                () -> assertEquals("12345", member.getZipCode())
+                () -> assertEquals("이전 편지 제목", responses.get(0).getTitle()),
+                () -> assertEquals("이전 편지 내용", responses.get(0).getContent()),
+                () -> assertEquals("12345", responses.get(0).getZipCode())
         );
 
-        // repository의 각 메서드가 올바른 인자로 호출되었는지 검증
-        verify(letterRepository).findById(previousLetter4.getId());
-        verify(letterRepository).findLettersByParentLetterId(previousLetter4.getParentLetterId());
-        verify(memberRepository).findById(1L);
+        verify(letterRepository).findById(replyLetterId);
+        verify(letterRepository).findLettersByParentLetterId(parentLetterId);
+        verify(letterMatchingRepository).findById(matchingId);
+        verify(memberRepository).findById(2L);
     }
+
+    @Test
+    @DisplayName("getPreviousLetters - 매칭 정보가 없으면 MatchingNotFoundException 발생")
+    void getPreviousLetters_matchingNotFound() {
+        // given
+        Long myId = 1L;
+        Long letterId = 5L; // 테스트용 편지 ID
+        Long parentLetterId = 10L;
+        Long matchingId = 100L; // 매칭 정보가 없는 경우
+
+        when(authFacade.getCurrentUserId()).thenReturn(myId);
+
+        Letter letter = Letter.builder()
+                .writerId(2L)
+                .parentLetterId(parentLetterId)
+                .matchingId(matchingId)
+                .build();
+        ReflectionTestUtils.setField(letter, "id", letterId);
+        when(letterRepository.findById(letterId)).thenReturn(Optional.of(letter));
+
+        when(letterMatchingRepository.findById(matchingId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(MatchingNotFoundException.class, () -> letterService.getPreviousLetters(letterId));
+
+        // verify 호출 여부 확인
+        verify(letterRepository).findById(letterId);
+        verify(letterMatchingRepository).findById(matchingId);
+    }
+
+    @Test
+    @DisplayName("getPreviousLetters - 현재 사용자가 매칭에 속하지 않은 경우 MatchingNotBelongException 발생")
+    void getPreviousLetters_whenUserNotBelong() {
+        // given
+        Long currentUserId = 1L; // 현재 로그인한 사용자 ID
+        Long replyLetterId = 5L; // 답장 편지의 ID
+        Long parentLetterId = 10L; // 답장 편지의 부모 편지 ID
+        Long matchingId = 100L;    // 답장 편지에 설정된 매칭 ID
+
+        // 답장 편지 생성
+        Letter replyLetter = Letter.builder()
+                .writerId(2L) // 작성자는 2번 (현재 사용자는 1번)
+                .parentLetterId(parentLetterId)
+                .matchingId(matchingId)
+                .title("답장 편지 제목")
+                .content("답장 편지 내용")
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .status(Status.DELIVERED)
+                .build();
+        ReflectionTestUtils.setField(replyLetter, "id", replyLetterId);
+
+        // 매칭 정보 생성 (매칭된 두 사용자 모두 현재 사용자가 아닌 값으로 설정)
+        LetterMatching letterMatching = LetterMatching.builder()
+                .firstMemberId(2L)
+                .secondMemberId(3L)
+                .build();
+        ReflectionTestUtils.setField(letterMatching, "id", matchingId);
+
+        when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
+        when(letterRepository.findById(replyLetterId)).thenReturn(Optional.of(replyLetter)); // 답장 편지 조회 시
+        when(letterMatchingRepository.findById(matchingId)).thenReturn(Optional.of(letterMatching));
+
+        // when & then
+        assertThrows(MatchingNotBelongException.class, () -> {
+            letterService.getPreviousLetters(replyLetterId);
+        });
+
+        // verify: 해당 메서드들이 호출되었는지 확인
+        verify(letterRepository).findById(replyLetterId);
+        verify(letterMatchingRepository).findById(matchingId);
+    }
+
+
 
 
     @Test
@@ -375,22 +583,26 @@ class LetterServiceTest {
     }
 
     @Test
-    @DisplayName("letterId로 편지 단건 조회 ")
+    @DisplayName("letterId로 편지 단건 조회 성공")
     void getLetter_success() {
-        ReflectionTestUtils.setField(savedRandomLetter, "id", 1L);
-
-        when(letterRepository.findById(savedRandomLetter.getId())).thenReturn(Optional.of(savedRandomLetter));
-
         Member member = Member.builder()
                 .zipCode("12345")
                 .build();
-        // savedRandomLetter의 writerId와 동일한 값으로 설정 (예를 들어 1L)
         ReflectionTestUtils.setField(member, "id", savedRandomLetter.getWriterId());
+        ReflectionTestUtils.setField(savedRandomLetter, "id", 1L);
+
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(member.getId())
+                .secondMemberId(99L).build();
+
+        when(authFacade.getCurrentUserId()).thenReturn(member.getId());
+        when(letterRepository.findById(savedRandomLetter.getId())).thenReturn(Optional.of(savedRandomLetter));
         when(memberRepository.findById(savedRandomLetter.getWriterId())).thenReturn(Optional.of(member));
+        when(letterMatchingRepository.findById(savedRandomLetter.getMatchingId())).thenReturn(Optional.ofNullable(matching));
 
         LetterResponse response = letterService.getLetterById(savedRandomLetter.getId());
 
-        // then: 반환된 응답 DTO 검증
+        // then
         assertAll("답장 조회 응답 검증",
                 () -> assertNotNull(response),
                 () -> assertNotNull(response.getLetterId()),
@@ -399,11 +611,70 @@ class LetterServiceTest {
                 () -> assertEquals(PaperType.COMFORT, response.getPaperType()),
                 () -> assertEquals(FontType.HIMCHAN, response.getFontType())
         );
-
-        //verify 메서드로 letterRepository.save() 메서드가 정확히 1번 호출되었는지 확인
         verify(letterRepository).findById(savedRandomLetter.getId());
         verify(memberRepository).findById(savedRandomLetter.getWriterId());
+    }
 
+    @Test
+    @DisplayName("letterId로 편지 단건 조회 실패 ")
+    void getLetter_fail() {
+        ReflectionTestUtils.setField(savedRandomLetter, "id", 1L);
+        ReflectionTestUtils.setField(savedRandomLetter, "matchingId", 100L);
+
+        when(authFacade.getCurrentUserId()).thenReturn(10L);
+
+        when(letterRepository.findById(1L)).thenReturn(Optional.of(savedRandomLetter));
+
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(22L)
+                .secondMemberId(99L)
+                .build();
+        ReflectionTestUtils.setField(matching, "id", 100L);
+        when(letterMatchingRepository.findById(100L)).thenReturn(Optional.of(matching));
+
+        assertThrows(MatchingNotBelongException.class, () -> letterService.getLetterById(1L));
+    }
+
+    @Test
+    @DisplayName("getLetterById - 편지 조회 시 읽음 상태로 업데이트")
+    void getLetterById_updatesReadStatus() {
+        // given
+        Long letterId = 1L;
+        Long myId = 1L;
+
+        Letter letter = Letter.builder()
+                .writerId(2L)
+                .receiverId(myId)
+                .matchingId(100L)
+                .letterType(LetterType.DIRECT)
+                .title("테스트 제목")
+                .content("테스트 내용")
+                .build();
+        ReflectionTestUtils.setField(letter, "id", letterId);
+        ReflectionTestUtils.setField(letter, "isRead", false);
+
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(myId)
+                .secondMemberId(2L)
+                .build();
+        ReflectionTestUtils.setField(matching, "id", 100L);
+
+        Member writer = Member.builder()
+                .zipCode("12345")
+                .build();
+        ReflectionTestUtils.setField(writer, "id", 2L);
+
+        when(authFacade.getCurrentUserId()).thenReturn(myId);
+        when(letterRepository.findById(letterId)).thenReturn(Optional.of(letter));
+        when(letterMatchingRepository.findById(100L)).thenReturn(Optional.of(matching));
+        when(memberRepository.findById(2L)).thenReturn(Optional.of(writer));
+
+        // when
+        letterService.getLetterById(letterId);
+
+        // then
+        assertTrue(letter.isRead());
+        verify(letterRepository).save(letter);
     }
 
     @DisplayName("편지 평가 실패 - 편지에 대해 평가할 수 있는 권한 없음")

@@ -7,11 +7,11 @@ import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.TemporarySaveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
+import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.enums.LetterType;
 import io.crops.warmletter.domain.letter.enums.Status;
-import io.crops.warmletter.domain.letter.exception.LetterNotBelongException;
-import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
-import io.crops.warmletter.domain.letter.exception.ParentLetterNotFoundException;
+import io.crops.warmletter.domain.letter.exception.*;
+import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
@@ -29,6 +29,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class LetterService {
 
+    private final LetterMatchingRepository letterMatchingRepository;
     private final LetterRepository letterRepository;
     private final MemberRepository memberRepository;
     private final BadWordService badWordService;
@@ -70,9 +71,11 @@ public class LetterService {
 
             //첫편지면 matchingId 넣어줌 , 받는사람도 넣어줌.
             Letter firstLetter = letterRepository.findById(request.getParentLetterId()).orElseThrow(ParentLetterNotFoundException::new);
-            if(firstLetter.getParentLetterId() == null) { //todo 테스트 코드 작성해야함
+            if(firstLetter.getParentLetterId() == null) {
                 firstLetter.updateMatchingId(request.getMatchingId());
                 firstLetter.updateReceiverId(writerId);
+                firstLetter.updateLetterType(LetterType.DIRECT);
+                firstLetter.updateIsRead(true);
             }
         }
         Letter letter = builder.build();
@@ -80,17 +83,20 @@ public class LetterService {
 
         String zipCode = authFacade.getZipCode(); //현제 로그인한 유저 ZipCode
 
-        //if(request.getReceiverId() != null){
-        //    notificationFacade.sendNotification(zipCode,savedLetter.getReceiverId(), AlarmType.LETTER, savedLetter.getId().toString());
-        //}
-
         return LetterResponse.fromEntity(savedLetter, zipCode);
     }
 
     public List<LetterResponse> getPreviousLetters(Long letterId) {
+        Long myId = authFacade.getCurrentUserId();
 
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
         Long parentLetterId = letter.getParentLetterId(); //답장하는 편지의 부모 id
+
+        Long matchingId = letter.getMatchingId();
+        LetterMatching letterMatching = letterMatchingRepository.findById(matchingId).orElseThrow(MatchingNotFoundException::new);
+        if (!letterMatching.getFirstMemberId().equals(myId) && !letterMatching.getSecondMemberId().equals(myId)) {
+            throw new MatchingNotBelongException();
+        }
 
         List<Letter> lettersByParentId = letterRepository.findLettersByParentLetterId(parentLetterId); //부모아이디로 편지 찾기
 
@@ -109,10 +115,25 @@ public class LetterService {
         letter.inactive();
     }
 
+
+    @Transactional
     public LetterResponse getLetterById(Long letterId) {
+        Long myId = authFacade.getCurrentUserId();
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
+
+        Long matchingId = letter.getMatchingId();
+        LetterMatching letterMatching = letterMatchingRepository.findById(matchingId).orElseThrow(MatchingNotFoundException::new);
+
+        if (!letterMatching.getFirstMemberId().equals(myId) && !letterMatching.getSecondMemberId().equals(myId)) {
+            throw new MatchingNotBelongException();
+        }
+
         String zipCode = memberRepository.findById(letter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode(); //편지를 쓴 사람의 zipCode
-        return LetterResponse.fromEntityForDetailView(letter, zipCode);
+
+        letter.updateIsRead(true); //편지 조회 시 읽기
+        letterRepository.save(letter);
+
+        return LetterResponse.fromEntityForDetailView(letter, zipCode, letterMatching.isActive());
     }
 
     @Transactional

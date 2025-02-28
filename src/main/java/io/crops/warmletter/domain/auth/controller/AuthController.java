@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.auth.controller;
 
+import io.crops.warmletter.domain.auth.docs.AuthControllerDocs;
 import io.crops.warmletter.domain.auth.dto.TokenResponse;
 import io.crops.warmletter.domain.auth.dto.TokenStorageResponse;
 import io.crops.warmletter.domain.auth.service.AuthService;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-public class AuthController {
+public class AuthController implements AuthControllerDocs {
 
     private final AuthService authService;
 

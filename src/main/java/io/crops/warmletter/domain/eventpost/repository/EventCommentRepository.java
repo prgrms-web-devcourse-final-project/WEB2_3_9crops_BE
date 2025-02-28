@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface EventCommentRepository extends JpaRepository<EventComment, Long>{
@@ -15,4 +16,6 @@ public interface EventCommentRepository extends JpaRepository<EventComment, Long
             "FROM EventComment ec JOIN Member m ON ec.writerId = m.id " +
             "WHERE ec.eventPostId = :eventPostId AND ec.isActive = true")
     List<EventCommentsResponse> findEventCommentsWithZipCode(Long eventPostId);
+
+    Optional<EventComment> findByIdAndWriterId(Long id, Long writerId);
 }

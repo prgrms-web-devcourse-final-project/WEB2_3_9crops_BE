@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.letter.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.letter.dto.response.MailboxDetailResponse;
 import io.crops.warmletter.domain.letter.dto.response.MailboxResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterMatching;
@@ -17,9 +18,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -220,4 +223,99 @@ class MailboxServiceTest {
         verify(letterMatchingRepository).findById(matchingId);
         verify(letterMatchingRepository).existsByIdAndFirstMemberIdOrSecondMemberId(matchingId, firstMemberId, firstMemberId);
     }
+
+
+    @DisplayName("편지함 상세 조회 성공 테스트")
+    @Test
+    void detailMailbox_Success() {
+        // given
+        Long myId = 1L;
+        Long matchingId = 100L;
+        Long oppositeId = 2L;
+
+        // 현재 사용자 ID 설정
+        when(authFacade.getCurrentUserId()).thenReturn(myId);
+
+        // 매칭 객체 생성
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(myId)
+                .secondMemberId(oppositeId)
+                .build();
+        ReflectionTestUtils.setField(matching, "isActive", true);
+
+        when(letterMatchingRepository.findById(matchingId)).thenReturn(Optional.of(matching));
+
+        // 편지 객체 생성
+        Letter myLetter = Letter.builder()
+                .writerId(myId)
+                .title("내가 보낸 편지")
+                .content("내가 보낸 내용")
+                .build();
+        ReflectionTestUtils.setField(myLetter, "id", 10L);
+        ReflectionTestUtils.setField(myLetter, "createdAt", LocalDateTime.now().minusDays(1));
+
+        Letter oppositeLetter = Letter.builder()
+                .writerId(oppositeId)
+                .title("상대방이 보낸 편지")
+                .content("상대방이 보낸 내용")
+                .build();
+        ReflectionTestUtils.setField(oppositeLetter, "id", 11L);
+        ReflectionTestUtils.setField(oppositeLetter, "createdAt", LocalDateTime.now());
+
+        List<Letter> letters = List.of(oppositeLetter, myLetter);
+
+        // 페이징 처리
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("id").descending());
+        Page<Letter> letterPage = new PageImpl<>(letters, pageable, letters.size());
+
+        when(letterRepository.findByMatchingIdOrderByIdDesc(matchingId, pageable)).thenReturn(letterPage);
+
+        // when
+        Page<MailboxDetailResponse> result = mailBoxService.detailMailbox(matchingId, pageable);
+
+        // then
+        MailboxDetailResponse firstResponse = result.getContent().get(0);
+        assertEquals(11L, firstResponse.getLetterId());
+        assertEquals("상대방이 보낸 편지", firstResponse.getTitle());
+
+        MailboxDetailResponse secondResponse = result.getContent().get(1);
+        assertEquals(10L, secondResponse.getLetterId());
+        assertEquals("내가 보낸 편지", secondResponse.getTitle());
+
+        // 호출 검증
+        verify(authFacade).getCurrentUserId();
+        verify(letterMatchingRepository).findById(matchingId);
+        verify(letterRepository).findByMatchingIdOrderByIdDesc(matchingId, pageable);
+    }
+
+
+    @DisplayName("편지함 상세 조회 실패 - 속하지 않은 매칭")
+    @Test
+    void detailMailbox_WithNotBelongMatching_ShouldThrowException() {
+        // given
+        Long myId = 1L;
+        Long matchingId = 100L;
+        Long firstMemberId = 2L;
+        Long secondMemberId = 3L;
+
+        when(authFacade.getCurrentUserId()).thenReturn(myId);
+
+        // 현재 사용자가 속하지 않은 매칭 생성
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(firstMemberId)
+                .secondMemberId(secondMemberId)
+                .build();
+
+        when(letterMatchingRepository.findById(matchingId)).thenReturn(Optional.of(matching));
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        // when & then
+        assertThrows(MatchingNotBelongException.class,
+                () -> mailBoxService.detailMailbox(matchingId, pageable));
+
+        verify(authFacade).getCurrentUserId();
+        verify(letterMatchingRepository).findById(matchingId);
+    }
+
 }

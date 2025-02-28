@@ -17,9 +17,9 @@ import java.util.List;
 public class NotificationController {
     private final NotificationService notificationService;
 
-    @GetMapping(value = "/sub/{memberId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter subscribeNotification(@PathVariable Long memberId) {
-        return notificationService.subscribeNotification(memberId);
+    @GetMapping(value = "/sub", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter subscribeNotification() {
+        return notificationService.subscribeNotification();
     }
 
     @PatchMapping("/{notificationId}/read")

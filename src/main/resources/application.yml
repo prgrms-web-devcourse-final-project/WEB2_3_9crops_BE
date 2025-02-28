@@ -109,4 +109,3 @@ logging:
     org.springframework.security: DEBUG
     io.corps.warmletter: DEBUG
     org.springframework.web: DEBUG
-    org.springframework.data.redis: DEBUG  # 레디스 로깅 추가

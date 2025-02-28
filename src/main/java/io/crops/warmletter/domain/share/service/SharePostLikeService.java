@@ -1,8 +1,8 @@
 package io.crops.warmletter.domain.share.service;
-
+import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.cache.PostLikeRedisManager;
 import io.crops.warmletter.domain.share.dto.response.SharePostLikeResponse;
-import io.crops.warmletter.domain.share.exception.SharePostNotFoundException;
+import io.crops.warmletter.domain.share.exception.ShareInvalidInputValue;
 import io.crops.warmletter.domain.share.repository.SharePostLikeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,15 +12,21 @@ import org.springframework.stereotype.Service;
 public class SharePostLikeService {
 
     private final PostLikeRedisManager postLikeRedisManager;
-
     private final SharePostLikeRepository sharePostLikeRepository;
-    public void toggleLike(Long postId, Long memberId) {
+    private final AuthFacade authFacade;
+
+    public void toggleLike(Long postId) {
+        Long memberId = authFacade.getCurrentUserId();
         postLikeRedisManager.toggleLike(postId, memberId);
     }
-    public SharePostLikeResponse getLikeCountAndStatus(Long sharePostId, Long memberId) {
-        if (sharePostId == null)
-            throw new SharePostNotFoundException();
 
-        return sharePostLikeRepository.getLikeCountAndStatus(sharePostId, memberId);
+    public SharePostLikeResponse getLikeCountAndStatus(Long sharePostId) {
+
+        Long memberId = authFacade.getCurrentUserId();
+
+        if (sharePostId == null)
+            throw new ShareInvalidInputValue();
+
+        return sharePostLikeRepository.getLikeCountAndStatus(sharePostId,memberId);
     }
 }

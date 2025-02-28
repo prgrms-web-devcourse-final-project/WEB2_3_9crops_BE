@@ -15,7 +15,7 @@
         INVALID_PAGE_REQUEST("SHARE-001", HttpStatus.BAD_REQUEST, "요청페이지 번호가 0보다 작습니다."),
         SHARE_POST_NOT_FOUND("SHARE-002",HttpStatus.NOT_FOUND,"해당 공유 게시글을 찾을 수 없습니다."),
         SHARE_PROPOSAL_NOTFOUND("SHARE-003",HttpStatus.NOT_FOUND,"해당 공유 제안을 찾을 수 없습니다."),
-
+        NOT_BELONG_TO_SHARE("SHARE-004", HttpStatus.FORBIDDEN, "해당 공유에 권한이 없습니다."),
 
         // 이벤트 게시판 관련 에러 코드
         EVENT_POST_NOT_FOUND("EVENT-001",HttpStatus.NOT_FOUND,"해당 이벤트 게시글을 찾을 수 없습니다."),
@@ -56,6 +56,7 @@
         NOT_BELONG_TO_LETTER("LET-006", HttpStatus.FORBIDDEN, "편지에 대한 권한이 없습니다."),
         ALREADY_APPROVED("LET-007", HttpStatus.CONFLICT, "이미 승인된 편지입니다."),
         DUPLICATE_LETTER_MATCH("LET-008", HttpStatus.CONFLICT, "이미 다른 사용자가 매칭된 편지입니다."),
+        PARENT_LETTER_FOUND("LET-009", HttpStatus.NOT_FOUND, "부모 편지를 찾을 수 없습니다."),
 
         // Member 관련
         MEMBER_NOT_FOUND("MEM-001", HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."),

@@ -4,6 +4,7 @@ import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -28,4 +29,9 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
     List<RandomLetterResponse> findRandomLettersByCategory(@Param("category") Category category, Long currentUserId, Pageable pageable);
 
     Optional<Letter> findByIdAndReceiverId(Long id, Long receiverId);
+
+    Optional<Letter> findByIdAndWriterId(Long letterId, Long writerId);
+
+    Page<Letter> findByMatchingIdOrderByIdDesc(Long matchingId, Pageable pageable);
+
 }

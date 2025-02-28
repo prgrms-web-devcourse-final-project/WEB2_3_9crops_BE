@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.letter.controller;
 
+import io.crops.warmletter.domain.letter.controller.docs.RandomLetterControllerDocs;
 import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
@@ -19,7 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping(("/api/random-letters/"))
 @RequiredArgsConstructor
-public class RandomLetterController {
+public class RandomLetterController implements RandomLetterControllerDocs {
 
     private final RandomLetterService randomLetterService;
 

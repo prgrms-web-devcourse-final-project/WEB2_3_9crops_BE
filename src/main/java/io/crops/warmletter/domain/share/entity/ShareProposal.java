@@ -13,6 +13,12 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(
+        indexes = {
+                @Index(name = "idx_shareproposal_requester", columnList = "requesterId"),
+                @Index(name = "idx_shareproposal_recipient", columnList = "recipientId")
+        }
+)
 public class ShareProposal extends BaseEntity {
 
     @Id
@@ -30,10 +36,6 @@ public class ShareProposal extends BaseEntity {
 
     @Column(nullable = false)
     private String message;
-
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
 
     @Builder
     public ShareProposal(Long requesterId, Long recipientId, String message) {

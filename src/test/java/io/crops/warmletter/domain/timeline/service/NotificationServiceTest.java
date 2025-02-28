@@ -1,5 +1,7 @@
 package io.crops.warmletter.domain.timeline.service;
 
+import io.crops.warmletter.domain.auth.exception.UnauthorizedException;
+import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.timeline.dto.response.NotificationResponse;
 import io.crops.warmletter.domain.timeline.dto.response.ReadNotificationResponse;
 import io.crops.warmletter.domain.timeline.entity.Timeline;
@@ -7,6 +9,7 @@ import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import io.crops.warmletter.domain.timeline.exception.NotificationNotFoundException;
 import io.crops.warmletter.domain.timeline.repository.TimelineRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
+import io.crops.warmletter.global.error.exception.AuthException;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,6 +44,9 @@ class NotificationServiceTest {
     private NotificationService notificationService;
 
     @Mock
+    private AuthFacade authFacade;
+
+    @Mock
     private SseEmitter emitter;
 
     private Map<Long, SseEmitter> emitters;
@@ -61,9 +67,10 @@ class NotificationServiceTest {
     @Test
     @DisplayName("알림 구독 생성 성공")
     void get_notificationSub_success() {
-        long memberId1 = 1L;
+        Long memberId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
 
-        SseEmitter sseEmitter = notificationService.subscribeNotification(memberId1);
+        SseEmitter sseEmitter = notificationService.subscribeNotification();
 
         assertNotNull(sseEmitter);
     }
@@ -72,7 +79,7 @@ class NotificationServiceTest {
     @DisplayName("알림 생성 성공 - LETTER")
     void create_notificationLETTER_success() {
         String zipCode = "12345";
-        long receiverId = 1L;
+        Long receiverId = 1L;
         AlarmType alarmType = AlarmType.LETTER;
         String letterId = "1";
 
@@ -92,7 +99,7 @@ class NotificationServiceTest {
     @DisplayName("알림 생성 성공 - REPORT")
     void create_notificationREPORT_success() {
         String zipCode = "12345";
-        long receiverId = 1L;
+        Long receiverId = 1L;
         AlarmType alarmType = AlarmType.REPORT;
         String letterId = "1";
 
@@ -111,7 +118,7 @@ class NotificationServiceTest {
     @DisplayName("알림 생성 성공 - SHARE")
     void create_notificationSHARE_success() {
         String zipCode = "12345";
-        long receiverId = 1L;
+        Long receiverId = 1L;
         AlarmType alarmType = AlarmType.SHARE;
         String letterId = "1";
 
@@ -131,7 +138,7 @@ class NotificationServiceTest {
     @DisplayName("알림 생성 성공 - POSTED")
     void create_notificationPOSTED_success() {
         String zipCode = "12345";
-        long receiverId = 1L;
+        Long receiverId = 1L;
         AlarmType alarmType = AlarmType.POSTED;
         String letterId = "1";
 
@@ -150,7 +157,7 @@ class NotificationServiceTest {
     @Test
     @DisplayName("알림 전송 성공")
     void create_sendEventToClient_success() throws IOException{
-        long receiverId = 1L;
+        Long receiverId = 1L;
         String title = "12345님이 편지를 보냈습니다.";
         AlarmType alarmType = AlarmType.LETTER;
 
@@ -172,7 +179,7 @@ class NotificationServiceTest {
     @Test
     @DisplayName("알림 전송 실패 - 일치하는 receiverId 없음")
     void create_sendEventToClient_notExistsReceiverId() throws IOException {
-        long receiverId = 1L;
+        Long receiverId = 1L;
         String title = "12345님이 편지를 보냈습니다.";
         AlarmType alarmType = AlarmType.LETTER;
 
@@ -190,12 +197,14 @@ class NotificationServiceTest {
     @DisplayName("알림 읽음 상태 변경 성공 - false 에서 true")
     void update_notificationRead_success(){
         //given
-        long notificationId = 1L;
+        Long notificationId = 1L;
+        Long memberId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
 
-        Timeline timeline = Timeline.builder().memberId(1).title("제목").content("내용").alarmType(AlarmType.LETTER).build();
+        Timeline timeline = Timeline.builder().memberId(memberId).title("제목").content("내용").alarmType(AlarmType.LETTER).build();
         ReflectionTestUtils.setField(timeline, "id", notificationId);
 
-        when(timelineRepository.findById(any(Long.class))).thenReturn(Optional.of(timeline));
+        when(timelineRepository.findByIdAndMemberId(any(Long.class),any(Long.class))).thenReturn(Optional.of(timeline));
 
         //when
         ReadNotificationResponse readNotificationResponse = notificationService.updateNotificationRead(notificationId);
@@ -209,13 +218,15 @@ class NotificationServiceTest {
     @DisplayName("알림 읽음 상태 변경 성공 - 변경 없음")
     void update_notificationAlreadyRead_success(){
         //given
-        long notificationId = 1L;
+        Long notificationId = 1L;
+        Long memberId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
 
-        Timeline timeline = Timeline.builder().memberId(1).title("제목").content("내용").alarmType(AlarmType.LETTER).build();
+        Timeline timeline = Timeline.builder().memberId(memberId).title("제목").content("내용").alarmType(AlarmType.LETTER).build();
         ReflectionTestUtils.setField(timeline, "id", notificationId);
         ReflectionTestUtils.setField(timeline, "isRead", true);
 
-        when(timelineRepository.findById(any(Long.class))).thenReturn(Optional.of(timeline));
+        when(timelineRepository.findByIdAndMemberId(any(Long.class),any(Long.class))).thenReturn(Optional.of(timeline));
 
         //when
         ReadNotificationResponse readNotificationResponse = notificationService.updateNotificationRead(notificationId);
@@ -229,7 +240,9 @@ class NotificationServiceTest {
     @DisplayName("알림 읽음 상태 변경 실패 - 일치하는 notificaitonId 없음 ")
     void update_notification_notFound(){
         //given
-        when(timelineRepository.findById(any(Long.class))).thenThrow(new NotificationNotFoundException());
+        Long memberId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+        when(timelineRepository.findByIdAndMemberId(any(Long.class),any(Long.class))).thenThrow(new NotificationNotFoundException());
 
         //when
         BusinessException exception = assertThrows(NotificationNotFoundException.class, ()-> notificationService.updateNotificationRead(999L));
@@ -242,10 +255,12 @@ class NotificationServiceTest {
     @DisplayName("모든 알림 읽음 상태 변경 성공 - false 에서 true")
     void update_notificationAllRead_success(){
         //given
+        Long memberId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
 
-        Timeline timeline1 = Timeline.builder().memberId(1L).title("제목1").content("내용1").alarmType(AlarmType.LETTER).build();
+        Timeline timeline1 = Timeline.builder().memberId(memberId).title("제목1").content("내용1").alarmType(AlarmType.LETTER).build();
         ReflectionTestUtils.setField(timeline1, "id", 1L);
-        Timeline timeline3 = Timeline.builder().memberId(1L).title("제목3").content("내용3").alarmType(AlarmType.LETTER).build();
+        Timeline timeline3 = Timeline.builder().memberId(memberId).title("제목3").content("내용3").alarmType(AlarmType.LETTER).build();
         ReflectionTestUtils.setField(timeline3, "id", 3L);
 
         List<Timeline> timelines = Arrays.asList(timeline1, timeline3);

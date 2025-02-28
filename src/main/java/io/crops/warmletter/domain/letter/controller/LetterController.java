@@ -1,13 +1,16 @@
 package io.crops.warmletter.domain.letter.controller;
 
+import io.crops.warmletter.domain.letter.controller.docs.LetterControllerDocs;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
+import io.crops.warmletter.domain.letter.dto.request.TemporarySaveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.service.LetterService;
 import io.crops.warmletter.global.response.BaseResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +20,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
-public class LetterController {
+public class LetterController implements LetterControllerDocs {
 
     private final LetterService letterService;
 
@@ -32,7 +35,6 @@ public class LetterController {
         return ResponseEntity.ok(response);
     }
 
-
     /**
      * 지정된 letterId의 이전 편지를 조회합니다.
      */
@@ -46,13 +48,13 @@ public class LetterController {
     /**
      * 지정된 letterId 삭제 (softDelete)
      */
+
     @DeleteMapping("/letters/{letterId}")
     public ResponseEntity<BaseResponse<Void>> deleteLetter(@PathVariable Long letterId) {
         letterService.deleteLetter(letterId);
         BaseResponse<Void> response = BaseResponse.of(null, "편지 삭제 완료");
         return ResponseEntity.ok(response);
     }
-
 
     /**
      * 지정된 letterId로 편지 단건 조회
@@ -69,4 +71,13 @@ public class LetterController {
         letterService.evaluateLetter(letterId, request);
         return ResponseEntity.ok(BaseResponse.of(null, "편지 평가 완료"));
     }
+
+    @PostMapping("/letters/{letterId}/temporary-save")
+    public ResponseEntity<BaseResponse<LetterResponse>> temporarySaveLetter(
+            @PathVariable (name="letterId")Long letterId, @Valid @RequestBody TemporarySaveLetterRequest request) {
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new BaseResponse<>(letterService.temporarySaveLetter(letterId, request),"임시 저장 완료 "));
+    }
+
 }

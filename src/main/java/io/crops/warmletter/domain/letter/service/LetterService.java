@@ -4,16 +4,19 @@ import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
+import io.crops.warmletter.domain.letter.dto.request.TemporarySaveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.LetterType;
 import io.crops.warmletter.domain.letter.enums.Status;
 import io.crops.warmletter.domain.letter.exception.LetterNotBelongException;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
+import io.crops.warmletter.domain.letter.exception.ParentLetterNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
+import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +35,8 @@ public class LetterService {
     private final MemberFacade memberFacade;
     private final AuthFacade authFacade;
 
+    private final NotificationFacade notificationFacade;
+
     @Transactional
     public LetterResponse createLetter(CreateLetterRequest request) {
         badWordService.validateText(request.getTitle());
@@ -44,7 +49,7 @@ public class LetterService {
                 .category(request.getCategory())
                 .title(request.getTitle())
                 .content(request.getContent())
-                .fontType(request.getFont())
+                .fontType(request.getFontType())
                 .paperType(request.getPaperType());
 
         //랜덤 편지로 가는 첫 편지 작성, 받는사람, 상위편지가 없으면 첫 편지 전송
@@ -52,19 +57,32 @@ public class LetterService {
             builder.receiverId(null)
                     .parentLetterId(null)
                     .letterType(LetterType.RANDOM)
-                    .status(Status.IN_DELIVERY);
+                    .status(Status.IN_DELIVERY)
+                    .matchingId(null);
         }
         //주고받는 답장편지, 랜덤편지에 대한 답장
         else {
             builder.receiverId(request.getReceiverId())
                     .parentLetterId(request.getParentLetterId())
                     .letterType(LetterType.DIRECT)
-                    .status(Status.IN_DELIVERY);
+                    .status(Status.IN_DELIVERY)
+                    .matchingId(request.getMatchingId());
+
+            //첫편지면 matchingId 넣어줌 , 받는사람도 넣어줌.
+            Letter firstLetter = letterRepository.findById(request.getParentLetterId()).orElseThrow(ParentLetterNotFoundException::new);
+            if(firstLetter.getParentLetterId() == null) { //todo 테스트 코드 작성해야함
+                firstLetter.updateMatchingId(request.getMatchingId());
+                firstLetter.updateReceiverId(writerId);
+            }
         }
         Letter letter = builder.build();
         Letter savedLetter = letterRepository.save(letter);
 
         String zipCode = authFacade.getZipCode(); //현제 로그인한 유저 ZipCode
+
+        //if(request.getReceiverId() != null){
+        //    notificationFacade.sendNotification(zipCode,savedLetter.getReceiverId(), AlarmType.LETTER, savedLetter.getId().toString());
+        //}
 
         return LetterResponse.fromEntity(savedLetter, zipCode);
     }
@@ -91,7 +109,6 @@ public class LetterService {
         letter.inactive();
     }
 
-
     public LetterResponse getLetterById(Long letterId) {
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
         String zipCode = memberRepository.findById(letter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode(); //편지를 쓴 사람의 zipCode
@@ -108,4 +125,42 @@ public class LetterService {
         memberFacade.applyEvaluationTemperature(letter.getWriterId(), request.getEvaluation());
 
     }
+
+    @Transactional
+    public LetterResponse temporarySaveLetter(Long letterId, TemporarySaveLetterRequest request) {
+        Long writerId = authFacade.getCurrentUserId();
+        String writerZipCode = authFacade.getZipCode();
+
+        if (letterId != null) {
+            Letter letter = letterRepository.findByIdAndWriterId(letterId, writerId)
+                    .orElseThrow(LetterNotBelongException::new);
+
+            letter.updateTemporarySave(
+                    request.getReceiverId(),
+                    request.getParentLetterId(),
+                    request.getCategory(),
+                    request.getTitle(),
+                    request.getContent()
+            );
+
+            return LetterResponse.fromEntity(letter, writerZipCode);
+        }
+        else {
+
+            Letter letter = Letter.builder()
+                    .writerId(writerId)
+                    .letterType(LetterType.RANDOM)
+                    .category(request.getCategory())
+                    .title(request.getTitle())
+                    .content(request.getContent())
+                    .status(Status.SAVED)
+                    .fontType(request.getFontType())
+                    .paperType(request.getPaperType())
+                    .build();
+            letterRepository.save(letter);
+
+            return LetterResponse.fromEntity(letter, writerZipCode);
+        }
+    }
+
 }

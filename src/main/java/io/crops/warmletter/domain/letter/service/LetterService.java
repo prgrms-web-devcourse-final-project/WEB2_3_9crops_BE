@@ -5,6 +5,7 @@ import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.TemporarySaveLetterRequest;
+import io.crops.warmletter.domain.letter.dto.response.LetterDraftResponse;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterMatching;
@@ -17,6 +18,7 @@ import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
+import io.crops.warmletter.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static io.crops.warmletter.global.error.common.ErrorCode.INVALID_INPUT_VALUE;
 
 @Service
 @RequiredArgsConstructor
@@ -64,6 +68,12 @@ public class LetterService {
         }
         //주고받는 답장편지, 랜덤편지에 대한 답장
         else {
+            //현재 계속 주고 받을 수 있는 상황이면 답장 가능
+//            boolean active = letterMatchingRepository.findById(request.getParentLetterId()).orElseThrow().isActive();
+//            if (active) {
+//
+//            }
+
             builder.receiverId(request.getReceiverId())
                     .parentLetterId(request.getParentLetterId())
                     .letterType(LetterType.DIRECT)
@@ -137,44 +147,6 @@ public class LetterService {
         return LetterResponse.fromEntityForDetailView(letter, zipCode, letterMatching.isActive());
     }
 
-    public List<LetterResponse> getInDeliveryLetters(Long memberId, String statusStr) {
-        Status status = Status.valueOf(statusStr);
-        List<Letter> letters = letterRepository.findInDeliveryLetters(memberId, status);
-
-        return letters.stream()
-                .map(letter -> LetterResponse.builder()
-                        .letterId(letter.getId())
-                        .writerId(letter.getWriterId())
-                        .receiverId(letter.getReceiverId())
-                        .content(letter.getContent())
-                        .deliveryStartedAt(letter.getDeliveryStartedAt())
-                        .deliveryCompletedAt(letter.getDeliveryCompletedAt())
-                        .build())
-                .collect(Collectors.toList());
-    }
-
-
-    public List<LetterResponse> getSavedLetters(Long memberId, String statusStr) {
-        Status status = Status.valueOf(statusStr);
-        List<Letter> letters = letterRepository.findSavedLetters(memberId, status);
-
-        return letters.stream()
-                .map(letter -> LetterResponse.builder()
-                        .letterId(letter.getId())
-                        .receiverId(letter.getReceiverId())
-                        .parentLetterId(letter.getParentLetterId())
-                        .title(letter.getTitle())
-                        .content(letter.getContent())
-                        .category(letter.getCategory())
-                        .paperType(letter.getPaperType())
-                        .fontType(letter.getFontType())
-                        .status(letter.getStatus())
-                        .deliveryStartedAt(letter.getDeliveryStartedAt())
-                        .deliveryCompletedAt(letter.getDeliveryCompletedAt())
-                        .build())
-                .collect(Collectors.toList());
-    }
-
 
     @Transactional
     public void evaluateLetter(Long letterId, EvaluateLetterRequest request) {
@@ -224,4 +196,44 @@ public class LetterService {
         }
     }
 
+    /**
+     * 오고 있는 편지 조회, 임시 저장된 편지 리스트 조회
+     */
+    public List<LetterResponse> getLettersByStatus(String status) {
+        Long currentUserId = authFacade.getCurrentUserId();
+        String formattedStatus = status.trim().toLowerCase();
+
+        if ("delivery".equals(formattedStatus)) {
+            // 받은 편지이면서 상태가 IN_DELIVERY인 편지 조회
+            return letterRepository.findByReceiverIdAndStatus(currentUserId, Status.IN_DELIVERY)
+                    .stream()
+                    .map(LetterResponse::fromDeliveryLetter)
+                    .collect(Collectors.toList());
+
+        } else if ("draft".equals(formattedStatus)) {
+            // 임시 저장 편지이면서 상태가 SAVED인 편지 조회 (작성자 기준)
+            List<LetterDraftResponse> drafts = letterRepository.findDraftLettersWithMatching(currentUserId, Status.SAVED);
+            return drafts.stream()
+                    .map(draft -> LetterResponse.builder()
+                            .letterId(draft.getLetterId())
+                            .writerId(draft.getWriterId())
+                            .receiverId(draft.getReceiverId())
+                            .parentLetterId(draft.getParentLetterId())
+                            .zipCode(authFacade.getZipCode())
+                            .title(draft.getTitle())
+                            .content(draft.getContent())
+                            .category(draft.getCategory())
+                            .paperType(draft.getPaperType())
+                            .fontType(draft.getFontType())
+                            .status(draft.getStatus())
+                            .matched(draft.isMatched())
+                            .deliveryStartedAt(draft.getDeliveryStartedAt())
+                            .deliveryCompletedAt(draft.getDeliveryCompletedAt())
+                            .matchingId(draft.getMatchingId())
+                            .build())
+                    .collect(Collectors.toList());
+        } else {
+            throw new BusinessException(INVALID_INPUT_VALUE);
+        }
+    }
 }

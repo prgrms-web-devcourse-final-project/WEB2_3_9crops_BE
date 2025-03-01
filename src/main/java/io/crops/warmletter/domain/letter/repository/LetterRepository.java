@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.letter.repository;
 
+import io.crops.warmletter.domain.letter.dto.response.LetterDraftResponse;
 import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.Category;
@@ -12,6 +13,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
+
+import static io.crops.warmletter.domain.letter.enums.Status.IN_DELIVERY;
 
 @Repository
 public interface LetterRepository extends JpaRepository<Letter, Long> {
@@ -47,5 +50,17 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
     Optional<Letter> findByIdAndWriterId(Long letterId, Long writerId);
 
     Page<Letter> findByMatchingIdOrderByIdDesc(Long matchingId, Pageable pageable);
+
+    List<Letter> findByReceiverIdAndStatus(Long currentUserId, Status status);
+
+    @Query("SELECT new io.crops.warmletter.domain.letter.dto.response.LetterDraftResponse(" +
+            "l.id, l.writerId, l.receiverId, l.parentLetterId, " +
+            "l.title, l.content, l.category, l.paperType, l.fontType, l.status, " +
+            "CASE WHEN m.id IS NOT NULL THEN m.isActive ELSE false END, " +
+            "l.deliveryStartedAt, l.deliveryCompletedAt, l.matchingId) " +
+            "FROM Letter l LEFT JOIN LetterMatching m ON l.matchingId = m.id " +
+            "WHERE l.writerId = :writerId AND l.status = :status")
+    List<LetterDraftResponse> findDraftLettersWithMatching(@Param("writerId") Long writerId,
+                                                           @Param("status") Status status);
 
 }

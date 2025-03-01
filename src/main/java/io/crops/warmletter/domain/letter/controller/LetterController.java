@@ -46,10 +46,10 @@ public class LetterController implements LetterControllerDocs {
         return ResponseEntity.ok(response);
     }
 
+
     /**
      * 지정된 letterId 삭제 (softDelete)
      */
-
     @DeleteMapping("/letters/{letterId}")
     public ResponseEntity<BaseResponse<Void>> deleteLetter(@PathVariable Long letterId) {
         letterService.deleteLetter(letterId);
@@ -68,12 +68,18 @@ public class LetterController implements LetterControllerDocs {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * 편지 평가하기
+     */
     @PostMapping("/letters/{letterId}/evaluate")
     public ResponseEntity<BaseResponse<Void>> evaluateLetter(@PathVariable Long letterId, @RequestBody EvaluateLetterRequest request) {
         letterService.evaluateLetter(letterId, request);
         return ResponseEntity.ok(BaseResponse.of(null, "편지 평가 완료"));
     }
 
+    /**
+     * 임시저장 편지 생성
+     */
     @PostMapping("/letters/{letterId}/temporary-save")
     public ResponseEntity<BaseResponse<LetterResponse>> temporarySaveLetter(
             @PathVariable (name="letterId")Long letterId, @Valid @RequestBody TemporarySaveLetterRequest request) {
@@ -83,17 +89,13 @@ public class LetterController implements LetterControllerDocs {
     }
 
 
-
-    @GetMapping("/api/letters{status}")
+    /**
+     * 오고 있는 편지 조회, 임시 저장된 편지 리스트 조회
+     */
+    @GetMapping("/letters")
     public ResponseEntity<BaseResponse<List<LetterResponse>>> getLettersByStatus(@RequestParam("status") String status) {
-
-        Long memberId = 1L;
-        if (!status.equals("IN_DELIVERY") && !status.equals("SAVED")) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>((status.equals("IN_DELIVERY")
-                ? letterService.getInDeliveryLetters(memberId, status)
-                : letterService.getSavedLetters(memberId, status)),"편지 조회 완료"));
+        List<LetterResponse> responses = letterService.getLettersByStatus(status);
+        BaseResponse<List<LetterResponse>> response = BaseResponse.of(responses, "편지 조회 완료");
+        return ResponseEntity.ok(response);
     }
 }

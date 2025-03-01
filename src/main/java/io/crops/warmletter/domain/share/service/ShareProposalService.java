@@ -1,5 +1,4 @@
 package io.crops.warmletter.domain.share.service;
-
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
@@ -8,7 +7,6 @@ import io.crops.warmletter.domain.share.entity.SharePost;
 import io.crops.warmletter.domain.share.entity.ShareProposal;
 import io.crops.warmletter.domain.share.entity.ShareProposalLetter;
 import io.crops.warmletter.domain.share.enums.ProposalStatus;
-import io.crops.warmletter.domain.share.exception.ShareInvalidInputValue;
 import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException;
 import io.crops.warmletter.domain.share.repository.*;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
@@ -16,7 +14,6 @@ import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,15 +31,11 @@ public class ShareProposalService {
     @Transactional
     public ShareProposalResponse requestShareProposal(ShareProposalRequest request) {
 
-        Long currentUserId = authFacade.getCurrentUserId();
+        Long requesterId = authFacade.getCurrentUserId();
 
-        if (!currentUserId.equals(request.getRequesterId())) {
-            throw new ShareInvalidInputValue();
-        }
+        ShareProposal shareProposal = shareProposalRepository.save(request.toEntity(requesterId));
 
-        ShareProposal shareProposal = shareProposalRepository.save(request.toEntity());
-
-        List<ShareProposalLetter> letters = request.getLetters().stream()
+        List<ShareProposalLetter> letters = request.getLetterIds().stream()
                 .map(letterId -> new ShareProposalLetter(shareProposal.getId(), letterId))
                 .collect(Collectors.toList());
         shareProposalLetterRepository.saveAll(letters);

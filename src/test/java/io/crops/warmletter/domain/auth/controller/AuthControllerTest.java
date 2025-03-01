@@ -179,8 +179,6 @@ class AuthControllerTest {
         String stateToken = "test.state.token";
         TokenStorageResponse tokenResponse = TokenStorageResponse.builder()
                 .accessToken("access.token")
-                .hasZipCode(true)
-                .userId(1L)
                 .build();
 
         when(authService.getTokenByState(stateToken)).thenReturn(tokenResponse);
@@ -191,8 +189,6 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.accessToken").value("access.token"))
-                .andExpect(jsonPath("$.data.hasZipCode").value(true))
-                .andExpect(jsonPath("$.data.userId").value(1L))
                 .andExpect(jsonPath("$.message").value("임시 저장소 토큰 조회 완료"));
 
         verify(authService).getTokenByState(stateToken);

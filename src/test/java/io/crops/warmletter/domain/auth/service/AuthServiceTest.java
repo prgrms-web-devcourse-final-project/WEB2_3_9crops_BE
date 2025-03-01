@@ -277,8 +277,6 @@ class AuthServiceTest {
 
         //then
         assertThat(accessToken).isEqualTo(tokenResponse.getAccessToken());
-        assertThat(memberId).isEqualTo(tokenResponse.getUserId());
-        assertThat(tokenResponse.isHasZipCode()).isTrue();
 
         verify(tokenStorage).getTokenInfo(validStateToken);
     }
@@ -305,8 +303,6 @@ class AuthServiceTest {
 
         //then
         assertThat(accessToken).isEqualTo(tokenResponse.getAccessToken());
-        assertThat(memberId).isEqualTo(tokenResponse.getUserId());
-        assertThat(tokenResponse.isHasZipCode()).isFalse();
 
         verify(tokenStorage).getTokenInfo(validStateToken);
     }

@@ -114,9 +114,6 @@ public class AuthService {
 
         return TokenStorageResponse.builder()
                 .accessToken(tokenInfo.getAccessToken())
-                .hasZipCode(tokenInfo.getUserInfo().getZipCode() != null
-                        && !tokenInfo.getUserInfo().getZipCode().isEmpty())
-                .userId(tokenInfo.getUserInfo().getId())
                 .build();
     }
 }

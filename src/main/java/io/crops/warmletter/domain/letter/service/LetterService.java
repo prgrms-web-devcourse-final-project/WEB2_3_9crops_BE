@@ -68,25 +68,28 @@ public class LetterService {
         }
         //주고받는 답장편지, 랜덤편지에 대한 답장
         else {
+            //부모편지 조회
+            Letter parentLetter = letterRepository.findById(request.getParentLetterId()).orElseThrow(ParentLetterNotFoundException::new);
+
+//            Long matchingId = request.getMatchingId() != null ? request.getMatchingId() : parentLetter.getMatchingId(); 만약을 위해..
+
             //현재 계속 주고 받을 수 있는 상황이면 답장 가능
-//            boolean active = letterMatchingRepository.findById(request.getParentLetterId()).orElseThrow().isActive();
-//            if (active) {
-//
-//            }
+            boolean active = letterMatchingRepository.findById(request.getMatchingId()).orElseThrow(MatchingNotFoundException::new).isActive();
 
-            builder.receiverId(request.getReceiverId())
-                    .parentLetterId(request.getParentLetterId())
-                    .letterType(LetterType.DIRECT)
-                    .status(Status.IN_DELIVERY)
-                    .matchingId(request.getMatchingId());
+            if (active) {
+                builder.receiverId(request.getReceiverId())
+                        .parentLetterId(request.getParentLetterId())
+                        .letterType(LetterType.DIRECT)
+                        .status(Status.IN_DELIVERY)
+                        .matchingId(request.getMatchingId());
 
-            //첫편지면 matchingId 넣어줌 , 받는사람도 넣어줌.
-            Letter firstLetter = letterRepository.findById(request.getParentLetterId()).orElseThrow(ParentLetterNotFoundException::new);
-            if(firstLetter.getParentLetterId() == null) {
-                firstLetter.updateMatchingId(request.getMatchingId());
-                firstLetter.updateReceiverId(writerId);
-                firstLetter.updateLetterType(LetterType.DIRECT);
-                firstLetter.updateIsRead(true);
+                //첫편지면 matchingId 넣어줌 , 받는사람도 넣어줌.
+                if(parentLetter.getParentLetterId() == null) {
+                    parentLetter.updateMatchingId(request.getMatchingId());
+                    parentLetter.updateReceiverId(writerId);
+                    parentLetter.updateLetterType(LetterType.DIRECT);
+                    parentLetter.updateIsRead(true);
+                }
             }
         }
         Letter letter = builder.build();

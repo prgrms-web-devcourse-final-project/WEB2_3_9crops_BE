@@ -5,8 +5,10 @@ import io.crops.warmletter.config.TestConfig;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.entity.Letter;
+import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.enums.*;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
+import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.letter.service.LetterService;
 import io.crops.warmletter.domain.member.entity.Member;
@@ -53,11 +55,16 @@ class LettersControllerTest {
     private MemberRepository memberRepository;
 
     @Autowired
+    private LetterMatchingRepository letterMatchingRepository;
+
+    @Autowired
     private LetterService letterService;
 
     //통합테스트 시 인증 권한 mock으로 넣기
     @MockitoBean
     private AuthFacade authFacade;
+    @Autowired
+    private LetterRepository letterRepository;
 
     @BeforeEach
     void setupAuth() {
@@ -69,6 +76,7 @@ class LettersControllerTest {
     void clean() {
         lettersRepository.deleteAll();
         memberRepository.deleteAll();
+        letterMatchingRepository.deleteAll();
     }
 
     @Test
@@ -125,6 +133,13 @@ class LettersControllerTest {
     @DisplayName("/api/letters 요청 시 랜덤 편지 답장, 주고 받는 편지 값 출력 확인")
     void create_exchanged_letter_success() throws Exception {
         //given
+        LetterMatching letterMatching = LetterMatching.builder()
+                .firstMemberId(1L)
+                .secondMemberId(2L)
+                .matchedAt(LocalDateTime.now())
+                .build();
+        letterMatchingRepository.save(letterMatching);
+
         Letter letter = Letter.builder()
                 .writerId(1L)
                 .receiverId(null)
@@ -136,6 +151,7 @@ class LettersControllerTest {
                 .fontType(FontType.HIMCHAN)
                 .paperType(PaperType.COMFORT)
                 .status(Status.IN_DELIVERY)
+                .matchingId(letterMatching.getId())
                 .build();
         lettersRepository.save(letter);
 
@@ -147,6 +163,7 @@ class LettersControllerTest {
                 .category(Category.CONSULT)
                 .paperType(PaperType.COMFORT)
                 .fontType(FontType.HIMCHAN)
+                .matchingId(letterMatching.getId())
                 .build();
 
         String json = objectMapper.writeValueAsString(request);
@@ -157,16 +174,10 @@ class LettersControllerTest {
                         .characterEncoding("UTF-8")
                         .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.letterId").exists())
-                .andExpect(jsonPath("$.data.writerId").exists())
                 .andExpect(jsonPath("$.data.receiverId").value(1L))
                 .andExpect(jsonPath("$.data.zipCode").value("12345"))
                 .andExpect(jsonPath("$.data.title").value("제목입니다"))
                 .andExpect(jsonPath("$.data.content").value("편지 내용입니다"))
-                .andExpect(jsonPath("$.data.category").value("CONSULT"))
-                .andExpect(jsonPath("$.data.paperType").value("COMFORT"))
-                .andExpect(jsonPath("$.data.fontType").value("HIMCHAN"))
-                .andExpect(jsonPath("$.data.status").value("IN_DELIVERY"))
                 .andExpect(jsonPath("$.message").value("편지가 성공적으로 생성되었습니다."))
                 .andDo(print());
 

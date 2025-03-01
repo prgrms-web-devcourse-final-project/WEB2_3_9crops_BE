@@ -35,8 +35,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
@@ -69,7 +68,7 @@ class AuthServiceTest {
         String socialUniqueId = "GOOGLE_12345";
         String newAccessToken = "new.access.token";
         Long memberId = 1L;
-        Claims claims = Mockito.mock(Claims.class);
+        Claims claims = mock(Claims.class);
 
         when(jwtTokenProvider.validateToken(refreshToken, TokenType.REFRESH)).thenReturn(true);
         when(jwtTokenProvider.getSocialUniqueId(accessToken)).thenReturn(socialUniqueId);
@@ -98,7 +97,7 @@ class AuthServiceTest {
         String newAccessToken = "new.access.token";
         String newRefreshToken = "new.refresh.token";
         Long memberId = 1L;
-        Claims claims = Mockito.mock(Claims.class);
+        Claims claims = mock(Claims.class);
 
         when(jwtTokenProvider.validateToken(refreshToken, TokenType.REFRESH)).thenReturn(true);
         when(jwtTokenProvider.getSocialUniqueId(accessToken)).thenReturn(socialUniqueId);
@@ -137,15 +136,26 @@ class AuthServiceTest {
         // given
         String accessToken = "valid.access.token";
         String refreshToken = "valid.refresh.token";
+        String socialUniqueId = "test_social_id";
         MockHttpServletResponse mockResponse = new MockHttpServletResponse();
+
+        // UserPrincipal 모킹
+        UserPrincipal userPrincipal = mock(UserPrincipal.class);
+        when(userPrincipal.getSocialUniqueId()).thenReturn(socialUniqueId);
+
+        // SecurityContext 설정
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(userPrincipal);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         // when
         authService.logout(accessToken, refreshToken, mockResponse);
 
         // then
-        verify(tokenBlacklistService).blacklistTokens(accessToken, refreshToken);
+        verify(tokenBlacklistService).blacklistTokens(accessToken, refreshToken, socialUniqueId);
 
-        // 일반 Cookie 대신 ResponseCookie 사용
+        // 쿠키 검증
         ResponseCookie expectedCookie = ResponseCookie.from("refresh_token", null)
                 .maxAge(0)
                 .path("/")
@@ -154,6 +164,9 @@ class AuthServiceTest {
 
         String setCookieHeader = mockResponse.getHeader(HttpHeaders.SET_COOKIE);
         assertThat(setCookieHeader).isEqualTo(expectedCookie.toString());
+
+        // 테스트 후 SecurityContext 정리
+        SecurityContextHolder.clearContext();
     }
 
     @Test

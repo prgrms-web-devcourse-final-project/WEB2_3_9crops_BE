@@ -77,8 +77,10 @@ public class AuthService {
     }
 
     public void logout(String accessToken, String refreshToken, HttpServletResponse response) {
+        String socialUniqueId = getCurrentUser().getSocialUniqueId();
+
         // 토큰 무효화
-        tokenBlacklistService.blacklistTokens(accessToken, refreshToken);
+        tokenBlacklistService.blacklistTokens(accessToken, refreshToken, socialUniqueId);
 
         // 리프레시 토큰 쿠키 제거
         Cookie cookie = new Cookie("refresh_token", null);

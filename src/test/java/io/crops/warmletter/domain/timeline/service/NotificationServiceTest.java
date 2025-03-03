@@ -211,7 +211,7 @@ class NotificationServiceTest {
 
         //then
         assertEquals(notificationId, readNotificationResponse.getNotificationId());
-        assertTrue(readNotificationResponse.getIsRead());
+        assertTrue(readNotificationResponse.isRead());
     }
 
     @Test
@@ -233,7 +233,7 @@ class NotificationServiceTest {
 
         //then
         assertEquals(notificationId, readNotificationResponse.getNotificationId());
-        assertTrue(readNotificationResponse.getIsRead());
+        assertTrue(readNotificationResponse.isRead());
     }
 
     @Test
@@ -272,9 +272,9 @@ class NotificationServiceTest {
 
         //then
         assertEquals(1L, readNotificationResponse.get(0).getNotificationId());
-        assertTrue(readNotificationResponse.get(0).getIsRead());
+        assertTrue(readNotificationResponse.get(0).isRead());
         assertEquals(3L, readNotificationResponse.get(1).getNotificationId());
-        assertTrue(readNotificationResponse.get(1).getIsRead());
+        assertTrue(readNotificationResponse.get(1).isRead());
     }
 
 }

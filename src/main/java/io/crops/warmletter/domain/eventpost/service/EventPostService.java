@@ -1,10 +1,7 @@
 package io.crops.warmletter.domain.eventpost.service;
 
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
-import io.crops.warmletter.domain.eventpost.dto.response.EventCommentsResponse;
-import io.crops.warmletter.domain.eventpost.dto.response.EventPostDetailResponse;
-import io.crops.warmletter.domain.eventpost.dto.response.EventPostResponse;
-import io.crops.warmletter.domain.eventpost.dto.response.EventPostStatusResponse;
+import io.crops.warmletter.domain.eventpost.dto.response.*;
 import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException;
 import io.crops.warmletter.domain.eventpost.exception.UsedEventPostNotFoundException;
@@ -15,6 +12,8 @@ import io.crops.warmletter.global.error.exception.BusinessException;
 import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +26,10 @@ import java.util.Map;
 public class EventPostService {
     private final EventPostRepository eventPostRepository;
     private final EventCommentRepository eventCommentRepository;
+
+    public Page<EventPostsResponse> getEventPosts(Pageable eventPostPageable) {
+        return eventPostRepository.findByActiveIsTrue(eventPostPageable);
+    }
 
     public EventPostResponse createEventPost(CreateEventPostRequest createEventPostRequest) {
         EventPost eventPost = EventPost.builder()
@@ -48,6 +51,7 @@ public class EventPostService {
 
     @Transactional(readOnly = true)
     public EventPostResponse getUsedEventPost() {
+        // TODO : 예외처리 대신 NULL 값이나 다른 값 리턴(예외 X)
         EventPost eventPost = eventPostRepository.findByIsUsed(true).orElseThrow(UsedEventPostNotFoundException::new);
 
         return EventPostResponse.builder()
@@ -77,7 +81,7 @@ public class EventPostService {
         try {
             EventPost eventPost = eventPostRepository.findById(eventPostId).orElseThrow(EventPostNotFoundException::new);
 
-            if (eventPost.getIsUsed()) {
+            if (eventPost.isUsed()) {
                 eventPost.isUsedChange(false);
             } else {
                 // isUsed가 true로 변경될 경우, 이미 true인 값이 있는지 확인
@@ -89,7 +93,7 @@ public class EventPostService {
             }
             return EventPostStatusResponse.builder()
                     .eventPostId(eventPost.getId())
-                    .isUsed(eventPost.getIsUsed())
+                    .isUsed(eventPost.isUsed())
                     .build();
         } catch (DataIntegrityViolationException e) {
             throw new BusinessException(ErrorCode.EVENT_POST_IN_USE);

@@ -1,8 +1,6 @@
 package io.crops.warmletter.domain.timeline.service;
 
-import io.crops.warmletter.domain.auth.exception.UnauthorizedException;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
-import io.crops.warmletter.domain.auth.service.AuthService;
 import io.crops.warmletter.domain.timeline.dto.response.NotificationResponse;
 import io.crops.warmletter.domain.timeline.dto.response.ReadNotificationResponse;
 import io.crops.warmletter.domain.timeline.entity.Timeline;
@@ -95,13 +93,13 @@ public class NotificationService {
     public ReadNotificationResponse updateNotificationRead(Long notificationId){
         Long memberId = authFacade.getCurrentUserId();
         Timeline timeline = timelineRepository.findByIdAndMemberId(notificationId, memberId).orElseThrow(NotificationNotFoundException::new);
-        if(!timeline.getIsRead()){
+        if(!timeline.isRead()){
             timeline.notificationRead();
         }
 
         return ReadNotificationResponse.builder()
                 .notificationId(timeline.getId())
-                .isRead(timeline.getIsRead())
+                .isRead(timeline.isRead())
                 .build();
     }
 
@@ -118,7 +116,7 @@ public class NotificationService {
             timeline.notificationRead();
             timelineResponses.add(ReadNotificationResponse.builder()
                     .notificationId(timeline.getId())
-                    .isRead(timeline.getIsRead())
+                    .isRead(timeline.isRead())
                     .build());
         }
 

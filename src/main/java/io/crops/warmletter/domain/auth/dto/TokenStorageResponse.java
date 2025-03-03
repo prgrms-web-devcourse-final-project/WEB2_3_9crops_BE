@@ -12,6 +12,4 @@ import lombok.NoArgsConstructor;
 public class TokenStorageResponse {
 
     private String accessToken;
-    private boolean hasZipCode;
-    private Long userId;
 }

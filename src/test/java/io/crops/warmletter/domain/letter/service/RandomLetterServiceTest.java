@@ -15,6 +15,7 @@ import io.crops.warmletter.domain.letter.enums.FontType;
 import io.crops.warmletter.domain.letter.enums.LetterType;
 import io.crops.warmletter.domain.letter.enums.PaperType;
 import io.crops.warmletter.domain.letter.exception.AlreadyApprovedException;
+import io.crops.warmletter.domain.letter.exception.CategoryNotFoundException;
 import io.crops.warmletter.domain.letter.exception.DuplicateLetterMatchException;
 import io.crops.warmletter.domain.letter.exception.TemporaryMatchingNotFoundException;
 import io.crops.warmletter.domain.letter.facade.LetterFacade;
@@ -116,11 +117,10 @@ class RandomLetterServiceTest {
                 () -> assertEquals(Category.CONSOLATION, response.getCategory())
         );
     }
-
     @Test
-    @DisplayName("findRandomLetters - 카테고리 null 시 전체 랜덤 편지 5개 조회 성공")
-    void find_RandomLetters_WithNullCategory() {
-        Category category = null;
+    @DisplayName("findRandomLetters - 카테고리 ALL시 전체 조회")
+    void find_RandomLetters_WithALLCategory() {
+        Category category = Category.ALL;
 
         // 10번 회원이 있고
         Member member = Member.builder()
@@ -141,7 +141,7 @@ class RandomLetterServiceTest {
 
         //조회 시 편지
         when(authFacade.getCurrentUserId()).thenReturn(1L);
-        when(letterRepository.findRandomLettersByCategory(null, 1L, pageable)).thenReturn(List.of(dto));
+        when(letterRepository.findRandomLettersByCategory(Category.ALL, 1L, pageable)).thenReturn(List.of(dto));
 
         List<RandomLetterResponse> responses = randomLetterService.findRandomLetters(category);
         RandomLetterResponse response = responses.get(0);
@@ -151,6 +151,17 @@ class RandomLetterServiceTest {
                 () -> assertEquals("12345", response.getZipCode()),
                 () -> assertEquals(Category.ETC, response.getCategory())
         );
+    }
+
+    @Test
+    @DisplayName("findRandomLetters - 카테고리 null 시 CategoryNotFoundException 발생")
+    void find_RandomLetters_WithNullCategory() {
+        when(authFacade.getCurrentUserId()).thenReturn(1L);
+
+        // 카테고리가 null인 경우 CategoryNotFoundException이 발생해야 함
+        assertThrows(CategoryNotFoundException.class, () -> {
+            randomLetterService.findRandomLetters(null);
+        });
     }
 
     @Test
@@ -368,7 +379,6 @@ class RandomLetterServiceTest {
         when(letterFacade.createLetter(request)).thenReturn(expectedResponse);
 
         LetterMatching dummyMatching = LetterMatching.builder()
-                .letterId(tempMatching.getLetterId())
                 .firstMemberId(tempMatching.getFirstMemberId())
                 .secondMemberId(tempMatching.getSecondMemberId())
                 .matchedAt(tempMatching.getMatchedAt())

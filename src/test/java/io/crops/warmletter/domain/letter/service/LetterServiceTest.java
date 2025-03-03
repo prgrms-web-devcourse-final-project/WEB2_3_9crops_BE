@@ -247,7 +247,6 @@ class LetterServiceTest {
         when(authFacade.getZipCode()).thenReturn("12345");
 
         LetterMatching matching = LetterMatching.builder()
-                .letterId(5L)
                 .firstMemberId(1L)
                 .secondMemberId(2L)
                 .matchedAt(LocalDateTime.now())
@@ -329,7 +328,6 @@ class LetterServiceTest {
         when(letterRepository.save(any(Letter.class))).thenReturn(newLetter);
         when(authFacade.getZipCode()).thenReturn("12345");
         LetterMatching matching = LetterMatching.builder()
-                .letterId(5L)
                 .firstMemberId(1L)
                 .secondMemberId(2L)
                 .matchedAt(LocalDateTime.now())
@@ -379,7 +377,6 @@ class LetterServiceTest {
         when(letterRepository.findById(directLetterRequest.getParentLetterId())).thenReturn(Optional.of(parentLetter));
 
         LetterMatching matching = LetterMatching.builder()
-                .letterId(5L)
                 .firstMemberId(1L)
                 .secondMemberId(2L)
                 .matchedAt(LocalDateTime.now())

@@ -12,10 +12,7 @@ import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.LetterType;
-import io.crops.warmletter.domain.letter.exception.AlreadyApprovedException;
-import io.crops.warmletter.domain.letter.exception.DuplicateLetterMatchException;
-import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
-import io.crops.warmletter.domain.letter.exception.TemporaryMatchingNotFoundException;
+import io.crops.warmletter.domain.letter.exception.*;
 import io.crops.warmletter.domain.letter.facade.LetterFacade;
 import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
@@ -54,7 +51,11 @@ public class RandomLetterService {
         Long currentUserId = authFacade.getCurrentUserId();
         Pageable pageable = PageRequest.of(0, 5);  // 첫 페이지, 5개 제한
 
-        if (category != null) { //전체 조회가 아닌 경우에 회원의 선호 카테고리를 변경
+        if (category == null){
+            throw new CategoryNotFoundException();
+        }
+
+        if (category != Category.ALL) { //전체 조회가 아닌 경우에 회원의 선호 카테고리를 변경
             Member member = memberRepository.findById(currentUserId).orElseThrow();
             member.updatePreferredLetterCategory(category);
         }
@@ -176,7 +177,6 @@ public class RandomLetterService {
         LetterTemporaryMatching letterTemporaryMatching = letterTemporaryMatchingRepository.findByLetterId(request.getParentLetterId()).orElseThrow(TemporaryMatchingNotFoundException::new);  //편지 임시 매칭 //10번
 
         LetterMatching letterMatching = LetterMatching.builder()
-                .letterId(letterTemporaryMatching.getLetterId())
                 .firstMemberId(letterTemporaryMatching.getFirstMemberId())
                 .secondMemberId(letterTemporaryMatching.getSecondMemberId())
                 .matchedAt(letterTemporaryMatching.getMatchedAt())

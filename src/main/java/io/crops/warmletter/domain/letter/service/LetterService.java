@@ -63,7 +63,7 @@ public class LetterService {
             builder.receiverId(null)
                     .parentLetterId(null)
                     .letterType(LetterType.RANDOM)
-                    .status(Status.IN_DELIVERY)
+                    .status(Status.DELIVERED)
                     .matchingId(null);
         }
         //주고받는 답장편지, 랜덤편지에 대한 답장

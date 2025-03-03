@@ -17,9 +17,9 @@ public class CorsConfig {
         // 허용할 Origin 설정
         configuration.setAllowedOrigins(
                 List.of(
-                        "http://localhost:3000", // 로컬 프론트엔드
+                        "http://localhost:5173", // 로컬 프론트엔드
                         "http://localhost:8080", // 개발 테스트
-                        "https://your-domain.com" // 운영 프론트엔드
+                        "https://www.ddasum.kr" // 운영 프론트엔드
                 ));
 
         // 허용할 HTTP 메서드
@@ -28,10 +28,10 @@ public class CorsConfig {
 
         // 허용할 헤더
         configuration.setAllowedHeaders(
-                List.of("Authorization", "Content-Type", "Cache-Control", "x-requested-with"));
+                List.of("Authorization", "Content-Type", "Cache-Control", "x-requested-with", "Cookie"));
 
         // 노출할 헤더 설정 추가
-        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
 
         // 인증 정보 포함 허용
         configuration.setAllowCredentials(true);

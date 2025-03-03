@@ -39,10 +39,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         // Refresh Token을 쿠키에 저장
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)    // JavaScript에서 쿠키에 접근할 수 없도록 설정
-//                .secure(true)      // HTTPS에서만 쿠키가 전송되도록 설정
-//                .secure(false)     // 개발 환경에서는 HTTP도 허용
-                .sameSite("Lax")   // CSRF 공격 방지를 위한 설정
-                .path("/")         // 쿠키가 유효한 경로 설정 ('/'는 모든 경로에서 사용 가능)
+                .secure(true)      // HTTPS에서만 쿠키가 전송되도록 설정
+                .sameSite("None")  // 크로스 도메인 요청 허용
+                .path("/")         // 쿠키가 유효한 경로 설정
                 .maxAge(Duration.ofDays(14))  // 쿠키의 유효기간 설정 (14일)
                 .build();
 

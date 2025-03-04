@@ -6,7 +6,7 @@ import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
+import io.crops.warmletter.domain.letter.dto.response.MatchingResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
@@ -242,7 +242,7 @@ class RandomLetterServiceTest {
         when(letterRepository.findById(100L)).thenReturn(Optional.of(letter));
         when(memberRepository.findById(tempMatching.getFirstMemberId())).thenReturn(Optional.of(member));
 
-        TemporaryMatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
+        MatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
 
         assertTrue(response.isTemporary());
         assertEquals("테스트 편지", response.getTitle());
@@ -256,7 +256,7 @@ class RandomLetterServiceTest {
         when(authFacade.getCurrentUserId()).thenReturn(1L);
         when(letterTemporaryMatchingRepository.findBySecondMemberId(userId)).thenReturn(Optional.empty());
 
-        TemporaryMatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
+        MatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
 
         assertFalse(response.isTemporary());
     }

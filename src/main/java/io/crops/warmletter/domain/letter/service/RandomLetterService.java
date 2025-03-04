@@ -86,7 +86,7 @@ public class RandomLetterService {
     /**
      * 임시테이블에 회원이 있는지 검증
      */
-    public TemporaryMatchingResponse checkTemporaryMatchedTable() {
+    public MatchingResponse checkTemporaryMatchedTable() {
         Long currentUserId = authFacade.getCurrentUserId();
         Optional<LetterTemporaryMatching> tempTable = letterTemporaryMatchingRepository.findBySecondMemberId(currentUserId);
         if (tempTable.isPresent()) {
@@ -98,9 +98,9 @@ public class RandomLetterService {
 
             String zipCode = memberRepository.findById(tempMatching.getFirstMemberId()).orElseThrow(MemberNotFoundException::new).getZipCode();
 
-            return TemporaryMatchingResponse.fromMatching(letter, tempMatching, zipCode);
+            return MatchingResponse.fromMatching(letter, tempMatching, zipCode);
         } else {
-            return TemporaryMatchingResponse.empty();
+            return MatchingResponse.empty();
         }
     }
 
@@ -125,7 +125,7 @@ public class RandomLetterService {
      * 랜덤 편지 승인하기.
      */
     @Transactional
-    public ApproveLetterResponse approveLetter(ApproveLetterRequest request) {
+    public MatchingResponse approveLetter(ApproveLetterRequest request) {
         Long currentUserId = authFacade.getCurrentUserId();
 
         // 현재 사용자가 이미 다른 편지를 승인했는지 확인
@@ -152,7 +152,7 @@ public class RandomLetterService {
         //상대방의 우편번호
         String zipCode = memberRepository.findById(letterTemporaryMatching.getFirstMemberId()).orElseThrow(MemberNotFoundException::new).getZipCode();
 
-        return ApproveLetterResponse.fromApprovedLetter(letter, letterTemporaryMatching, zipCode);
+        return MatchingResponse.fromApprovedLetter(letter, letterTemporaryMatching, zipCode);
     }
 
 

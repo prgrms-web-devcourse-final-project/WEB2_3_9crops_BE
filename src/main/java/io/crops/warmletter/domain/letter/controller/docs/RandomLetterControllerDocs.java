@@ -34,7 +34,7 @@ public interface RandomLetterControllerDocs {
             description = "임시 매칭 테이블에 현재 사용자의 데이터가 존재하는지 확인합니다. 데이터가 있으면 이미 선택된 상태로 간주합니다."
     )
     @PostMapping("/valid-table")
-    ResponseEntity<BaseResponse<TemporaryMatchingResponse>> checkTemporaryMatchedTable();
+    ResponseEntity<BaseResponse<MatchingResponse>> checkTemporaryMatchedTable();
 
     @Operation(
             summary = "매칭 취소",
@@ -48,7 +48,7 @@ public interface RandomLetterControllerDocs {
             description = "사용자가 랜덤 편지를 승인하면 해당 편지에 대한 승인을 처리합니다."
     )
     @PostMapping("/approve")
-    ResponseEntity<BaseResponse<ApproveLetterResponse>> approveLetter(@RequestBody ApproveLetterRequest request);
+    ResponseEntity<BaseResponse<MatchingResponse>> approveLetter(@RequestBody ApproveLetterRequest request);
 
     @Operation(
             summary = "최종 랜덤 편지 매칭 완료",

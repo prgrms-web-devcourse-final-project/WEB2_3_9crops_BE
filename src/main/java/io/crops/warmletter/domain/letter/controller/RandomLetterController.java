@@ -45,9 +45,9 @@ public class RandomLetterController implements RandomLetterControllerDocs {
      * 임시테이블에 내 데이터가 있는지 확인 (있으면 이미 선택됨 페이지, 없으면 랜덤 편지 리스트 확인)
      */
     @PostMapping("/valid-table")
-    public ResponseEntity<BaseResponse<TemporaryMatchingResponse>> checkTemporaryMatchedTable(){
-        TemporaryMatchingResponse temporaryMatchingResponse = randomLetterService.checkTemporaryMatchedTable();
-        BaseResponse<TemporaryMatchingResponse> response = BaseResponse.of(temporaryMatchingResponse, "임시 테이블 데이터 확인 완료");
+    public ResponseEntity<BaseResponse<MatchingResponse>> checkTemporaryMatchedTable(){
+        MatchingResponse temporaryMatchingResponse = randomLetterService.checkTemporaryMatchedTable();
+        BaseResponse<MatchingResponse> response = BaseResponse.of(temporaryMatchingResponse, "임시 테이블 데이터 확인 완료");
         return ResponseEntity.ok(response);
     }
 
@@ -65,9 +65,9 @@ public class RandomLetterController implements RandomLetterControllerDocs {
      * 랜덤 편지 승인하기
      */
     @PostMapping("/approve")
-    public ResponseEntity<BaseResponse<ApproveLetterResponse>> approveLetter(@RequestBody ApproveLetterRequest request) {
-        ApproveLetterResponse approveLetterResponse = randomLetterService.approveLetter(request);
-        BaseResponse<ApproveLetterResponse> response = BaseResponse.of(approveLetterResponse, "랜덤 편지 승인 완료");
+    public ResponseEntity<BaseResponse<MatchingResponse>> approveLetter(@RequestBody ApproveLetterRequest request) {
+        MatchingResponse approveLetterResponse = randomLetterService.approveLetter(request);
+        BaseResponse<MatchingResponse> response = BaseResponse.of(approveLetterResponse, "랜덤 편지 승인 완료");
         return ResponseEntity.ok(response);
     }
 

@@ -102,7 +102,7 @@ class RandomLetterControllerTest {
     @DisplayName("Post /api/random-letters/valid-table  - 임시테이블에 내 데이터 없을 경우")
     void temporaryTableEmptyReturnsFalse() throws Exception {
 
-        TemporaryMatchingResponse response = TemporaryMatchingResponse.builder()
+        MatchingResponse response = MatchingResponse.builder()
                 .isTemporary(false)
                 .build();
 
@@ -116,7 +116,7 @@ class RandomLetterControllerTest {
     @Test
     @DisplayName("Post /api/random-letters/valid-table  - 임시테이블에 내 데이터 있을 경우")
     void temporaryTableHasDataReturnsTrue() throws Exception {
-        TemporaryMatchingResponse response = TemporaryMatchingResponse.builder()
+        MatchingResponse response = MatchingResponse.builder()
                 .letterId(1L)
                 .title("두번째 편지 작성")
                 .content("내용")
@@ -163,7 +163,7 @@ class RandomLetterControllerTest {
                 .writerId(2L)
                 .build();
 
-        ApproveLetterResponse response = ApproveLetterResponse.builder()
+        MatchingResponse response = MatchingResponse.builder()
                 .letterId(1L)
                 .title("테스트 제목입니다")
                 .content("테스트 내용입니다")

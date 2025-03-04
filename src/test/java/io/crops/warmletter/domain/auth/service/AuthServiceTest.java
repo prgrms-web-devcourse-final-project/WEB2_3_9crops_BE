@@ -160,6 +160,7 @@ class AuthServiceTest {
                 .maxAge(0)
                 .path("/")
                 .httpOnly(true)
+                .secure(true)
                 .build();
 
         String setCookieHeader = mockResponse.getHeader(HttpHeaders.SET_COOKIE);

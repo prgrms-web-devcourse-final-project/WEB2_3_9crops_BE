@@ -20,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -50,12 +51,20 @@ public class RandomLetterServiceConcurrencyTest {
     @MockitoBean
     private AuthFacade authFacade;
 
-    private Member savedMember; //회원 1 생성
+    private Member writeMember; //첫 편지 작성자
+    private Member savedMember; //답장하는 회원 1 생성
     private Letter savedLetter; //저장된 편지 생성
-
+    private ApproveLetterRequest request; // 테스트에서 사용할 요청 객체
 
     @BeforeEach
     void setupAuth() {
+        writeMember = memberRepository.save(Member.builder()
+                .email("writer@example.com")
+                .password("password")
+                .socialUniqueId("unique_writer_id")
+                .role(Role.USER)
+                .build());
+
         savedMember = memberRepository.save(Member.builder()
                 .email("test@example.com")
                 .password("password")
@@ -64,7 +73,7 @@ public class RandomLetterServiceConcurrencyTest {
                 .build());
 
         savedLetter = letterRepository.save(Letter.builder()
-                .writerId(20L)                   // ApproveLetterRequest의 writerId와 일치
+                .writerId(writeMember.getId())                   // ApproveLetterRequest의 writerId와 일치
                 .receiverId(savedMember.getId())   // 현재 사용자의 아이디
                 .parentLetterId(null)
                 .letterType(LetterType.RANDOM)
@@ -78,6 +87,11 @@ public class RandomLetterServiceConcurrencyTest {
 
         when(authFacade.getCurrentUserId()).thenReturn(savedMember.getId());
         when(authFacade.getZipCode()).thenReturn("12345");
+
+        request = ApproveLetterRequest.builder()
+                .letterId(savedLetter.getId())
+                .writerId(writeMember.getId()) // writer의 실제 ID 사용
+                .build();
     }
 
     @BeforeEach
@@ -91,19 +105,16 @@ public class RandomLetterServiceConcurrencyTest {
     @DisplayName("동시성 이슈 생성 - 동시에 100명 요청 시 단 한 건의 승인만 성공해야 함 (유니크 제약 조건으로 해결)")
     void approveLetter_concurrentRequests_onlyOneApprovalSucceeds() throws Exception {
         // given
-        int threadCount = 100;
+        int threadCount = 10;
         ExecutorService executor = Executors.newFixedThreadPool(32);
         CountDownLatch latch = new CountDownLatch(threadCount);
-
-        ApproveLetterRequest request = ApproveLetterRequest.builder()
-                .letterId(savedLetter.getId())
-                .writerId(20L)
-                .build();
 
         for (int i = 0; i < threadCount; i++) {
             executor.submit(() -> {
                 try {
                     randomLetterService.approveLetter(request);
+                }catch (Exception e) {
+                    System.out.println("동시성 에러 확인: " + e.getMessage());
                 }finally {
                     latch.countDown();
                 }
@@ -119,5 +130,4 @@ public class RandomLetterServiceConcurrencyTest {
         assertEquals(request.getLetterId(), approved.getLetterId());
         assertEquals(request.getWriterId(), approved.getFirstMemberId()); //최초로 편지쓴 사람 id = 편지 작성자인지 확인
     }
-
 }

@@ -3,10 +3,7 @@ package io.crops.warmletter.domain.letter.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
-import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
-import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
+import io.crops.warmletter.domain.letter.dto.response.*;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
@@ -18,6 +15,7 @@ import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.letter.repository.LetterTemporaryMatchingRepository;
 import io.crops.warmletter.domain.member.entity.Member;
+import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -88,7 +86,7 @@ public class RandomLetterService {
     /**
      * 임시테이블에 회원이 있는지 검증
      */
-    public TemporaryMatchingResponse checkTemporaryMatchedTable() {
+    public MatchingResponse checkTemporaryMatchedTable() {
         Long currentUserId = authFacade.getCurrentUserId();
         Optional<LetterTemporaryMatching> tempTable = letterTemporaryMatchingRepository.findBySecondMemberId(currentUserId);
         if (tempTable.isPresent()) {
@@ -98,24 +96,11 @@ public class RandomLetterService {
             Letter letter = letterRepository.findById(tempMatching.getLetterId())
                     .orElseThrow(LetterNotFoundException::new);
 
-//            Member member = memberRepository.findById(6L).orElseThrow(); //테스트시 필요
+            String zipCode = memberRepository.findById(tempMatching.getFirstMemberId()).orElseThrow(MemberNotFoundException::new).getZipCode();
 
-            return TemporaryMatchingResponse.builder()
-                    .letterId(letter.getId())
-                    .content(letter.getContent())
-                    .zipCode(authFacade.getZipCode())
-                    .title(letter.getTitle())
-                    .category(letter.getCategory())
-                    .paperType(letter.getPaperType())
-                    .fontType(letter.getFontType())
-                    .createdAt(letter.getCreatedAt())
-                    .replyDeadLine(tempMatching.getReplyDeadLine())
-                    .isTemporary(true)
-                    .build();
+            return MatchingResponse.fromMatching(letter, tempMatching, zipCode);
         } else {
-            return TemporaryMatchingResponse.builder()
-                    .isTemporary(false)
-                    .build();
+            return MatchingResponse.empty();
         }
     }
 
@@ -140,7 +125,7 @@ public class RandomLetterService {
      * 랜덤 편지 승인하기.
      */
     @Transactional
-    public void approveLetter(ApproveLetterRequest request) {
+    public MatchingResponse approveLetter(ApproveLetterRequest request) {
         Long currentUserId = authFacade.getCurrentUserId();
 
         // 현재 사용자가 이미 다른 편지를 승인했는지 확인
@@ -163,6 +148,11 @@ public class RandomLetterService {
 
         Letter letter = letterRepository.findById(letterTemporaryMatching.getLetterId()).orElseThrow(LetterNotFoundException::new);
         letter.updateLetterType(LetterType.DIRECT);
+
+        //상대방의 우편번호
+        String zipCode = memberRepository.findById(letterTemporaryMatching.getFirstMemberId()).orElseThrow(MemberNotFoundException::new).getZipCode();
+
+        return MatchingResponse.fromApprovedLetter(letter, letterTemporaryMatching, zipCode);
     }
 
 

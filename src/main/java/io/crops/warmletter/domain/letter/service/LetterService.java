@@ -157,6 +157,7 @@ public class LetterService {
 
         Letter letter = letterRepository.findByIdAndReceiverId(letterId, receiverId)
                                         .orElseThrow(LetterNotBelongException::new);
+        letter.updateIsEvaluated(true); //편자 평가여부 true변환
 
         memberFacade.applyEvaluationTemperature(letter.getWriterId(), request.getEvaluation());
 

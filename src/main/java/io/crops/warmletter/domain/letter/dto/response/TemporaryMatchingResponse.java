@@ -24,7 +24,7 @@ public class TemporaryMatchingResponse {
 
     private final Long writerId;
 
-    private final String zipCode;          // 현재 로그인한 회원의 우편번호
+    private final String zipCode;          // 로그인한 회원 말고 상대방 회원의 zipCode
 
     private final Category category;       // 편지의 카테고리
 

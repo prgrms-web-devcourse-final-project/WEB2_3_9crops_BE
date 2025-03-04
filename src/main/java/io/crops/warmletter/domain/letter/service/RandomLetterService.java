@@ -18,6 +18,7 @@ import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.letter.repository.LetterTemporaryMatchingRepository;
 import io.crops.warmletter.domain.member.entity.Member;
+import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -95,7 +96,9 @@ public class RandomLetterService {
             LetterTemporaryMatching tempMatching = tempTable.get();
             Letter letter = letterRepository.findById(tempMatching.getLetterId())
                     .orElseThrow(LetterNotFoundException::new);
-            return TemporaryMatchingResponse.fromMatching(letter, tempMatching, authFacade.getZipCode());
+            String zipCode = memberRepository.findById(tempMatching.getFirstMemberId()).orElseThrow(MemberNotFoundException::new).getZipCode();
+
+            return TemporaryMatchingResponse.fromMatching(letter, tempMatching, zipCode);
         } else {
             return TemporaryMatchingResponse.empty();
         }

@@ -68,7 +68,7 @@ class NotificationControllerTest {
         mockMvc.perform(patch("/api/notifications/{notificationId}/read", notificationId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.notificationId").value(readNotificationResponse.getNotificationId()))
-                .andExpect(jsonPath("$.data.isRead").value(true))
+                .andExpect(jsonPath("$.data.read").value(true))
                 .andExpect(jsonPath("$.message").value("알림 읽음 처리 성공"))
                 .andDo(print());
     }
@@ -91,9 +91,9 @@ class NotificationControllerTest {
         mockMvc.perform(patch("/api/notifications/read"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].notificationId").value(readNotificationResponse1.getNotificationId()))
-                .andExpect(jsonPath("$.data[0].isRead").value(true))
+                .andExpect(jsonPath("$.data[0].read").value(true))
                 .andExpect(jsonPath("$.data[1].notificationId").value(readNotificationResponse2.getNotificationId()))
-                .andExpect(jsonPath("$.data[1].isRead").value(true))
+                .andExpect(jsonPath("$.data[1].read").value(true))
                 .andExpect(jsonPath("$.message").value("모든 알림 읽음 처리 성공"))
                 .andDo(print());
     }

@@ -28,7 +28,7 @@ public class Timeline extends BaseTimeEntity {
     private AlarmType alarmType;
 
     @Column(nullable = false)
-    private Boolean isRead;
+    private boolean isRead;
 
     @Builder
     public Timeline(long memberId, String title, String content, AlarmType alarmType) {

@@ -1,10 +1,7 @@
 package io.crops.warmletter.domain.eventpost.service;
 
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
-import io.crops.warmletter.domain.eventpost.dto.response.EventCommentsResponse;
-import io.crops.warmletter.domain.eventpost.dto.response.EventPostDetailResponse;
-import io.crops.warmletter.domain.eventpost.dto.response.EventPostResponse;
-import io.crops.warmletter.domain.eventpost.dto.response.EventPostStatusResponse;
+import io.crops.warmletter.domain.eventpost.dto.response.*;
 import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException;
 import io.crops.warmletter.domain.eventpost.exception.UsedEventPostNotFoundException;
@@ -18,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -43,8 +41,37 @@ class EventPostServiceTest {
     private EventPostService eventPostService;
 
     @Test
+    @DisplayName("게시판 전체 조회 성공")
+    void get_eventPosts_success() throws Exception {
+        //given
+        EventPostsResponse eventPostsResponse1 = EventPostsResponse.builder().eventPostId(1L).title("제목").build();
+        EventPostsResponse eventPostsResponse2 = EventPostsResponse.builder().eventPostId(2L).title("제목").build();
+        ReflectionTestUtils.setField(eventPostsResponse2, "isUsed", true);
+
+        Pageable pageable = PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<EventPostsResponse> eventPosts = List.of(eventPostsResponse1, eventPostsResponse2);
+        Page<EventPostsResponse> eventPostsPage = new PageImpl<>(eventPosts, pageable, eventPosts.size());
+
+        when(eventPostRepository.findByActiveIsTrue(any(Pageable.class))).thenReturn(eventPostsPage);
+
+        //when
+        Page<EventPostsResponse> eventPostsResponse = eventPostService.getEventPosts(pageable);
+
+        //then
+        assertNotNull(eventPostsResponse);
+        assertEquals(eventPostsResponse1.getEventPostId(), eventPostsResponse.getContent().get(0).getEventPostId());
+        assertEquals(eventPostsResponse1.getTitle(), eventPostsResponse.getContent().get(0).getTitle());
+        assertEquals(eventPostsResponse1.isUsed(), eventPostsResponse.getContent().get(0).isUsed());
+        assertEquals(eventPostsResponse2.getEventPostId(), eventPostsResponse.getContent().get(1).getEventPostId());
+        assertEquals(eventPostsResponse2.getTitle(), eventPostsResponse.getContent().get(1).getTitle());
+        assertEquals(eventPostsResponse2.isUsed(), eventPostsResponse.getContent().get(1).isUsed());
+    }
+
+
+
+    @Test
     @DisplayName("게시판 생성 성공")
-    void create_EventPost_success(){
+    void create_eventPost_success(){
         //given
         CreateEventPostRequest createEventPostRequest = CreateEventPostRequest.builder()
                 .title("제목")
@@ -67,7 +94,7 @@ class EventPostServiceTest {
 
     @Test
     @DisplayName("게시판 삭제 성공")
-    void delete_EventPost_success(){
+    void delete_eventPost_success(){
         //given
         Long eventPostId = 1L;
 
@@ -81,14 +108,14 @@ class EventPostServiceTest {
 
         //then
         assertEquals(1, deleteEventPostResponse.get("eventPostId"));
-        assertFalse(eventPost.getIsUsed());
+        assertFalse(eventPost.isUsed());
 
     }
 
 
     @Test
     @DisplayName("게시판 삭제 실패 - 존재하지 않는 게시판")
-    void delete_EventPost_notFound() {
+    void delete_eventPost_notFound() {
         // given
         when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.empty());
 
@@ -101,7 +128,7 @@ class EventPostServiceTest {
 
     @Test
     @DisplayName("사용중인 게시판 조회 성공")
-    void get_UsedEventPost_success(){
+    void get_usedEventPost_success(){
         //given
         Long eventPostId = 1L;
 
@@ -121,7 +148,7 @@ class EventPostServiceTest {
 
     @Test
     @DisplayName("사용중인 게시판 조회 실패 - 조건이 일치하는 게시판 없음")
-    void get_UsedEventPost_notFound(){
+    void get_usedEventPost_notFound(){
         //given
         when(eventPostRepository.findByIsUsed(true)).thenReturn(Optional.empty());
         //when
@@ -133,7 +160,7 @@ class EventPostServiceTest {
 
     @Test
     @DisplayName("게시판 조회(개별) 성공")
-    void get_EventPost_success(){
+    void get_eventPost_success(){
         // given
         EventPost eventPost = EventPost.builder().title("제목").build();
         ReflectionTestUtils.setField(eventPost, "id", 1L);
@@ -166,7 +193,7 @@ class EventPostServiceTest {
 
     @Test
     @DisplayName("게시판 조회(개별) 실패 - 일치하는 eventPostId 없음")
-    void get_EventPost_notFound(){
+    void get_eventPost_notFound(){
         //given
         when(eventPostRepository.findById(any(Long.class))).thenThrow(new EventPostNotFoundException());
 
@@ -179,7 +206,7 @@ class EventPostServiceTest {
 
     @Test
     @DisplayName("게시판 사용여부 변경 성공 - 사용중에서 미사용")
-    void update_EventPostIsUsedToFalse_success(){
+    void update_eventPostIsUsedToFalse_success(){
         //given
         Long eventPostId = 1L;
 
@@ -194,12 +221,12 @@ class EventPostServiceTest {
 
         //then
         assertEquals(1, eventPostStatusResponse.getEventPostId());
-        assertFalse(eventPostStatusResponse.getIsUsed());
+        assertFalse(eventPostStatusResponse.isUsed());
     }
 
     @Test
     @DisplayName("게시판 사용여부 변경 성공 - 미사용에서 사용중")
-    void update_EventPostIsUsedToTrue_success(){
+    void update_eventPostIsUsedToTrue_success(){
         //given
         Long eventPostId = 1L;
 
@@ -214,12 +241,12 @@ class EventPostServiceTest {
 
         //then
         assertEquals(1, eventPostStatusResponse.getEventPostId());
-        assertTrue(eventPostStatusResponse.getIsUsed());
+        assertTrue(eventPostStatusResponse.isUsed());
     }
 
     @Test
     @DisplayName("게시판 사용여부 변경 실패 - 이미 사용중인 게시판이 있는 경우")
-    void update_EventPostIsUsedToFalse_AlreadyInUsed(){
+    void update_eventPostIsUsedToFalse_AlreadyInUsed(){
         //given
         Long eventPostId = 1L;
 

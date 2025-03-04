@@ -40,7 +40,10 @@ public interface LetterControllerDocs {
     @PostMapping("/api/letters/{letterId}/evaluate")
     ResponseEntity<BaseResponse<Void>> evaluateLetter(@PathVariable Long letterId, @RequestBody @Valid EvaluateLetterRequest request);
 
-
+    @Operation(summary = "읽지 않은 편지 수 조회하기",
+            description = "홈화면에서 내가 읽지 않은 편지 수를 조회합니다.")
+    @GetMapping("/letters/unread/count")
+    ResponseEntity<BaseResponse<Integer>> getLetterUnreadCount();
 
 
 }

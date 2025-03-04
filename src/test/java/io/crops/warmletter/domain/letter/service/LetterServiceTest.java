@@ -1005,7 +1005,7 @@ class LetterServiceTest {
         assertThat(count).isZero();
 
         verify(authFacade).getCurrentUserId();
-        verify(letterRepository).countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(memberId);
+        verify(letterRepository).countLetterUnreadCount(memberId);
     }
 
     @DisplayName("읽지 않은 편지 수 조회 성공 - 3건")
@@ -1014,7 +1014,7 @@ class LetterServiceTest {
         // given
         Long memberId = 1L;
         when(authFacade.getCurrentUserId()).thenReturn(memberId);
-        when(letterRepository.countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(memberId)).thenReturn(3);
+        when(letterRepository.countLetterUnreadCount(memberId)).thenReturn(3);
 
         // when
         int count = letterService.getLetterUnreadCount();
@@ -1023,6 +1023,6 @@ class LetterServiceTest {
         assertThat(count).isEqualTo(3);
 
         verify(authFacade).getCurrentUserId();
-        verify(letterRepository).countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(memberId);
+        verify(letterRepository).countLetterUnreadCount(memberId);
     }
 }

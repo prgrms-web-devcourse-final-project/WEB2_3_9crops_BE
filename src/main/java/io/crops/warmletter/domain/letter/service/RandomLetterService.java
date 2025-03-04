@@ -96,24 +96,11 @@ public class RandomLetterService {
             Letter letter = letterRepository.findById(tempMatching.getLetterId())
                     .orElseThrow(LetterNotFoundException::new);
 
-//            Member member = memberRepository.findById(6L).orElseThrow(); //테스트시 필요
+            String zipCode = memberRepository.findById(tempMatching.getFirstMemberId()).orElseThrow(MemberNotFoundException::new).getZipCode();
 
-            return TemporaryMatchingResponse.builder()
-                    .letterId(letter.getId())
-                    .content(letter.getContent())
-                    .zipCode(authFacade.getZipCode())
-                    .title(letter.getTitle())
-                    .category(letter.getCategory())
-                    .paperType(letter.getPaperType())
-                    .fontType(letter.getFontType())
-                    .createdAt(letter.getCreatedAt())
-                    .replyDeadLine(tempMatching.getReplyDeadLine())
-                    .isTemporary(true)
-                    .build();
+            return TemporaryMatchingResponse.fromMatching(letter, tempMatching, zipCode);
         } else {
-            return TemporaryMatchingResponse.builder()
-                    .isTemporary(false)
-                    .build();
+            return TemporaryMatchingResponse.empty();
         }
     }
 

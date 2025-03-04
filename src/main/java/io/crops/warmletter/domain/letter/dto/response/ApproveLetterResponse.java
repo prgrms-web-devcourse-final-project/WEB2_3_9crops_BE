@@ -22,7 +22,9 @@ public class ApproveLetterResponse {
 
     private final String content;
 
-    private final String zipCode;    // 상대방 회원의 우편번호
+    private final Long writerId;
+
+    private final String zipCode;          // 로그인한 회원 말고 상대방 회원의 zipCode
 
     private final Category category;       // 편지의 카테고리
 
@@ -42,6 +44,7 @@ public class ApproveLetterResponse {
                 .letterId(tempMatching.getLetterId())
                 .title(letter.getTitle())
                 .content(letter.getContent())
+                .writerId(tempMatching.getFirstMemberId())
                 .zipCode(zipCode)
                 .category(letter.getCategory())
                 .paperType(letter.getPaperType())

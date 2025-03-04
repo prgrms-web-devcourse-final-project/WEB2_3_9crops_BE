@@ -239,4 +239,10 @@ public class LetterService {
             throw new BusinessException(INVALID_INPUT_VALUE);
         }
     }
+
+    public int getLetterUnreadCount() {
+//        Long memberId = authFacade.getCurrentUserId();
+
+        return letterRepository.countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(1L);
+    }
 }

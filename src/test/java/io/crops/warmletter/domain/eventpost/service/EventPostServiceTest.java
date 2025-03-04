@@ -100,7 +100,7 @@ class EventPostServiceTest {
         EventPost eventPost = EventPost.builder().title("제목").build();
         ReflectionTestUtils.setField(eventPost, "id", eventPostId);
 
-        when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.of(eventPost));
+        when(eventPostRepository.findByIdAndIsActiveIsTrue(any(Long.class))).thenReturn(Optional.of(eventPost));
 
         //when
         Map<String,Long> deleteEventPostResponse = eventPostService.deleteEventPost(eventPostId);
@@ -111,12 +111,11 @@ class EventPostServiceTest {
 
     }
 
-
     @Test
-    @DisplayName("게시판 삭제 실패 - 존재하지 않는 게시판")
+    @DisplayName("게시판 삭제 실패 - 존재하지 않는(이미 삭제된) 게시판")
     void delete_eventPost_notFound() {
         // given
-        when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.empty());
+        when(eventPostRepository.findByIdAndIsActiveIsTrue(any(Long.class))).thenReturn(Optional.empty());
 
         // when & then
         BusinessException exception = assertThrows(EventPostNotFoundException.class, () -> eventPostService.deleteEventPost(999L));

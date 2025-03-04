@@ -12,9 +12,15 @@ spring:
       on-profile: prod
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${PROD_DATASOURCE_URL}
+    jdbc-url: ${PROD_DATASOURCE_URL}
     username: ${PROD_DATASOURCE_USERNAME}
     password: ${PROD_DATASOURCE_PASSWORD}
+  datasource-meta:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    jdbc-url: ${META_DATASOURCE_URL}
+    username: ${META_DATASOURCE_USERNAME}
+    password: ${META_DATASOURCE_PASSWORD}
+
   jpa:
     hibernate:
       ddl-auto: none
@@ -40,9 +46,21 @@ spring:
   config:
     activate:
       on-profile: local
+
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+      schema: classpath:org/springframework/batch/core/schema-mysql.sql
+  datasource-meta:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    jdbc-url: ${META_DATASOURCE_URL}
+    username: ${META_DATASOURCE_USERNAME}
+    password: ${META_DATASOURCE_PASSWORD}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DATASOURCE_URL}
+    jdbc-url: ${DATASOURCE_URL}
     username: ${DATASOURCE_USERNAME}
     password: ${DATASOURCE_PASSWORD}
   jpa:
@@ -106,6 +124,8 @@ redirect:
 logging:
   level:
     root: INFO
+#    org.springframework.beans.factory: DEBUG
+#    org.springframework.boot: DEBUG
     org.springframework.security: DEBUG
     io.corps.warmletter: DEBUG
     org.springframework.web: DEBUG

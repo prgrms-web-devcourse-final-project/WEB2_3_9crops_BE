@@ -17,6 +17,7 @@ import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
+import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,6 +57,9 @@ class LetterServiceTest {
 
     @Mock
     private MemberFacade memberFacade;
+
+    @Mock
+    private NotificationFacade notificationFacade;
 
     @InjectMocks
     private LetterService letterService;
@@ -121,7 +125,7 @@ class LetterServiceTest {
                 .status(Status.IN_DELIVERY)
                 .matchingId(directLetterRequest.getMatchingId())
                 .build();
-
+        ReflectionTestUtils.setField(savedDirectLetter, "id", 1L);
     }
 
 
@@ -334,6 +338,7 @@ class LetterServiceTest {
                 .build();
         ReflectionTestUtils.setField(matching, "id", 100L);
         when(letterMatchingRepository.findById(100L)).thenReturn(Optional.of(matching));
+        doNothing().when(notificationFacade).sendNotification(anyString(), anyLong(), any(), anyString());
 
         // when: 서비스 메서드 호출
         LetterResponse response = letterService.createLetter(request);

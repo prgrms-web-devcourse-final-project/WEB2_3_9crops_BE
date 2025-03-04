@@ -338,7 +338,6 @@ class LetterServiceTest {
                 .build();
         ReflectionTestUtils.setField(matching, "id", 100L);
         when(letterMatchingRepository.findById(100L)).thenReturn(Optional.of(matching));
-        doNothing().when(notificationFacade).sendNotification(anyString(), anyLong(), any(), anyString());
 
         // when: 서비스 메서드 호출
         LetterResponse response = letterService.createLetter(request);
@@ -407,6 +406,7 @@ class LetterServiceTest {
         );
         //verify 메서드로 letterRepository.save() 메서드가 정확히 1번 호출되었는지 확인
         verify(letterRepository).save(any(Letter.class));
+        verify(notificationFacade).sendNotification(anyString(), anyLong(), any(), anyString());
     }
 
 

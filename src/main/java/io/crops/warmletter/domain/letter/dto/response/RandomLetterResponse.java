@@ -23,14 +23,20 @@ public class RandomLetterResponse {
 
     private final Category category;
 
+    private final PaperType paperType;
+
+    private final FontType fontType;
+
     private final LocalDateTime createdAt;
 
-    public RandomLetterResponse(Long letterId, Long writerId, String title, String zipCode, Category category, LocalDateTime createdAt) {
+    public RandomLetterResponse(Long letterId, Long writerId, String title, String zipCode, Category category, PaperType paperType, FontType fontType, LocalDateTime createdAt) {
         this.letterId = letterId;
         this.writerId = writerId;
         this.title = title;
         this.zipCode = zipCode;
         this.category = category;
+        this.paperType = paperType;
+        this.fontType = fontType;
         this.createdAt = createdAt;
     }
 }

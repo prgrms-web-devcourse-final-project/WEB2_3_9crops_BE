@@ -6,7 +6,7 @@ import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
+import io.crops.warmletter.domain.letter.dto.response.MatchingResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
@@ -15,6 +15,7 @@ import io.crops.warmletter.domain.letter.enums.FontType;
 import io.crops.warmletter.domain.letter.enums.LetterType;
 import io.crops.warmletter.domain.letter.enums.PaperType;
 import io.crops.warmletter.domain.letter.exception.AlreadyApprovedException;
+import io.crops.warmletter.domain.letter.exception.CategoryNotFoundException;
 import io.crops.warmletter.domain.letter.exception.DuplicateLetterMatchException;
 import io.crops.warmletter.domain.letter.exception.TemporaryMatchingNotFoundException;
 import io.crops.warmletter.domain.letter.facade.LetterFacade;
@@ -116,11 +117,10 @@ class RandomLetterServiceTest {
                 () -> assertEquals(Category.CONSOLATION, response.getCategory())
         );
     }
-
     @Test
-    @DisplayName("findRandomLetters - 카테고리 null 시 전체 랜덤 편지 5개 조회 성공")
-    void find_RandomLetters_WithNullCategory() {
-        Category category = null;
+    @DisplayName("findRandomLetters - 카테고리 ALL시 전체 조회")
+    void find_RandomLetters_WithALLCategory() {
+        Category category = Category.ALL;
 
         // 10번 회원이 있고
         Member member = Member.builder()
@@ -141,7 +141,7 @@ class RandomLetterServiceTest {
 
         //조회 시 편지
         when(authFacade.getCurrentUserId()).thenReturn(1L);
-        when(letterRepository.findRandomLettersByCategory(null, 1L, pageable)).thenReturn(List.of(dto));
+        when(letterRepository.findRandomLettersByCategory(Category.ALL, 1L, pageable)).thenReturn(List.of(dto));
 
         List<RandomLetterResponse> responses = randomLetterService.findRandomLetters(category);
         RandomLetterResponse response = responses.get(0);
@@ -151,6 +151,17 @@ class RandomLetterServiceTest {
                 () -> assertEquals("12345", response.getZipCode()),
                 () -> assertEquals(Category.ETC, response.getCategory())
         );
+    }
+
+    @Test
+    @DisplayName("findRandomLetters - 카테고리 null 시 CategoryNotFoundException 발생")
+    void find_RandomLetters_WithNullCategory() {
+        when(authFacade.getCurrentUserId()).thenReturn(1L);
+
+        // 카테고리가 null인 경우 CategoryNotFoundException이 발생해야 함
+        assertThrows(CategoryNotFoundException.class, () -> {
+            randomLetterService.findRandomLetters(null);
+        });
     }
 
     @Test
@@ -204,8 +215,6 @@ class RandomLetterServiceTest {
     @DisplayName("checkTemporaryMatchedTable - 임시 매칭 데이터가 존재하는 경우")
     void checkTemporaryMatchedTable_exists() {
         Long userId = 1L;
-        when(authFacade.getCurrentUserId()).thenReturn(userId);
-        when(authFacade.getZipCode()).thenReturn("12345");
 
         // 임시 매칭 데이터 생성
         LetterTemporaryMatching tempMatching = LetterTemporaryMatching.builder()
@@ -213,7 +222,6 @@ class RandomLetterServiceTest {
                 .firstMemberId(2L)
                 .secondMemberId(userId)
                 .build();
-        when(letterTemporaryMatchingRepository.findBySecondMemberId(userId)).thenReturn(Optional.ofNullable(tempMatching));
 
         // Letter 생성 (임시 매칭에 해당하는 편지)
         Letter letter = Letter.builder()
@@ -225,12 +233,19 @@ class RandomLetterServiceTest {
                 .writerId(2L)
                 .build();
 
-        when(letterRepository.findById(100L)).thenReturn(Optional.of(letter));
+        Member member = Member.builder()
+                .zipCode("12345")
+                .build();
 
-        TemporaryMatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
+        when(authFacade.getCurrentUserId()).thenReturn(userId);
+        when(letterTemporaryMatchingRepository.findBySecondMemberId(userId)).thenReturn(Optional.ofNullable(tempMatching));
+        when(letterRepository.findById(100L)).thenReturn(Optional.of(letter));
+        when(memberRepository.findById(tempMatching.getFirstMemberId())).thenReturn(Optional.of(member));
+
+        MatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
 
         assertTrue(response.isTemporary());
-        assertEquals("테스트 편지", response.getLetterTitle());
+        assertEquals("테스트 편지", response.getTitle());
         assertEquals("테스트 내용", response.getContent());
     }
 
@@ -241,7 +256,7 @@ class RandomLetterServiceTest {
         when(authFacade.getCurrentUserId()).thenReturn(1L);
         when(letterTemporaryMatchingRepository.findBySecondMemberId(userId)).thenReturn(Optional.empty());
 
-        TemporaryMatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
+        MatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
 
         assertFalse(response.isTemporary());
     }
@@ -368,7 +383,6 @@ class RandomLetterServiceTest {
         when(letterFacade.createLetter(request)).thenReturn(expectedResponse);
 
         LetterMatching dummyMatching = LetterMatching.builder()
-                .letterId(tempMatching.getLetterId())
                 .firstMemberId(tempMatching.getFirstMemberId())
                 .secondMemberId(tempMatching.getSecondMemberId())
                 .matchedAt(tempMatching.getMatchedAt())

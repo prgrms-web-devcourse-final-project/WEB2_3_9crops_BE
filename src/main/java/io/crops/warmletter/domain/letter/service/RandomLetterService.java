@@ -3,24 +3,19 @@ package io.crops.warmletter.domain.letter.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
-import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
-import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
+import io.crops.warmletter.domain.letter.dto.response.*;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.LetterType;
-import io.crops.warmletter.domain.letter.exception.AlreadyApprovedException;
-import io.crops.warmletter.domain.letter.exception.DuplicateLetterMatchException;
-import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
-import io.crops.warmletter.domain.letter.exception.TemporaryMatchingNotFoundException;
+import io.crops.warmletter.domain.letter.exception.*;
 import io.crops.warmletter.domain.letter.facade.LetterFacade;
 import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.letter.repository.LetterTemporaryMatchingRepository;
 import io.crops.warmletter.domain.member.entity.Member;
+import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +49,11 @@ public class RandomLetterService {
         Long currentUserId = authFacade.getCurrentUserId();
         Pageable pageable = PageRequest.of(0, 5);  // 첫 페이지, 5개 제한
 
-        if (category != null) { //전체 조회가 아닌 경우에 회원의 선호 카테고리를 변경
+        if (category == null){
+            throw new CategoryNotFoundException();
+        }
+
+        if (category != Category.ALL) { //전체 조회가 아닌 경우에 회원의 선호 카테고리를 변경
             Member member = memberRepository.findById(currentUserId).orElseThrow();
             member.updatePreferredLetterCategory(category);
         }
@@ -87,7 +86,7 @@ public class RandomLetterService {
     /**
      * 임시테이블에 회원이 있는지 검증
      */
-    public TemporaryMatchingResponse checkTemporaryMatchedTable() {
+    public MatchingResponse checkTemporaryMatchedTable() {
         Long currentUserId = authFacade.getCurrentUserId();
         Optional<LetterTemporaryMatching> tempTable = letterTemporaryMatchingRepository.findBySecondMemberId(currentUserId);
         if (tempTable.isPresent()) {
@@ -97,24 +96,11 @@ public class RandomLetterService {
             Letter letter = letterRepository.findById(tempMatching.getLetterId())
                     .orElseThrow(LetterNotFoundException::new);
 
-//            Member member = memberRepository.findById(6L).orElseThrow(); //테스트시 필요
+            String zipCode = memberRepository.findById(tempMatching.getFirstMemberId()).orElseThrow(MemberNotFoundException::new).getZipCode();
 
-            return TemporaryMatchingResponse.builder()
-                    .letterId(letter.getId())
-                    .content(letter.getContent())
-                    .zipCode(authFacade.getZipCode())
-                    .letterTitle(letter.getTitle())
-                    .category(letter.getCategory())
-                    .paperType(letter.getPaperType())
-                    .fontType(letter.getFontType())
-                    .createdAt(letter.getCreatedAt())
-                    .replyDeadLine(tempMatching.getReplyDeadLine())
-                    .isTemporary(true)
-                    .build();
+            return MatchingResponse.fromMatching(letter, tempMatching, zipCode);
         } else {
-            return TemporaryMatchingResponse.builder()
-                    .isTemporary(false)
-                    .build();
+            return MatchingResponse.empty();
         }
     }
 
@@ -139,7 +125,7 @@ public class RandomLetterService {
      * 랜덤 편지 승인하기.
      */
     @Transactional
-    public void approveLetter(ApproveLetterRequest request) {
+    public MatchingResponse approveLetter(ApproveLetterRequest request) {
         Long currentUserId = authFacade.getCurrentUserId();
 
         // 현재 사용자가 이미 다른 편지를 승인했는지 확인
@@ -162,6 +148,11 @@ public class RandomLetterService {
 
         Letter letter = letterRepository.findById(letterTemporaryMatching.getLetterId()).orElseThrow(LetterNotFoundException::new);
         letter.updateLetterType(LetterType.DIRECT);
+
+        //상대방의 우편번호
+        String zipCode = memberRepository.findById(letterTemporaryMatching.getFirstMemberId()).orElseThrow(MemberNotFoundException::new).getZipCode();
+
+        return MatchingResponse.fromApprovedLetter(letter, letterTemporaryMatching, zipCode);
     }
 
 
@@ -176,7 +167,6 @@ public class RandomLetterService {
         LetterTemporaryMatching letterTemporaryMatching = letterTemporaryMatchingRepository.findByLetterId(request.getParentLetterId()).orElseThrow(TemporaryMatchingNotFoundException::new);  //편지 임시 매칭 //10번
 
         LetterMatching letterMatching = LetterMatching.builder()
-                .letterId(letterTemporaryMatching.getLetterId())
                 .firstMemberId(letterTemporaryMatching.getFirstMemberId())
                 .secondMemberId(letterTemporaryMatching.getSecondMemberId())
                 .matchedAt(letterTemporaryMatching.getMatchedAt())

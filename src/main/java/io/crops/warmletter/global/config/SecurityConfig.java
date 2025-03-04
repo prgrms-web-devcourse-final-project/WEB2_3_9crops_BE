@@ -60,8 +60,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         (authorizeRequests) ->
                                 authorizeRequests
+                                        .requestMatchers("/api/reissue")
+                                        .permitAll()
                                         .requestMatchers("/api/auth/**")
-                                        .permitAll() // h2-console 접근 허용
+                                        .permitAll()
                                         .requestMatchers("/swagger-ui/**")
                                         .permitAll() // Swagger UI 허용
                                         .requestMatchers("/api/**").permitAll()

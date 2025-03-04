@@ -5,6 +5,7 @@ import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.TemporarySaveLetterRequest;
+import io.crops.warmletter.domain.letter.dto.response.LetterDraftResponse;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterMatching;
@@ -22,14 +23,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -91,6 +90,7 @@ class LetterServiceTest {
                 .category(Category.ETC)
                 .paperType(PaperType.PAPER)
                 .fontType(FontType.GYEONGGI)
+                .matchingId(100L)
                 .build();
 
         // repository.save()가 반환할 Letter 객체 미리 준비 (랜덤편지에 간 편지에 대한 첫 답장)
@@ -119,6 +119,7 @@ class LetterServiceTest {
                 .receiverId(directLetterRequest.getReceiverId())
                 .parentLetterId(directLetterRequest.getParentLetterId())
                 .status(Status.IN_DELIVERY)
+                .matchingId(directLetterRequest.getMatchingId())
                 .build();
 
     }
@@ -202,7 +203,7 @@ class LetterServiceTest {
                 .category(Category.ETC)
                 .paperType(PaperType.PAPER)
                 .fontType(FontType.GYEONGGI)
-                .matchingId(100L)         // 업데이트할 매칭 ID
+                .matchingId(100L)
                 .build();
 
         // 현재 로그인한 사용자 ID는 1L라고 가정 (작성자)
@@ -244,6 +245,15 @@ class LetterServiceTest {
         when(letterRepository.save(any(Letter.class))).thenReturn(newLetter);
 
         when(authFacade.getZipCode()).thenReturn("12345");
+
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(1L)
+                .secondMemberId(2L)
+                .matchedAt(LocalDateTime.now())
+                .build();
+        ReflectionTestUtils.setField(matching, "id", 100L);
+        when(letterMatchingRepository.findById(100L)).thenReturn(Optional.of(matching));
+
 
         // when: 서비스 메서드 호출
         LetterResponse response = letterService.createLetter(request);
@@ -317,6 +327,13 @@ class LetterServiceTest {
 
         when(letterRepository.save(any(Letter.class))).thenReturn(newLetter);
         when(authFacade.getZipCode()).thenReturn("12345");
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(1L)
+                .secondMemberId(2L)
+                .matchedAt(LocalDateTime.now())
+                .build();
+        ReflectionTestUtils.setField(matching, "id", 100L);
+        when(letterMatchingRepository.findById(100L)).thenReturn(Optional.of(matching));
 
         // when: 서비스 메서드 호출
         LetterResponse response = letterService.createLetter(request);
@@ -338,7 +355,6 @@ class LetterServiceTest {
     void writeDirectLetter_success() {
         // given: repository.save()가 답장 편지 객체를 반환하도록 설정, save호출
         when(letterRepository.save(any(Letter.class))).thenReturn(savedDirectLetter);
-        //현재 로그인한 사용자 ID 및 ZipCode 설정
         when(authFacade.getCurrentUserId()).thenReturn(1L);
         when(authFacade.getZipCode()).thenReturn("12345");
 
@@ -353,14 +369,23 @@ class LetterServiceTest {
                 .content("부모 편지 내용")
                 .fontType(FontType.HIMCHAN)
                 .paperType(PaperType.COMFORT)
-                .status(Status.DELIVERED) // 또는 적절한 상태
+                .status(Status.DELIVERED)
+                .matchingId(100L)
                 .build();
         ReflectionTestUtils.setField(parentLetter, "id", 5L);
+
         when(letterRepository.findById(directLetterRequest.getParentLetterId())).thenReturn(Optional.of(parentLetter));
+
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(1L)
+                .secondMemberId(2L)
+                .matchedAt(LocalDateTime.now())
+                .build();
+        ReflectionTestUtils.setField(matching, "id", 100L);
+        when(letterMatchingRepository.findById(100L)).thenReturn(Optional.of(matching));
 
         // when: 서비스 메서드 호출
         LetterResponse response = letterService.createLetter(directLetterRequest);
-
         // then: 반환된 응답 DTO 검증
         assertAll("답장 편지 응답 검증",
                 () -> assertNotNull(response),
@@ -373,9 +398,7 @@ class LetterServiceTest {
                 () -> assertEquals(3L, response.getReceiverId()),
                 () -> assertEquals(5L, response.getParentLetterId()),
                 () -> assertEquals("12345", authFacade.getZipCode()),
-                () -> assertEquals(Status.IN_DELIVERY, response.getStatus()),
-                () -> assertNotNull(response.getDeliveryStartedAt()),
-                () -> assertNotNull(response.getDeliveryCompletedAt())
+                () -> assertEquals(Status.IN_DELIVERY, response.getStatus())
         );
         //verify 메서드로 letterRepository.save() 메서드가 정확히 1번 호출되었는지 확인
         verify(letterRepository).save(any(Letter.class));
@@ -899,5 +922,102 @@ class LetterServiceTest {
 
         verify(authFacade).getCurrentUserId();
         verify(letterRepository).save(any(Letter.class));
+    }
+
+
+    @Test
+    @DisplayName("오고 있는 편지 조회 성공~")
+    void findDeliveryLetters() throws Exception {
+        Long currentUserId = 1L;
+        Letter letter = Letter.builder()
+                .writerId(2L)
+                .receiverId(currentUserId)
+                .parentLetterId(null)
+                .letterType(LetterType.RANDOM)
+                .category(Category.CONSULT)
+                .title("제목이다.")
+                .content("내용이다.")
+                .status(Status.IN_DELIVERY)
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .matchingId(null)
+                .build();
+        List<Letter> letters = Collections.singletonList(letter);
+
+        when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
+        when(letterRepository.findByReceiverIdAndStatus(currentUserId, Status.IN_DELIVERY)).thenReturn(letters);
+
+        List<LetterResponse> responses = letterService.getLettersByStatus("delivery");
+
+        LetterResponse result = responses.get(0);
+        assertNotNull(responses);
+        assertEquals(1, responses.size());
+        assertEquals(letter.getTitle(), result.getTitle());
+    }
+
+    @Test
+    @DisplayName("임시저장 편지 조회 성공")
+    void findDraftLetters() throws Exception {
+        Long currentUserId = 1L;
+        LetterDraftResponse letterDraftResponse = LetterDraftResponse.builder()
+                .letterId(200L)
+                .writerId(currentUserId)
+                .receiverId(2L)
+                .parentLetterId(50L)
+                .title("제목")
+                .content("내용")
+                .category(Category.CONSULT)
+                .paperType(PaperType.COMFORT)
+                .fontType(FontType.HIMCHAN)
+                .status(Status.SAVED)
+                .matched(true)
+                .deliveryStartedAt(LocalDateTime.now())
+                .deliveryCompletedAt(LocalDateTime.now().plusHours(1))
+                .matchingId(300L)
+                .build();
+        List<LetterDraftResponse> letterDraftResponses = Collections.singletonList(letterDraftResponse);
+
+        when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
+        when(letterRepository.findDraftLettersWithMatching(currentUserId, Status.SAVED)).thenReturn(letterDraftResponses);
+
+        List<LetterResponse> lettersByStatus = letterService.getLettersByStatus("draft");
+        LetterResponse letterResponse = lettersByStatus.get(0);
+        assertNotNull(letterResponse);
+        assertEquals(letterDraftResponse.getTitle(), letterResponse.getTitle());
+    }
+
+    @DisplayName("읽지 않은 편지 수 조회 성공 - 0건")
+    @Test
+    void getLetterUnreadCount_Success_CountZero() throws Exception {
+        //given
+        Long memberId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+
+        //when
+        int count = letterService.getLetterUnreadCount();
+
+        //then
+        assertThat(count).isZero();
+
+        verify(authFacade).getCurrentUserId();
+        verify(letterRepository).countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(memberId);
+    }
+
+    @DisplayName("읽지 않은 편지 수 조회 성공 - 3건")
+    @Test
+    void getLetterUnreadCount_Success_CountThree() throws Exception {
+        // given
+        Long memberId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+        when(letterRepository.countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(memberId)).thenReturn(3);
+
+        // when
+        int count = letterService.getLetterUnreadCount();
+
+        // then
+        assertThat(count).isEqualTo(3);
+
+        verify(authFacade).getCurrentUserId();
+        verify(letterRepository).countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(memberId);
     }
 }

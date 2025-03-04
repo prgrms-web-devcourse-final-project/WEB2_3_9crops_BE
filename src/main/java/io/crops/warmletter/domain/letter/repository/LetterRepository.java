@@ -49,5 +49,10 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
     List<LetterDraftResponse> findDraftLettersWithMatching(@Param("writerId") Long writerId,
                                                            @Param("status") Status status);
 
-    int countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(Long receiverId);
+    @Query("SELECT count(l) from Letter l " +
+            "where l.receiverId = :receiverId " +
+            "and l.isRead = false " +
+            "and l.isActive = true " +
+            "and l.status = 'DELIVERED'")
+    int countLetterUnreadCount(Long receiverId);
 }

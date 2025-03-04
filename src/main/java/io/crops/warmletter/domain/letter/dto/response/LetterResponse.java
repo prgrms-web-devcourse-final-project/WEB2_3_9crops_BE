@@ -50,6 +50,8 @@ public class LetterResponse {
 
     private final Long matchingId; //편지 조회
 
+    private final boolean evaluated; //편지 평가 여부
+
 
     //공통 변환
     public static LetterResponse fromEntity(Letter letter, String zipCode) {
@@ -93,6 +95,7 @@ public class LetterResponse {
                 .fontType(letter.getFontType())
                 .matched(matched)
                 .matchingId(letter.getMatchingId())
+                .evaluated(letter.isEvaluated())
                 .build();
     }
 

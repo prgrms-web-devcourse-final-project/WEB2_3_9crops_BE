@@ -55,6 +55,7 @@ public class Letter extends BaseTimeEntity {
 
     private boolean isActive;        // 활성화 여부
 
+    private boolean isEvaluated; // 평가 여부
 
     //편지매칭아이디 추가
     private Long matchingId;
@@ -81,6 +82,7 @@ public class Letter extends BaseTimeEntity {
         this.paperType = paperType;
         this.isActive = true; // 기본값: 활성 상태
         this.matchingId = matchingId;
+        this.isEvaluated = false; //기본값 : 평가 여부 x
     }
 
     public void inactive() {
@@ -113,4 +115,7 @@ public class Letter extends BaseTimeEntity {
         this.isRead = isRead;
     }
 
+    public void updateIsEvaluated(boolean isEvaluated) {
+        this.isEvaluated = isEvaluated;
+    }
 }

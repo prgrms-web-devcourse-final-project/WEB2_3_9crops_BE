@@ -3,10 +3,7 @@ package io.crops.warmletter.domain.letter.controller;
 import io.crops.warmletter.domain.letter.controller.docs.RandomLetterControllerDocs;
 import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
-import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
-import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
+import io.crops.warmletter.domain.letter.dto.response.*;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.service.RandomLetterService;
 import io.crops.warmletter.global.response.BaseResponse;
@@ -68,9 +65,9 @@ public class RandomLetterController implements RandomLetterControllerDocs {
      * 랜덤 편지 승인하기
      */
     @PostMapping("/approve")
-    public ResponseEntity<BaseResponse<Void>> approveLetter(@RequestBody ApproveLetterRequest request) {
-        randomLetterService.approveLetter(request);
-        BaseResponse<Void> response = BaseResponse.of(null, "랜덤 편지 승인 완료");
+    public ResponseEntity<BaseResponse<ApproveLetterResponse>> approveLetter(@RequestBody ApproveLetterRequest request) {
+        ApproveLetterResponse approveLetterResponse = randomLetterService.approveLetter(request);
+        BaseResponse<ApproveLetterResponse> response = BaseResponse.of(approveLetterResponse, "랜덤 편지 승인 완료");
         return ResponseEntity.ok(response);
     }
 

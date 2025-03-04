@@ -3,10 +3,7 @@ package io.crops.warmletter.domain.letter.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
-import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
-import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
+import io.crops.warmletter.domain.letter.dto.response.*;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.FontType;
 import io.crops.warmletter.domain.letter.enums.PaperType;
@@ -165,14 +162,24 @@ class RandomLetterControllerTest {
                 .letterId(1L)
                 .writerId(2L)
                 .build();
-        doNothing().when(randomLetterService).approveLetter(any(ApproveLetterRequest.class));
+
+        ApproveLetterResponse response = ApproveLetterResponse.builder()
+                .letterId(1L)
+                .title("테스트 제목입니다")
+                .content("테스트 내용입니다")
+                .zipCode("12345")
+                .build();
+
+        when(randomLetterService.approveLetter(any(ApproveLetterRequest.class))).thenReturn(response);
 
         // when,then
         mockMvc.perform(post("/api/random-letters/approve")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isEmpty())
+                .andExpect(jsonPath("$.data.title").value("테스트 제목입니다"))
+                .andExpect(jsonPath("$.data.content").value("테스트 내용입니다"))
+                .andExpect(jsonPath("$.data.zipCode").value("12345"))
                 .andExpect(jsonPath("$.message").value("랜덤 편지 승인 완료"))
                 .andDo(print());
     }

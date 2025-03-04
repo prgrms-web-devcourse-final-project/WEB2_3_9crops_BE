@@ -3,10 +3,7 @@ package io.crops.warmletter.domain.letter.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
-import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
-import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
+import io.crops.warmletter.domain.letter.dto.response.*;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
@@ -18,6 +15,7 @@ import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.letter.repository.LetterTemporaryMatchingRepository;
 import io.crops.warmletter.domain.member.entity.Member;
+import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -140,7 +138,7 @@ public class RandomLetterService {
      * 랜덤 편지 승인하기.
      */
     @Transactional
-    public void approveLetter(ApproveLetterRequest request) {
+    public ApproveLetterResponse approveLetter(ApproveLetterRequest request) {
         Long currentUserId = authFacade.getCurrentUserId();
 
         // 현재 사용자가 이미 다른 편지를 승인했는지 확인
@@ -163,6 +161,11 @@ public class RandomLetterService {
 
         Letter letter = letterRepository.findById(letterTemporaryMatching.getLetterId()).orElseThrow(LetterNotFoundException::new);
         letter.updateLetterType(LetterType.DIRECT);
+
+        //상대방의 우편번호
+        String zipCode = memberRepository.findById(letterTemporaryMatching.getFirstMemberId()).orElseThrow(MemberNotFoundException::new).getZipCode();
+
+        return ApproveLetterResponse.fromApprovedLetter(letter, letterTemporaryMatching, zipCode);
     }
 
 

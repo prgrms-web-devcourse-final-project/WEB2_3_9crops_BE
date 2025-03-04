@@ -49,4 +49,5 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
     List<LetterDraftResponse> findDraftLettersWithMatching(@Param("writerId") Long writerId,
                                                            @Param("status") Status status);
 
+    int countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(Long receiverId);
 }

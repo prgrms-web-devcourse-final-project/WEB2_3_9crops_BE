@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TemporaryMatchingResponse {
+public class MatchingResponse {
 
     private final Long letterId;
 
@@ -40,8 +40,8 @@ public class TemporaryMatchingResponse {
 
 
     // 정적 메서드 추가: 매칭 데이터가 있을 때
-    public static TemporaryMatchingResponse fromMatching(Letter letter, LetterTemporaryMatching tempMatching, String zipCode) {
-        return TemporaryMatchingResponse.builder()
+    public static MatchingResponse fromMatching(Letter letter, LetterTemporaryMatching tempMatching, String zipCode) {
+        return MatchingResponse.builder()
                 .letterId(letter.getId())
                 .title(letter.getTitle())
                 .content(letter.getContent())
@@ -57,9 +57,25 @@ public class TemporaryMatchingResponse {
     }
 
     // 정적 메서드 추가: 매칭 데이터가 없을 때
-    public static TemporaryMatchingResponse empty() {
-        return TemporaryMatchingResponse.builder()
+    public static MatchingResponse empty() {
+        return MatchingResponse.builder()
                 .isTemporary(false)
+                .build();
+    }
+
+    public static MatchingResponse fromApprovedLetter(Letter letter, LetterTemporaryMatching tempMatching, String zipCode) {
+        return MatchingResponse.builder()
+                .letterId(tempMatching.getLetterId())
+                .title(letter.getTitle())
+                .content(letter.getContent())
+                .writerId(tempMatching.getFirstMemberId())
+                .zipCode(zipCode)
+                .category(letter.getCategory())
+                .paperType(letter.getPaperType())
+                .fontType(letter.getFontType())
+                .createdAt(letter.getCreatedAt())
+                .replyDeadLine(tempMatching.getReplyDeadLine())
+                .isTemporary(false) //임시테이블 없다고 판단
                 .build();
     }
 }

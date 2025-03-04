@@ -2,10 +2,7 @@ package io.crops.warmletter.domain.letter.controller.docs;
 
 import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
-import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
-import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
+import io.crops.warmletter.domain.letter.dto.response.*;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.global.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,7 +34,7 @@ public interface RandomLetterControllerDocs {
             description = "임시 매칭 테이블에 현재 사용자의 데이터가 존재하는지 확인합니다. 데이터가 있으면 이미 선택된 상태로 간주합니다."
     )
     @PostMapping("/valid-table")
-    ResponseEntity<BaseResponse<TemporaryMatchingResponse>> checkTemporaryMatchedTable();
+    ResponseEntity<BaseResponse<MatchingResponse>> checkTemporaryMatchedTable();
 
     @Operation(
             summary = "매칭 취소",
@@ -51,7 +48,7 @@ public interface RandomLetterControllerDocs {
             description = "사용자가 랜덤 편지를 승인하면 해당 편지에 대한 승인을 처리합니다."
     )
     @PostMapping("/approve")
-    ResponseEntity<BaseResponse<Void>> approveLetter(@RequestBody ApproveLetterRequest request);
+    ResponseEntity<BaseResponse<MatchingResponse>> approveLetter(@RequestBody ApproveLetterRequest request);
 
     @Operation(
             summary = "최종 랜덤 편지 매칭 완료",

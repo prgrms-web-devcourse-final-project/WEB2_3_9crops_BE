@@ -18,6 +18,7 @@ public class CorsConfig {
         configuration.setAllowedOrigins(
                 List.of(
                         "http://localhost:5173", // 로컬 프론트엔드
+                        "https://localhost:5173", // 로컬 프론트엔드
                         "http://localhost:8080", // 개발 테스트
                         "https://www.ddasum.kr" // 운영 프론트엔드
                 ));

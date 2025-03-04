@@ -157,6 +157,7 @@ public class LetterService {
 
         Letter letter = letterRepository.findByIdAndReceiverId(letterId, receiverId)
                                         .orElseThrow(LetterNotBelongException::new);
+        letter.updateIsEvaluated(true); //편자 평가여부 true변환
 
         memberFacade.applyEvaluationTemperature(letter.getWriterId(), request.getEvaluation());
 
@@ -222,5 +223,11 @@ public class LetterService {
         } else {
             throw new BusinessException(INVALID_INPUT_VALUE);
         }
+    }
+
+    public int getLetterUnreadCount() {
+        Long memberId = authFacade.getCurrentUserId();
+
+        return letterRepository.countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(memberId);
     }
 }

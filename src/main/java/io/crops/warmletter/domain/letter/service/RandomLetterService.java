@@ -3,10 +3,7 @@ package io.crops.warmletter.domain.letter.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.letter.dto.request.ApproveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
-import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
-import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
+import io.crops.warmletter.domain.letter.dto.response.*;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
@@ -89,18 +86,21 @@ public class RandomLetterService {
     /**
      * 임시테이블에 회원이 있는지 검증
      */
-    public TemporaryMatchingResponse checkTemporaryMatchedTable() {
+    public MatchingResponse checkTemporaryMatchedTable() {
         Long currentUserId = authFacade.getCurrentUserId();
         Optional<LetterTemporaryMatching> tempTable = letterTemporaryMatchingRepository.findBySecondMemberId(currentUserId);
         if (tempTable.isPresent()) {
+            // 임시 매칭 데이터가 있으면 해당 편지 정보를 조회해서 응답 DTO에 채워줌~~
             LetterTemporaryMatching tempMatching = tempTable.get();
+
             Letter letter = letterRepository.findById(tempMatching.getLetterId())
                     .orElseThrow(LetterNotFoundException::new);
+
             String zipCode = memberRepository.findById(tempMatching.getFirstMemberId()).orElseThrow(MemberNotFoundException::new).getZipCode();
 
-            return TemporaryMatchingResponse.fromMatching(letter, tempMatching, zipCode);
+            return MatchingResponse.fromMatching(letter, tempMatching, zipCode);
         } else {
-            return TemporaryMatchingResponse.empty();
+            return MatchingResponse.empty();
         }
     }
 
@@ -125,7 +125,7 @@ public class RandomLetterService {
      * 랜덤 편지 승인하기.
      */
     @Transactional
-    public void approveLetter(ApproveLetterRequest request) {
+    public MatchingResponse approveLetter(ApproveLetterRequest request) {
         Long currentUserId = authFacade.getCurrentUserId();
 
         // 현재 사용자가 이미 다른 편지를 승인했는지 확인
@@ -148,6 +148,11 @@ public class RandomLetterService {
 
         Letter letter = letterRepository.findById(letterTemporaryMatching.getLetterId()).orElseThrow(LetterNotFoundException::new);
         letter.updateLetterType(LetterType.DIRECT);
+
+        //상대방의 우편번호
+        String zipCode = memberRepository.findById(letterTemporaryMatching.getFirstMemberId()).orElseThrow(MemberNotFoundException::new).getZipCode();
+
+        return MatchingResponse.fromApprovedLetter(letter, letterTemporaryMatching, zipCode);
     }
 
 

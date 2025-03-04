@@ -1,18 +1,18 @@
 package io.crops.warmletter.domain.eventpost.controller;
 
-import io.crops.warmletter.domain.eventpost.dto.request.CreateEventCommentRequest;
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
-import io.crops.warmletter.domain.eventpost.dto.response.EventCommentResponse;
-import io.crops.warmletter.domain.eventpost.dto.response.EventPostDetailResponse;
-import io.crops.warmletter.domain.eventpost.dto.response.EventPostResponse;
-import io.crops.warmletter.domain.eventpost.dto.response.EventPostStatusResponse;
-import io.crops.warmletter.domain.eventpost.service.EventCommentService;
+import io.crops.warmletter.domain.eventpost.dto.response.*;
 import io.crops.warmletter.domain.eventpost.service.EventPostService;
 import io.crops.warmletter.global.response.BaseResponse;
+import io.crops.warmletter.global.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +24,18 @@ import java.util.Map;
 @Tag(name = "이벤트 게시판 기능 API", description = "이벤트 게시판 생성, 삭제, 조회 등 이벤트 게시판 관련 기능의 API를 제공합니다.")
 public class EventPostController {
     private final EventPostService eventPostService;
+
+    @GetMapping("/admin/event-posts")
+    @Operation(summary = "전체 이벤트 게시판 조회", description = "이벤트 게시판 전체를 조회합니다.")
+    public ResponseEntity<BaseResponse<PageResponse<EventPostsResponse>>> getEventPosts(
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Pageable eventPostsPageable = PageRequest.of(
+                pageable.getPageNumber() > 0 ? pageable.getPageNumber() - 1 : 0,
+                pageable.getPageSize(),
+                pageable.getSort()
+        );
+        return ResponseEntity.ok(BaseResponse.of(new PageResponse<>(eventPostService.getEventPosts(eventPostsPageable)),"게시판 조회(전체) 성공"));
+    }
 
     @PostMapping("/admin/event-posts")
     @Operation(summary = "이벤트 게시판 생성", description = "미사용인 새로운 이벤트 게시판을 생성합니다.")

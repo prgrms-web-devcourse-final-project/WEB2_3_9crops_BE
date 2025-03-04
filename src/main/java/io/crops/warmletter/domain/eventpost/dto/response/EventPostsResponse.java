@@ -5,7 +5,8 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class EventPostStatusResponse {
+public class EventPostsResponse {
     private Long eventPostId;
+    private String title;
     private boolean isUsed;
 }

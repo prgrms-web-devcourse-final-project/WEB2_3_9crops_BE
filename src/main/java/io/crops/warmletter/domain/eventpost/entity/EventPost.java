@@ -17,19 +17,23 @@ public class EventPost extends BaseEntity {
     private String title;
 
     @Column(nullable = false)
-    private Boolean isUsed;
+    private boolean isUsed;
+
+    @Column(nullable = false)
+    private boolean isActive;
 
     @Builder
     public EventPost(String title) {
         this.title = title;
         this.isUsed = false;    // 기본 값 비활성화
+        this.isActive = true;
     }
 
     public void softDelete(){
         this.isUsed = false;
     }
 
-    public void isUsedChange(Boolean isUsed){
+    public void isUsedChange(boolean isUsed){
         this.isUsed = isUsed;
     }
 }

@@ -61,17 +61,15 @@ public class EventPostService {
     }
 
     @Transactional(readOnly = true)
-    public EventPostDetailResponse getEventPostDetail(Long eventPostId) {
-
-        EventPost eventPost = eventPostRepository.findById(eventPostId)
+    public EventPostDetailResponse getEventPostDetail(Long eventPostId, Pageable eventCommentspageable) {
+        EventPost eventPost = eventPostRepository.findByIdAndIsActiveIsTrue(eventPostId)
                 .orElseThrow(EventPostNotFoundException::new);
-
-        List<EventCommentsResponse> eventCommentsResponses = eventCommentRepository.findEventCommentsWithZipCode(eventPostId);
-
+        PageResponse<EventCommentsResponse> eventCommentsPageResponse = new PageResponse<>(
+                eventCommentRepository.findByEventPostIdWithZipCode(eventPostId, eventCommentspageable));
         return EventPostDetailResponse.builder()
                 .eventPostId(eventPost.getId())
                 .title(eventPost.getTitle())
-                .eventPostComments(eventCommentsResponses)
+                .eventPostComments(eventCommentsPageResponse)
                 .build();
     }
 

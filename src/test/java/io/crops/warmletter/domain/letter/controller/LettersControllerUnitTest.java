@@ -282,4 +282,21 @@ class LettersControllerUnitTest {
                 any(TemporarySaveLetterRequest.class)
         );
     }
+    
+    @DisplayName("안 읽은 편지 조회 API 호출 성공")
+    @Test
+    void getLetterUnreadCount_Success() throws Exception {
+        //given
+        int count = 0;
+
+        when(letterService.getLetterUnreadCount()).thenReturn(count);
+
+        //when & then
+        mockMvc.perform(get("/api/letters/unread/count"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("읽지 않은 편지 수 조회 완료"))
+                .andExpect(jsonPath("$.data").value(count));
+
+        verify(letterService).getLetterUnreadCount();
+    }
 }

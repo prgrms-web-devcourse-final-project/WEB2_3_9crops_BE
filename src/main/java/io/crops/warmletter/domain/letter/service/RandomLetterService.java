@@ -104,7 +104,7 @@ public class RandomLetterService {
                     .letterId(letter.getId())
                     .content(letter.getContent())
                     .zipCode(authFacade.getZipCode())
-                    .letterTitle(letter.getTitle())
+                    .title(letter.getTitle())
                     .category(letter.getCategory())
                     .paperType(letter.getPaperType())
                     .fontType(letter.getFontType())

@@ -121,7 +121,7 @@ class RandomLetterControllerTest {
     void temporaryTableHasDataReturnsTrue() throws Exception {
         TemporaryMatchingResponse response = TemporaryMatchingResponse.builder()
                 .letterId(1L)
-                .letterTitle("두번째 편지 작성")
+                .title("두번째 편지 작성")
                 .content("내용")
                 .zipCode("12345")
                 .category(Category.CELEBRATION)
@@ -138,7 +138,7 @@ class RandomLetterControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.letterId").value(1L))
-                .andExpect(jsonPath("$.data.letterTitle").value("두번째 편지 작성"))
+                .andExpect(jsonPath("$.data.title").value("두번째 편지 작성"))
                 .andExpect(jsonPath("$.data.temporary").value(true))
                 .andDo(print());
     }

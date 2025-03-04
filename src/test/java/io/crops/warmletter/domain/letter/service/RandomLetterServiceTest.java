@@ -241,7 +241,7 @@ class RandomLetterServiceTest {
         TemporaryMatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
 
         assertTrue(response.isTemporary());
-        assertEquals("테스트 편지", response.getLetterTitle());
+        assertEquals("테스트 편지", response.getTitle());
         assertEquals("테스트 내용", response.getContent());
     }
 

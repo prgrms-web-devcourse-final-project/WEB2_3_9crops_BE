@@ -985,4 +985,39 @@ class LetterServiceTest {
         assertNotNull(letterResponse);
         assertEquals(letterDraftResponse.getTitle(), letterResponse.getTitle());
     }
+
+    @DisplayName("읽지 않은 편지 수 조회 성공 - 0건")
+    @Test
+    void getLetterUnreadCount_Success_CountZero() throws Exception {
+        //given
+        Long memberId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+
+        //when
+        int count = letterService.getLetterUnreadCount();
+
+        //then
+        assertThat(count).isZero();
+
+        verify(authFacade).getCurrentUserId();
+        verify(letterRepository).countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(memberId);
+    }
+
+    @DisplayName("읽지 않은 편지 수 조회 성공 - 3건")
+    @Test
+    void getLetterUnreadCount_Success_CountThree() throws Exception {
+        // given
+        Long memberId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+        when(letterRepository.countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(memberId)).thenReturn(3);
+
+        // when
+        int count = letterService.getLetterUnreadCount();
+
+        // then
+        assertThat(count).isEqualTo(3);
+
+        verify(authFacade).getCurrentUserId();
+        verify(letterRepository).countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(memberId);
+    }
 }

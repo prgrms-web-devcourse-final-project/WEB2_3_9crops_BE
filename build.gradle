@@ -53,6 +53,10 @@ dependencies {
     // Oauth
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
+    //Spring batch
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+    testImplementation 'org.springframework.batch:spring-batch-test'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

@@ -1,6 +1,5 @@
 package io.crops.warmletter.domain.timeline.service;
 
-import io.crops.warmletter.domain.auth.exception.UnauthorizedException;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.timeline.dto.response.NotificationResponse;
 import io.crops.warmletter.domain.timeline.dto.response.ReadNotificationResponse;
@@ -9,7 +8,6 @@ import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import io.crops.warmletter.domain.timeline.exception.NotificationNotFoundException;
 import io.crops.warmletter.domain.timeline.repository.TimelineRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
-import io.crops.warmletter.global.error.exception.AuthException;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -264,9 +262,11 @@ class NotificationServiceTest {
         ReflectionTestUtils.setField(timeline3, "id", 3L);
 
         List<Timeline> timelines = Arrays.asList(timeline1, timeline3);
-
         when(timelineRepository.findByMemberIdAndIsReadFalse(any(Long.class))).thenReturn(timelines);
 
+        ReflectionTestUtils.setField(timeline1, "isRead", true);
+        ReflectionTestUtils.setField(timeline3, "isRead", true);
+        when(timelineRepository.findByIds(any())).thenReturn(timelines);
         //when
         List<ReadNotificationResponse> readNotificationResponse = notificationService.updateNotificationAllRead();
 

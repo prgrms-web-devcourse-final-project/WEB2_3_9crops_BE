@@ -105,4 +105,24 @@ public class LetterResponse {
                 .deliveryCompletedAt(letter.getDeliveryCompletedAt())
                 .build();
     }
+
+    public static LetterResponse fromDraft(LetterDraftResponse draft, String zipCode) {
+        return LetterResponse.builder()
+                .letterId(draft.getLetterId())
+                .writerId(draft.getWriterId())
+                .receiverId(draft.getReceiverId())
+                .parentLetterId(draft.getParentLetterId())
+                .zipCode(zipCode)
+                .title(draft.getTitle())
+                .content(draft.getContent())
+                .category(draft.getCategory())
+                .paperType(draft.getPaperType())
+                .fontType(draft.getFontType())
+                .status(draft.getStatus())
+                .matched(draft.isMatched())
+                .deliveryStartedAt(draft.getDeliveryStartedAt())
+                .deliveryCompletedAt(draft.getDeliveryCompletedAt())
+                .matchingId(draft.getMatchingId())
+                .build();
+    }
 }

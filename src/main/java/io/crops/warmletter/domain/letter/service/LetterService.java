@@ -217,23 +217,7 @@ public class LetterService {
             // 임시 저장 편지이면서 상태가 SAVED인 편지 조회 (작성자 기준)
             List<LetterDraftResponse> drafts = letterRepository.findDraftLettersWithMatching(currentUserId, Status.SAVED);
             return drafts.stream()
-                    .map(draft -> LetterResponse.builder()
-                            .letterId(draft.getLetterId())
-                            .writerId(draft.getWriterId())
-                            .receiverId(draft.getReceiverId())
-                            .parentLetterId(draft.getParentLetterId())
-                            .zipCode(authFacade.getZipCode())
-                            .title(draft.getTitle())
-                            .content(draft.getContent())
-                            .category(draft.getCategory())
-                            .paperType(draft.getPaperType())
-                            .fontType(draft.getFontType())
-                            .status(draft.getStatus())
-                            .matched(draft.isMatched())
-                            .deliveryStartedAt(draft.getDeliveryStartedAt())
-                            .deliveryCompletedAt(draft.getDeliveryCompletedAt())
-                            .matchingId(draft.getMatchingId())
-                            .build())
+                    .map(draft -> LetterResponse.fromDraft(draft, authFacade.getZipCode()))
                     .collect(Collectors.toList());
         } else {
             throw new BusinessException(INVALID_INPUT_VALUE);

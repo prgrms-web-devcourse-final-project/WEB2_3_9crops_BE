@@ -92,30 +92,12 @@ public class RandomLetterService {
         Long currentUserId = authFacade.getCurrentUserId();
         Optional<LetterTemporaryMatching> tempTable = letterTemporaryMatchingRepository.findBySecondMemberId(currentUserId);
         if (tempTable.isPresent()) {
-            // 임시 매칭 데이터가 있으면 해당 편지 정보를 조회해서 응답 DTO에 채워줌~~
             LetterTemporaryMatching tempMatching = tempTable.get();
-
             Letter letter = letterRepository.findById(tempMatching.getLetterId())
                     .orElseThrow(LetterNotFoundException::new);
-
-//            Member member = memberRepository.findById(6L).orElseThrow(); //테스트시 필요
-
-            return TemporaryMatchingResponse.builder()
-                    .letterId(letter.getId())
-                    .content(letter.getContent())
-                    .zipCode(authFacade.getZipCode())
-                    .title(letter.getTitle())
-                    .category(letter.getCategory())
-                    .paperType(letter.getPaperType())
-                    .fontType(letter.getFontType())
-                    .createdAt(letter.getCreatedAt())
-                    .replyDeadLine(tempMatching.getReplyDeadLine())
-                    .isTemporary(true)
-                    .build();
+            return TemporaryMatchingResponse.fromMatching(letter, tempMatching, authFacade.getZipCode());
         } else {
-            return TemporaryMatchingResponse.builder()
-                    .isTemporary(false)
-                    .build();
+            return TemporaryMatchingResponse.empty();
         }
     }
 

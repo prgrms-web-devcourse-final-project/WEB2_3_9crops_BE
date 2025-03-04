@@ -244,6 +244,6 @@ public class LetterService {
     public int getLetterUnreadCount() {
         Long memberId = authFacade.getCurrentUserId();
 
-        return letterRepository.countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(memberId);
+        return letterRepository.countLetterUnreadCount(memberId);
     }
 }

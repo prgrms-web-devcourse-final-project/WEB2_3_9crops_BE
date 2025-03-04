@@ -13,13 +13,11 @@ class LetterMatchingTest {
     void createLetterMatching() {
 
         LetterMatching letterMatching = LetterMatching.builder()
-                .letterId(1L)
                 .firstMemberId(1L)
                 .secondMemberId(2L)
                 .build();
 
         assertAll(
-                () -> assertThat(letterMatching.getLetterId()).isEqualTo(1L),
                 () -> assertThat(letterMatching.getFirstMemberId()).isEqualTo(1L),
                 () -> assertThat(letterMatching.getSecondMemberId()).isEqualTo(2L)
         );

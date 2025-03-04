@@ -16,7 +16,7 @@ public class TemporaryMatchingResponse {
 
     private final Long letterId;
 
-    private final String letterTitle;      // 매칭된 편지의 제목
+    private final String title;      // 매칭된 편지의 제목
 
     private final String content;
 

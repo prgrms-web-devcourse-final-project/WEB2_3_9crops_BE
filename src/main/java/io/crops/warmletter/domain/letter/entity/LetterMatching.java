@@ -20,8 +20,6 @@ public class LetterMatching extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long letterId;
-
     private Long firstMemberId;
 
     private Long secondMemberId;
@@ -32,8 +30,7 @@ public class LetterMatching extends BaseTimeEntity {
 
 
     @Builder
-    public LetterMatching(Long letterId, Long firstMemberId, Long secondMemberId, LocalDateTime matchedAt) {
-        this.letterId = letterId;
+    public LetterMatching(Long firstMemberId, Long secondMemberId, LocalDateTime matchedAt) {
         this.firstMemberId = firstMemberId;
         this.secondMemberId = secondMemberId;
         this.isActive = true; // 매칭 테이블 생성 시 바로 활성

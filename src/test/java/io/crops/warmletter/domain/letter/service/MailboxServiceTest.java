@@ -52,69 +52,37 @@ class MailboxServiceTest {
     @Test
     @DisplayName("내 편지함 목록 조회 성공 테스트")
     void getMailbox_success() {
-        Long myId = 3L; //내 아이디
-        when(authFacade.getCurrentUserId()).thenReturn(3L);
+        Long myId = 3L; // 내 아이디
+        when(authFacade.getCurrentUserId()).thenReturn(myId);
 
-
-        // 1. myId(3L)와 매칭된 회원 목록: 회원 1이 매칭됨.
-        List<Long> matchedMembers = List.of(1L);
-        when(letterMatchingRepository.findMatchedMembers(myId)).thenReturn(matchedMembers); //나와 대화 나눈 상대방 아이디 1L
-
-        // 2. 회원 1의 정보: 우편번호 "12345"를 가진 Member 객체 반환.
-        Member matchedMember = Member.builder()
-                .socialUniqueId("unique123")
-                .email("user@example.com")
-                .zipCode("12345")
-                .password("hashedPassword")
-                .preferredLetterCategory(null)
-                .role(null)
-                .lastMatchedAt(null)
+        // findMailboxDetails를 호출했을 때, 미리 준비한 MailboxResponse DTO를 반환하도록 stub합니다.
+        MailboxResponse mailboxResponse = MailboxResponse.builder()
+                .letterMatchingId(100L)
+                .oppositeZipCode("12345")
+                .isActive(true)
+                .isOppositeRead(false)
+                .letterCount(1L)
                 .build();
-        ReflectionTestUtils.setField(matchedMember, "id", 1L);
-        when(memberRepository.findById(1L)).thenReturn(Optional.of(matchedMember));
-
-        LetterMatching letterMatching = LetterMatching.builder()
-                .letterId(2L)
-                .build();
-
-        // letterMatching의 ID, letterId, isActive 설정 (setter가 없으면 Reflection 사용)
-        ReflectionTestUtils.setField(letterMatching, "id", 100L);
-        List<LetterMatching> matchingList = List.of(letterMatching);
-        when(letterMatchingRepository.findMatchingIdsByMembers(myId, 1L)).thenReturn(matchingList);
-
-        // 4. 매칭된 편지 정보: letterId 2인 편지, isRead = false.
-        Letter matchedLetter = Letter.builder()
-                .writerId(1L)
-                .title("편지 제목")
-                .content("편지 내용")
-                .fontType(null)
-                .paperType(null)
-                .category(null)
-                .receiverId(null)
-                .parentLetterId(null)
-                .build();
-        ReflectionTestUtils.setField(matchedLetter, "id", 2L);
-        ReflectionTestUtils.setField(matchedLetter, "isRead", false);
-        when(letterRepository.findById(2L)).thenReturn(Optional.of(matchedLetter));
+        when(letterMatchingRepository.findMailboxDetails(myId))
+                .thenReturn(List.of(mailboxResponse));
 
         // Act: 내 편지함 목록 조회
         List<MailboxResponse> responses = mailBoxService.getMailbox();
 
         // Assert: 결과 검증
         assertNotNull(responses);
-        assertEquals(1, responses.size());
+        assertFalse(responses.isEmpty(), "편지함 결과가 비어있으면 안됩니다.");
         MailboxResponse response = responses.get(0);
         assertEquals(100L, response.getLetterMatchingId());
         assertEquals("12345", response.getOppositeZipCode());
         assertTrue(response.isActive());
         assertFalse(response.isOppositeRead());
+        assertEquals(1L, response.getLetterCount());
 
-        // verify 호출
-        verify(letterMatchingRepository).findMatchedMembers(myId);
-        verify(memberRepository).findById(1L);
-        verify(letterMatchingRepository).findMatchingIdsByMembers(myId, 1L);
-        verify(letterRepository).findById(2L);
+        // verify: findMailboxDetails가 올바른 인자로 호출되었는지 확인
+        verify(letterMatchingRepository).findMailboxDetails(myId);
     }
+
 
     @DisplayName("매칭 차단 실패 - 존재하지 않은 매칭")
     @Test

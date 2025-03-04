@@ -46,7 +46,7 @@ public class LetterResponse {
 
     private final LocalDateTime deliveryCompletedAt;
 
-    private final boolean matched; //편지 조회
+    private final Boolean matched;
 
     private final Long matchingId; //편지 조회
 
@@ -93,6 +93,16 @@ public class LetterResponse {
                 .fontType(letter.getFontType())
                 .matched(matched)
                 .matchingId(letter.getMatchingId())
+                .build();
+    }
+
+    //임시 저장된 편지 리스트 조회
+    public static LetterResponse fromDeliveryLetter(Letter letter) {
+        return LetterResponse.builder()
+                .letterId(letter.getId())
+                .title(letter.getTitle())
+                .deliveryStartedAt(letter.getDeliveryStartedAt())
+                .deliveryCompletedAt(letter.getDeliveryCompletedAt())
                 .build();
     }
 }

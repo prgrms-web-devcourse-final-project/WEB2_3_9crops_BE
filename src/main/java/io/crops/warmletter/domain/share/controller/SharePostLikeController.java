@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.share.controller;
 
+import io.crops.warmletter.domain.share.dto.request.SharePostLikeRequest;
 import io.crops.warmletter.domain.share.dto.response.SharePostLikeResponse;
 import io.crops.warmletter.domain.share.service.SharePostLikeService;
 import io.crops.warmletter.global.response.BaseResponse;

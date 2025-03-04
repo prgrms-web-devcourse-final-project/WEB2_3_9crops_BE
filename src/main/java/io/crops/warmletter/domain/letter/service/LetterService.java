@@ -17,6 +17,7 @@ import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
+import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -96,6 +97,10 @@ public class LetterService {
         Letter savedLetter = letterRepository.save(letter);
 
         String zipCode = authFacade.getZipCode(); //현제 로그인한 유저 ZipCode
+
+        if(request.getReceiverId() != null){
+            notificationFacade.sendNotification(zipCode,request.getReceiverId(), AlarmType.LETTER,savedLetter.getId().toString());
+        }
 
         return LetterResponse.fromEntity(savedLetter, zipCode);
     }

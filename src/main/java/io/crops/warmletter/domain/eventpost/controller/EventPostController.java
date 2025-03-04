@@ -5,11 +5,11 @@ import io.crops.warmletter.domain.eventpost.dto.response.*;
 import io.crops.warmletter.domain.eventpost.service.EventPostService;
 import io.crops.warmletter.global.response.BaseResponse;
 import io.crops.warmletter.global.response.PageResponse;
+import io.crops.warmletter.global.util.PageableConverter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -29,11 +29,7 @@ public class EventPostController {
     @Operation(summary = "전체 이벤트 게시판 조회", description = "이벤트 게시판 전체를 조회합니다.")
     public ResponseEntity<BaseResponse<PageResponse<EventPostsResponse>>> getEventPosts(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Pageable eventPostsPageable = PageRequest.of(
-                pageable.getPageNumber() > 0 ? pageable.getPageNumber() - 1 : 0,
-                pageable.getPageSize(),
-                pageable.getSort()
-        );
+        Pageable eventPostsPageable = PageableConverter.convertToPageable(pageable);
         return ResponseEntity.ok(BaseResponse.of(new PageResponse<>(eventPostService.getEventPosts(eventPostsPageable)),"게시판 조회(전체) 성공"));
     }
 
@@ -57,8 +53,11 @@ public class EventPostController {
 
     @GetMapping("/event-posts/{eventPostId}")
     @Operation(summary = "개별 이벤트 게시판 조회", description = "특정 이벤트 게시판의 세부 정보(제목, 댓글들)를 조회합니다.")
-    public ResponseEntity<BaseResponse<EventPostDetailResponse>> getEventPostDetail(@PathVariable Long eventPostId){
-        return ResponseEntity.ok(BaseResponse.of(eventPostService.getEventPostDetail(eventPostId),"게시판 조회(개별) 성공"));
+    public ResponseEntity<BaseResponse<EventPostDetailResponse>> getEventPostDetail(
+            @PathVariable Long eventPostId,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable){
+        Pageable eventCommentsPageable = PageableConverter.convertToPageable(pageable);
+        return ResponseEntity.ok(BaseResponse.of(eventPostService.getEventPostDetail(eventPostId,eventCommentsPageable),"게시판 조회(개별) 성공"));
     }
 
     @PatchMapping("/admin/event-posts/{eventPostId}/status")

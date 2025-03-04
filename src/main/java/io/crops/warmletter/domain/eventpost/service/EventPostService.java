@@ -4,11 +4,11 @@ import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.*;
 import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException;
-import io.crops.warmletter.domain.eventpost.exception.UsedEventPostNotFoundException;
 import io.crops.warmletter.domain.eventpost.repository.EventCommentRepository;
 import io.crops.warmletter.domain.eventpost.repository.EventPostRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
+import io.crops.warmletter.global.response.PageResponse;
 import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -17,7 +17,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -27,8 +26,9 @@ public class EventPostService {
     private final EventPostRepository eventPostRepository;
     private final EventCommentRepository eventCommentRepository;
 
+    @Transactional(readOnly = true)
     public Page<EventPostsResponse> getEventPosts(Pageable eventPostPageable) {
-        return eventPostRepository.findByActiveIsTrue(eventPostPageable);
+        return eventPostRepository.findByIsActiveIsTrue(eventPostPageable);
     }
 
     public EventPostResponse createEventPost(CreateEventPostRequest createEventPostRequest) {
@@ -44,16 +44,17 @@ public class EventPostService {
     }
 
     public Map<String, Long> deleteEventPost(Long eventPostId) {
-        EventPost eventPost = eventPostRepository.findById(eventPostId).orElseThrow(EventPostNotFoundException::new);
+        EventPost eventPost = eventPostRepository.findByIdAndIsActiveIsTrue(eventPostId).orElseThrow(EventPostNotFoundException::new);
         eventPost.softDelete();
         return Map.of("eventPostId", eventPost.getId());
     }
 
     @Transactional(readOnly = true)
     public EventPostResponse getUsedEventPost() {
-        // TODO : 예외처리 대신 NULL 값이나 다른 값 리턴(예외 X)
-        EventPost eventPost = eventPostRepository.findByIsUsed(true).orElseThrow(UsedEventPostNotFoundException::new);
-
+        EventPost eventPost = eventPostRepository.findByIsUsed(true).orElse(null);
+        if(eventPost==null) {
+            return null;
+        }
         return EventPostResponse.builder()
                 .eventPostId(eventPost.getId())
                 .title(eventPost.getTitle())
@@ -61,17 +62,15 @@ public class EventPostService {
     }
 
     @Transactional(readOnly = true)
-    public EventPostDetailResponse getEventPostDetail(Long eventPostId) {
-
-        EventPost eventPost = eventPostRepository.findById(eventPostId)
+    public EventPostDetailResponse getEventPostDetail(Long eventPostId, Pageable eventCommentspageable) {
+        EventPost eventPost = eventPostRepository.findByIdAndIsActiveIsTrue(eventPostId)
                 .orElseThrow(EventPostNotFoundException::new);
-
-        List<EventCommentsResponse> eventCommentsResponses = eventCommentRepository.findEventCommentsWithZipCode(eventPostId);
-
+        PageResponse<EventCommentsResponse> eventCommentsPageResponse = new PageResponse<>(
+                eventCommentRepository.findByEventPostIdWithZipCode(eventPostId, eventCommentspageable));
         return EventPostDetailResponse.builder()
                 .eventPostId(eventPost.getId())
                 .title(eventPost.getTitle())
-                .eventPostComments(eventCommentsResponses)
+                .eventPostComments(eventCommentsPageResponse)
                 .build();
     }
 
@@ -84,7 +83,7 @@ public class EventPostService {
             if (eventPost.isUsed()) {
                 eventPost.isUsedChange(false);
             } else {
-                // isUsed가 true로 변경될 경우, 이미 true인 값이 있는지 확인
+                // Used가 true로 변경될 경우, 이미 true인 값이 있는지 확인
                 boolean isAlreadyInUse = eventPostRepository.existsByIsUsedTrue();
                 if (isAlreadyInUse) {
                     throw new BusinessException(ErrorCode.EVENT_POST_IN_USE);

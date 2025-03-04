@@ -4,11 +4,11 @@ import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.*;
 import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException;
-import io.crops.warmletter.domain.eventpost.exception.UsedEventPostNotFoundException;
 import io.crops.warmletter.domain.eventpost.repository.EventCommentRepository;
 import io.crops.warmletter.domain.eventpost.repository.EventPostRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
+import io.crops.warmletter.global.response.PageResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +19,6 @@ import org.springframework.data.domain.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,7 +51,7 @@ class EventPostServiceTest {
         List<EventPostsResponse> eventPosts = List.of(eventPostsResponse1, eventPostsResponse2);
         Page<EventPostsResponse> eventPostsPage = new PageImpl<>(eventPosts, pageable, eventPosts.size());
 
-        when(eventPostRepository.findByActiveIsTrue(any(Pageable.class))).thenReturn(eventPostsPage);
+        when(eventPostRepository.findByIsActiveIsTrue(any(Pageable.class))).thenReturn(eventPostsPage);
 
         //when
         Page<EventPostsResponse> eventPostsResponse = eventPostService.getEventPosts(pageable);
@@ -101,7 +100,7 @@ class EventPostServiceTest {
         EventPost eventPost = EventPost.builder().title("제목").build();
         ReflectionTestUtils.setField(eventPost, "id", eventPostId);
 
-        when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.of(eventPost));
+        when(eventPostRepository.findByIdAndIsActiveIsTrue(any(Long.class))).thenReturn(Optional.of(eventPost));
 
         //when
         Map<String,Long> deleteEventPostResponse = eventPostService.deleteEventPost(eventPostId);
@@ -112,12 +111,11 @@ class EventPostServiceTest {
 
     }
 
-
     @Test
-    @DisplayName("게시판 삭제 실패 - 존재하지 않는 게시판")
+    @DisplayName("게시판 삭제 실패 - 존재하지 않는(이미 삭제된) 게시판")
     void delete_eventPost_notFound() {
         // given
-        when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.empty());
+        when(eventPostRepository.findByIdAndIsActiveIsTrue(any(Long.class))).thenReturn(Optional.empty());
 
         // when & then
         BusinessException exception = assertThrows(EventPostNotFoundException.class, () -> eventPostService.deleteEventPost(999L));
@@ -148,57 +146,63 @@ class EventPostServiceTest {
 
     @Test
     @DisplayName("사용중인 게시판 조회 실패 - 조건이 일치하는 게시판 없음")
-    void get_usedEventPost_notFound(){
+    void get_usedEventPost_isReadFalse(){
         //given
         when(eventPostRepository.findByIsUsed(true)).thenReturn(Optional.empty());
         //when
-        BusinessException exception = assertThrows(UsedEventPostNotFoundException.class, ()-> eventPostService.getUsedEventPost());
+        EventPostResponse eventPostResponse = eventPostService.getUsedEventPost();
 
         //then
-        assertEquals(ErrorCode.USED_EVENT_POST_NOT_FOUND, exception.getErrorCode());
+        assertNull(eventPostResponse);
+
+        verify(eventPostRepository).findByIsUsed(true);
     }
 
     @Test
     @DisplayName("게시판 조회(개별) 성공")
     void get_eventPost_success(){
         // given
+        Long eventPostId = 1L;
         EventPost eventPost = EventPost.builder().title("제목").build();
-        ReflectionTestUtils.setField(eventPost, "id", 1L);
+        ReflectionTestUtils.setField(eventPost, "id", eventPostId);
 
-        List<EventCommentsResponse> eventCommentsResponses = new ArrayList<>();
-        EventCommentsResponse comment1 = EventCommentsResponse.builder()
-                .commentId(1L).zipCode("11111").content("내용1").build();
-        EventCommentsResponse comment2 = EventCommentsResponse.builder()
-                .commentId(2L).zipCode("22222").content("내용2").build();
-        eventCommentsResponses.add(comment1);
-        eventCommentsResponses.add(comment2);
 
-        when(eventPostRepository.findById(any(Long.class))).thenReturn(Optional.of(eventPost));
-        when(eventCommentRepository.findEventCommentsWithZipCode(any(Long.class))).thenReturn(eventCommentsResponses);
+        EventCommentsResponse comment1 = EventCommentsResponse.builder().commentId(1L).zipCode("11111").content("내용1").build();
+        EventCommentsResponse comment2 = EventCommentsResponse.builder().commentId(2L).zipCode("22222").content("내용2").build();
+
+        Pageable pageable = PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<EventCommentsResponse> comments = List.of(comment2, comment1);
+
+
+        Page<EventCommentsResponse> eventCommentsPage = new PageImpl<>(comments, pageable, comments.size());
+        PageResponse<EventCommentsResponse> eventCommentsResponse = new PageResponse<>(eventCommentsPage);
+        when(eventPostRepository.findByIdAndIsActiveIsTrue(any(Long.class))).thenReturn(Optional.of(eventPost));
+        when(eventCommentRepository.findByEventPostIdWithZipCode(any(Long.class),any(Pageable.class))).thenReturn(eventCommentsPage);
 
         // when
-        EventPostDetailResponse eventPostDetailResponse = eventPostService.getEventPostDetail(1L);
+        EventPostDetailResponse eventPostDetailResponse = eventPostService.getEventPostDetail(1L,pageable);
 
         // then
         assertEquals("제목", eventPostDetailResponse.getTitle());
         assertNotNull(eventPostDetailResponse.getEventPostComments());
-        assertEquals(2, eventPostDetailResponse.getEventPostComments().size());
-        assertEquals(1L, eventPostDetailResponse.getEventPostComments().get(0).getCommentId());
-        assertEquals("11111", eventPostDetailResponse.getEventPostComments().get(0).getZipCode());
-        assertEquals("내용1", eventPostDetailResponse.getEventPostComments().get(0).getContent());
-        assertEquals(2L, eventPostDetailResponse.getEventPostComments().get(1).getCommentId());
-        assertEquals("22222", eventPostDetailResponse.getEventPostComments().get(1).getZipCode());
-        assertEquals("내용2", eventPostDetailResponse.getEventPostComments().get(1).getContent());
+        assertEquals(comment2.getCommentId(), eventPostDetailResponse.getEventPostComments().getContent().get(0).getCommentId());
+        assertEquals(comment2.getZipCode(), eventPostDetailResponse.getEventPostComments().getContent().get(0).getZipCode());
+        assertEquals(comment2.getContent(), eventPostDetailResponse.getEventPostComments().getContent().get(0).getContent());
+        assertEquals(1, eventPostDetailResponse.getEventPostComments().getCurrentPage());
+        assertEquals(1,eventPostDetailResponse.getEventPostComments().getSize());
+        assertEquals(2,eventPostDetailResponse.getEventPostComments().getTotalElements());
+        assertEquals(2,eventPostDetailResponse.getEventPostComments().getTotalPages());
     }
 
     @Test
     @DisplayName("게시판 조회(개별) 실패 - 일치하는 eventPostId 없음")
     void get_eventPost_notFound(){
         //given
-        when(eventPostRepository.findById(any(Long.class))).thenThrow(new EventPostNotFoundException());
+        when(eventPostRepository.findByIdAndIsActiveIsTrue(any(Long.class))).thenThrow(new EventPostNotFoundException());
+        Pageable pageable = PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         //when
-        BusinessException exception = assertThrows(EventPostNotFoundException.class, ()-> eventPostService.getEventPostDetail(999L));
+        BusinessException exception = assertThrows(EventPostNotFoundException.class, ()-> eventPostService.getEventPostDetail(999L,pageable));
 
         //then
         assertEquals(ErrorCode.EVENT_POST_NOT_FOUND, exception.getErrorCode());

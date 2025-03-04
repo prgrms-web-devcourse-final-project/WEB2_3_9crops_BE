@@ -30,7 +30,7 @@ public class EventPost extends BaseEntity {
     }
 
     public void softDelete(){
-        this.isUsed = false;
+        this.isActive = false;
     }
 
     public void isUsedChange(boolean isUsed){

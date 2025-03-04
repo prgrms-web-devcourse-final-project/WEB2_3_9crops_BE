@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.config.TestConfig;
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.*;
-import io.crops.warmletter.domain.eventpost.entity.EventPost;
 import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException;
 import io.crops.warmletter.domain.eventpost.service.EventPostService;
-import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
+import io.crops.warmletter.global.response.PageResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -60,9 +58,7 @@ class EventPostControllerTest {
         when(eventPostService.getEventPosts(any(Pageable.class))).thenReturn(eventPostsPage);
 
         //when & then
-        mockMvc.perform(get("/api/admin/event-posts")
-                        .param("page","0")
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/api/admin/event-posts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content", hasSize(2)))
                 .andExpect(jsonPath("$.data.content[0].eventPostId").value(eventPostsResponse2.getEventPostId()))
@@ -90,9 +86,7 @@ class EventPostControllerTest {
         when(eventPostService.getEventPosts(any(Pageable.class))).thenReturn(eventPostsPage);
 
         //when & then
-        mockMvc.perform(get("/api/admin/event-posts")
-                        .param("page", "2")
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/api/admin/event-posts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.content", hasSize(2)))
                 .andExpect(jsonPath("$.data.currentPage").value(2))
@@ -201,34 +195,38 @@ class EventPostControllerTest {
     @Test
     @DisplayName("GET 게시판 개별 조회 성공")
     void get_eventPost_success() throws Exception {
+        // given
         Long eventPostId = 1L;
-
-        List<EventCommentsResponse> comments = new ArrayList<>();
         EventCommentsResponse comment1 = EventCommentsResponse.builder().commentId(1L).zipCode("11111").content("내용1").build();
         EventCommentsResponse comment2 = EventCommentsResponse.builder().commentId(2L).zipCode("22222").content("내용2").build();
-        comments.add(comment1);
-        comments.add(comment2);
+
+        Pageable pageable = PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<EventCommentsResponse> comments = List.of(comment2, comment1);
+
+        PageResponse<EventCommentsResponse> eventCommentsResponse = new PageResponse<>(
+                new PageImpl<>(comments, pageable, comments.size()));
 
         EventPostDetailResponse eventPostDetailResponse = EventPostDetailResponse.builder()
                 .eventPostId(1L)
                 .title("제목")
-                .eventPostComments(comments)
+                .eventPostComments(eventCommentsResponse)
                 .build();
 
-        // given
-        when(eventPostService.getEventPostDetail(eventPostId)).thenReturn(eventPostDetailResponse);
+        when(eventPostService.getEventPostDetail(any(Long.class),any(Pageable.class))).thenReturn(eventPostDetailResponse);
 
         // when & then
         mockMvc.perform(get("/api/event-posts/{eventPostId}", eventPostId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.eventPostId").value(1L))
                 .andExpect(jsonPath("$.data.title").value("제목"))
-                .andExpect(jsonPath("$.data.eventPostComments[0].commentId").value(1L))
-                .andExpect(jsonPath("$.data.eventPostComments[0].zipCode").value("11111"))
-                .andExpect(jsonPath("$.data.eventPostComments[0].content").value("내용1"))
-                .andExpect(jsonPath("$.data.eventPostComments[1].commentId").value(2L))
-                .andExpect(jsonPath("$.data.eventPostComments[1].zipCode").value("22222"))
-                .andExpect(jsonPath("$.data.eventPostComments[1].content").value("내용2"))
+                .andExpect(jsonPath("$.data.eventPostComments.content", hasSize(2)))
+                .andExpect(jsonPath("$.data.eventPostComments.content[0].commentId").value(comment2.getCommentId()))
+                .andExpect(jsonPath("$.data.eventPostComments.content[0].zipCode").value(comment2.getZipCode()))
+                .andExpect(jsonPath("$.data.eventPostComments.content[0].content").value(comment2.getContent()))
+                .andExpect(jsonPath("$.data.eventPostComments.currentPage").value(1))
+                .andExpect(jsonPath("$.data.eventPostComments.size").value(1))
+                .andExpect(jsonPath("$.data.eventPostComments.totalElements").value(2))
+                .andExpect(jsonPath("$.data.eventPostComments.totalPages").value(2))
                 .andExpect(jsonPath("$.message").value("게시판 조회(개별) 성공"))
                 .andDo(print());
     }

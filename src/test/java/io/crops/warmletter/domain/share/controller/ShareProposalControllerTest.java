@@ -1,5 +1,4 @@
 package io.crops.warmletter.domain.share.controller;
-
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalStatusResponse;
@@ -17,8 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import java.util.List;
-
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -38,12 +35,11 @@ class ShareProposalControllerTest {
     void requestShareProposal_Success() {
         // Given
         ShareProposalRequest request = new ShareProposalRequest(List.of(1L, 2L)
+
                 , 1L,
-                2L,
                 "공유 요청"
         );
 
-        // Controller 테스트에서 서비스를 mocking할 때 필요한 모든 값을 설정
         ShareProposalResponse serviceResponse = ShareProposalResponse.builder()
                 .shareProposalId(1L)
                 .zipCode("12345")
@@ -77,7 +73,6 @@ class ShareProposalControllerTest {
         ShareProposalRequest request = new ShareProposalRequest(
                 List.of(1L, 2L),
                 null,
-                2L,
                 "공유 요청"
         );
 

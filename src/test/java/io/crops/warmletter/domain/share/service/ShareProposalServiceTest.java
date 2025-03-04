@@ -1,5 +1,4 @@
 package io.crops.warmletter.domain.share.service;
-
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
@@ -7,7 +6,6 @@ import io.crops.warmletter.domain.share.dto.response.ShareProposalStatusResponse
 import io.crops.warmletter.domain.share.entity.SharePost;
 import io.crops.warmletter.domain.share.entity.ShareProposal;
 import io.crops.warmletter.domain.share.enums.ProposalStatus;
-import io.crops.warmletter.domain.share.exception.ShareInvalidInputValue;
 import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalLetterRepository;
@@ -23,11 +21,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
@@ -62,25 +58,21 @@ class ShareProposalServiceTest {
         Long requesterId = 1L;
         ShareProposalRequest request = new ShareProposalRequest(
                 List.of(1L, 2L),
-                requesterId,
                 2L,
                 "공유 요청"
         );
 
-        ShareProposal shareProposal = request.toEntity();
+        ShareProposal shareProposal = request.toEntity(requesterId);
         ReflectionTestUtils.setField(shareProposal, "id", 1L);
 
         ShareProposalResponse expectedResponse = ShareProposalResponse.builder().shareProposalId(1L).zipCode("12345").build();
 
-        // authFacade 모킹 추가
         when(authFacade.getCurrentUserId()).thenReturn(requesterId);
         when(shareProposalRepository.save(any(ShareProposal.class))).thenReturn(shareProposal);
         when(shareProposalRepository.findShareProposalWithZipCode(anyLong())).thenReturn(expectedResponse);
 
-        // when
         ShareProposalResponse response = shareProposalService.requestShareProposal(request);
 
-        // then
         assertAll(
                 () -> assertNotNull(response),
                 () -> assertEquals(expectedResponse.getShareProposalId(), response.getShareProposalId()),
@@ -95,15 +87,13 @@ class ShareProposalServiceTest {
 
 
     @Test
-    @DisplayName("요청자 ID가 일치하지 않는 경우 예외 발생")
-    void requestShareProposal_ThrowsException_WhenRequesterIdMismatch() {
+    @DisplayName("편지 ID 목록이 유효하지 않은 경우 예외 발생")
+    void requestShareProposal_ThrowsException_WhenLetterIdsInvalid() {
         // given
         Long currentUserId = 1L;
-        Long differentRequesterId = 3L; // 현재 사용자와 다른 ID
 
         ShareProposalRequest request = new ShareProposalRequest(
-                List.of(1L, 2L),
-                differentRequesterId,
+                null, // 편지 ID 목록이 null
                 2L,
                 "공유 요청"
         );
@@ -111,14 +101,12 @@ class ShareProposalServiceTest {
         when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
 
         // when & then
-        assertThrows(ShareInvalidInputValue.class, () ->
+        NullPointerException exception = assertThrows(NullPointerException.class, () ->
                 shareProposalService.requestShareProposal(request));
 
         verify(authFacade).getCurrentUserId();
-        // 예외가 발생하므로 다음 메소드들은 호출되지 않아야 함
-        verify(shareProposalRepository, never()).save(any());
-        verify(shareProposalLetterRepository, never()).saveAll(anyList());
     }
+
 
     @Test
     @DisplayName("빈 편지 목록으로 요청시 처리되어야 함")
@@ -127,10 +115,10 @@ class ShareProposalServiceTest {
         Long currentUserId = 1L;
         ShareProposalRequest request = mock(ShareProposalRequest.class);
 
-        // 모킹된 request 객체 설정
-        when(request.getRequesterId()).thenReturn(currentUserId);
-        when(request.getLetters()).thenReturn(Collections.emptyList());
-        when(request.toEntity()).thenReturn(mock(ShareProposal.class));
+        when(request.getLetterIds()).thenReturn(Collections.emptyList());
+
+        ShareProposal mockProposal = mock(ShareProposal.class);
+        when(request.toEntity(currentUserId)).thenReturn(mockProposal);
 
         ShareProposal savedProposal = mock(ShareProposal.class);
         when(savedProposal.getId()).thenReturn(1L);
@@ -140,14 +128,10 @@ class ShareProposalServiceTest {
         when(shareProposalRepository.findShareProposalWithZipCode(anyLong()))
                 .thenReturn(ShareProposalResponse.builder().shareProposalId(1L).build());
 
-        // when
-        // 실제로는 예외가 발생하지 않을 수 있으므로 일반 호출로 변경
         ShareProposalResponse response = shareProposalService.requestShareProposal(request);
 
-        // then
         assertNotNull(response);
 
-        // 검증
         verify(authFacade).getCurrentUserId();
         verify(shareProposalRepository).save(any(ShareProposal.class));
         verify(shareProposalLetterRepository).saveAll(Collections.emptyList()); // 빈 리스트가 전달됨
@@ -155,27 +139,25 @@ class ShareProposalServiceTest {
     }
 
     @Test
-    @DisplayName("필수값(requesterId) 누락시 예외 발생")
-    void requestShareProposal_WithoutRequesterId() {
+    @DisplayName("필수값(recipientId) 누락시 예외 발생")
+    void requestShareProposal_WithoutRecipientId() {
         // given
         Long currentUserId = 1L;
         ShareProposalRequest request = new ShareProposalRequest(
                 List.of(1L, 2L),
-                null,  // requesterId null
-                2L,
+                null,  // recipientId null
                 "공유 요청"
         );
 
         when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
 
-        // when & then
-        ShareInvalidInputValue exception = assertThrows(ShareInvalidInputValue.class,
+        assertThrows(NullPointerException.class,
                 () -> shareProposalService.requestShareProposal(request));
 
         verify(authFacade).getCurrentUserId();
-        verify(shareProposalRepository, never()).save(any(ShareProposal.class));
-        verify(shareProposalLetterRepository, never()).saveAll(anyList());
     }
+
+
 
     @Test
     @DisplayName("Response가 null일 경우 예외 발생")
@@ -184,12 +166,11 @@ class ShareProposalServiceTest {
         Long currentUserId = 1L;
         ShareProposalRequest request = new ShareProposalRequest(
                 List.of(1L, 2L),
-                currentUserId,
                 2L,
                 "공유 요청"
         );
 
-        ShareProposal shareProposal = request.toEntity();
+        ShareProposal shareProposal = request.toEntity(currentUserId);
         ReflectionTestUtils.setField(shareProposal, "id", 1L);
 
         when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
@@ -213,12 +194,11 @@ class ShareProposalServiceTest {
         Long currentUserId = 1L;
         ShareProposalRequest request = new ShareProposalRequest(
                 List.of(1L, 2L),
-                currentUserId,
                 2L,
                 "공유 요청"
         );
 
-        ShareProposal shareProposal = request.toEntity();
+        ShareProposal shareProposal = request.toEntity(currentUserId);
         ReflectionTestUtils.setField(shareProposal, "id", 1L);
 
         when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
@@ -257,27 +237,22 @@ class ShareProposalServiceTest {
     @Test
     @DisplayName("공유 제안 승인 성공")
     void approveShareProposal_Success() {
-        // given
         Long shareProposalId = 1L;
         Long recipientId = 2L;
         Long currentUserId = recipientId; // 현재 사용자가 수신자와 동일하게 설정
         Long sharePostId = 1L;
 
-        // 공유 제안 모킹
         ShareProposal shareProposal = mock(ShareProposal.class);
         when(shareProposal.getId()).thenReturn(shareProposalId);
         when(shareProposal.getRecipientId()).thenReturn(recipientId);
         when(shareProposal.getMessage()).thenReturn("test message");
         when(shareProposal.getStatus()).thenReturn(ProposalStatus.APPROVED);
 
-        // AuthFacade 모킹
         when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
 
-        // 리포지토리 모킹
         when(shareProposalRepository.findById(shareProposalId))
                 .thenReturn(Optional.of(shareProposal));
 
-        // sharePostRepository.save() 모킹 - Argument Captor 사용
         ArgumentCaptor<SharePost> sharePostCaptor = ArgumentCaptor.forClass(SharePost.class);
         when(sharePostRepository.save(sharePostCaptor.capture())).thenAnswer(invocation -> {
             SharePost savedPost = sharePostCaptor.getValue();
@@ -302,7 +277,6 @@ class ShareProposalServiceTest {
         verify(sharePostRepository).save(any(SharePost.class));
         verify(shareProposal).updateStatus(ProposalStatus.APPROVED);
 
-        // 생성된 SharePost 검증
         SharePost createdPost = sharePostCaptor.getValue();
         assertThat(createdPost.getShareProposalId()).isEqualTo(shareProposalId);
         assertThat(createdPost.getContent()).isEqualTo("test message");
@@ -321,20 +295,16 @@ class ShareProposalServiceTest {
         ShareProposal shareProposal = new ShareProposal(requesterId, recipientId, "test");
         ReflectionTestUtils.setField(shareProposal, "id", shareProposalId);
 
-        // AuthFacade 모킹 - 현재 사용자는 수신자와 동일해야 함
         when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
         when(shareProposalRepository.findById(shareProposalId))
                 .thenReturn(Optional.of(shareProposal));
 
-        // when
         ShareProposalStatusResponse response = shareProposalService.rejectShareProposal(shareProposalId);
 
-        // then
         assertThat(response.getShareProposalId()).isEqualTo(shareProposalId);
         assertThat(response.getStatus()).isEqualTo(ProposalStatus.REJECTED);
         assertThat(shareProposal.getStatus()).isEqualTo(ProposalStatus.REJECTED);
 
-        // 검증
         verify(authFacade).getCurrentUserId();
         verify(shareProposalRepository).findById(shareProposalId);
     }

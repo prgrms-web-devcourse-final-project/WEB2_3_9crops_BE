@@ -35,7 +35,12 @@ public class NotificationService {
 
         emitter.onCompletion(() -> emitters.remove(memberId)); // 연결 종료 시 제거
         emitter.onTimeout(() -> emitters.remove(memberId)); // 타임아웃 시 제거
-        emitter.onCompletion(() -> emitters.remove(memberId)); // 에러 시 제거
+
+        NotificationResponse notificationResponse = NotificationResponse.builder()
+                .title("사용자 " + memberId + " EventStream 생성")
+                .alarmType("TEST").build();
+
+        sendEventToClient(memberId, notificationResponse);
 
         return emitter;
     }
@@ -76,7 +81,7 @@ public class NotificationService {
         sendEventToClient(receiverId,notificationResponse);
     }
 
-    public void sendEventToClient(Long receiverId, NotificationResponse notificationResponse){
+    private void sendEventToClient(Long receiverId, NotificationResponse notificationResponse){
         SseEmitter emitter = emitters.get(receiverId);
         if (emitter != null) {
             try {
@@ -84,8 +89,8 @@ public class NotificationService {
                         .name("notification")
                         .data(notificationResponse, MediaType.APPLICATION_JSON));
             } catch (IOException e) {
-                emitter.complete();
                 emitters.remove(receiverId);
+                emitter.complete();
             }
         }
     }

@@ -1,8 +1,5 @@
 package io.crops.warmletter.domain.share.dto.response;
-
 import lombok.*;
-
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -14,7 +11,5 @@ public class SharePostDetailResponse {
     private String zipCode;
     private String sharePostContent;
     private List<ShareLetterPostResponse> letters;
-
-
 
 }

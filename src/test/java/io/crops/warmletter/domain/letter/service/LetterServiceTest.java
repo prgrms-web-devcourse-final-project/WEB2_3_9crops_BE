@@ -779,6 +779,7 @@ class LetterServiceTest {
         //then
         verify(memberFacade).applyEvaluationTemperature(writerId, evaluation);
     }
+
     @Test
     @DisplayName("기존 편지 임시 저장 성공 테스트")
     void temporarySaveExistingLetter_success() throws Exception {

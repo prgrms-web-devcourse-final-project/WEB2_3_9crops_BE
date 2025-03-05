@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.share.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
+import io.crops.warmletter.domain.share.dto.response.ShareInboxResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalStatusResponse;
 import io.crops.warmletter.domain.share.entity.SharePost;
@@ -97,5 +98,11 @@ public class ShareProposalService {
                 .shareProposalId(shareProposal.getId())
                 .status(shareProposal.getStatus())
                 .build();
+    }
+
+    public List<ShareInboxResponse> getReceivedShareProposals() {
+        Long memberId = authFacade.getCurrentUserId();
+
+        return shareProposalRepository.getAllByRecipientIdOrderByCreatedAtDesc(memberId);
     }
 }

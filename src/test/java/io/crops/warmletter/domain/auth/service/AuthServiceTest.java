@@ -3,7 +3,9 @@ package io.crops.warmletter.domain.auth.service;
 import io.crops.warmletter.domain.auth.dto.TokenResponse;
 import io.crops.warmletter.domain.auth.dto.TokenStorageResponse;
 import io.crops.warmletter.domain.auth.exception.UnauthorizedException;
+import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.enums.Role;
+import io.crops.warmletter.domain.member.repository.MemberRepository;
 import io.crops.warmletter.global.jwt.enums.TokenType;
 import io.crops.warmletter.global.jwt.exception.InvalidRefreshTokenException;
 import io.crops.warmletter.global.jwt.exception.InvalidTokenException;
@@ -11,16 +13,13 @@ import io.crops.warmletter.global.jwt.provider.JwtTokenProvider;
 import io.crops.warmletter.global.jwt.service.TokenBlacklistService;
 import io.crops.warmletter.global.jwt.service.TokenStorage;
 import io.crops.warmletter.global.oauth.entity.UserPrincipal;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -30,6 +29,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -54,65 +54,81 @@ class AuthServiceTest {
     private HttpServletResponse response;
 
     @Mock
-    private RedisTemplate<String, String> redisTemplate;
+    private MemberRepository memberRepository;
 
     @Mock
     private TokenStorage tokenStorage;
 
     @DisplayName("리프레시 토큰 재발급 - 만료 임박하지 않은 경우")
     @Test
-    void reissueToken_NotNearExpiration() {
+    void reissueToken_NotNearExpiration() throws Exception{
         // given
-        String accessToken = "valid.access.token";
         String refreshToken = "valid.refresh.token";
         String socialUniqueId = "GOOGLE_12345";
         String newAccessToken = "new.access.token";
+        String zipCode = "12345";
         Long memberId = 1L;
-        Claims claims = mock(Claims.class);
+        Member member = Member.builder()
+                .socialUniqueId(socialUniqueId)
+                .zipCode(zipCode)
+                .role(Role.USER)
+                .build();
+
+        // Reflection으로 id 설정
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, memberId);
 
         when(jwtTokenProvider.validateToken(refreshToken, TokenType.REFRESH)).thenReturn(true);
-        when(jwtTokenProvider.getSocialUniqueId(accessToken)).thenReturn(socialUniqueId);
-        when(jwtTokenProvider.getClaims(accessToken)).thenReturn(claims);
-        when(claims.get("role")).thenReturn("USER");
-        when(claims.get("zipCode", String.class)).thenReturn("12345");
-        when(claims.get("memberId", Long.class)).thenReturn(memberId);
-        when(jwtTokenProvider.createAccessToken(socialUniqueId, Role.USER, "12345", memberId)).thenReturn(newAccessToken);
+        when(jwtTokenProvider.getSocialUniqueId(refreshToken)).thenReturn(socialUniqueId);
+        when(memberRepository.findBySocialUniqueId(socialUniqueId)).thenReturn(Optional.of(member));
+
+        when(jwtTokenProvider.createAccessToken(socialUniqueId, Role.USER, zipCode, memberId)).thenReturn(newAccessToken);
         when(jwtTokenProvider.getExpirationTime(refreshToken)).thenReturn(1000L * 60 * 60 * 24 * 10); // 10일
 
         // when
-        TokenResponse response = authService.reissue(accessToken, refreshToken, this.response);
+        TokenResponse response = authService.reissue(refreshToken, this.response);
 
         // then
+        assertThat(zipCode).isEqualTo(member.getZipCode());
         assertThat(response.getAccessToken()).isEqualTo(newAccessToken);
         assertThat(response.getRefreshToken()).isEqualTo(refreshToken);
     }
 
     @DisplayName("리프레시 토큰 재발급 - 만료 임박한 경우")
     @Test
-    void reissueToken_NearExpiration() {
+    void reissueToken_NearExpiration() throws Exception{
         // given
-        String accessToken = "valid.access.token";
         String refreshToken = "valid.refresh.token";
         String socialUniqueId = "GOOGLE_12345";
         String newAccessToken = "new.access.token";
         String newRefreshToken = "new.refresh.token";
+        String zipCode = "12345";
         Long memberId = 1L;
-        Claims claims = mock(Claims.class);
+        Member member = Member.builder()
+                .socialUniqueId(socialUniqueId)
+                .zipCode(zipCode)
+                .role(Role.USER)
+                .build();
+
+        // Reflection으로 id 설정
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, memberId);
 
         when(jwtTokenProvider.validateToken(refreshToken, TokenType.REFRESH)).thenReturn(true);
-        when(jwtTokenProvider.getSocialUniqueId(accessToken)).thenReturn(socialUniqueId);
-        when(jwtTokenProvider.getClaims(accessToken)).thenReturn(claims);
-        when(claims.get("role")).thenReturn("USER");
-        when(claims.get("zipCode", String.class)).thenReturn("12345");
-        when(claims.get("memberId", Long.class)).thenReturn(1L);
-        when(jwtTokenProvider.createAccessToken(socialUniqueId, Role.USER, "12345", memberId)).thenReturn(newAccessToken);
+        when(jwtTokenProvider.getSocialUniqueId(refreshToken)).thenReturn(socialUniqueId);
+        when(memberRepository.findBySocialUniqueId(socialUniqueId)).thenReturn(Optional.of(member));
+
+        when(jwtTokenProvider.createAccessToken(socialUniqueId, Role.USER, zipCode, memberId)).thenReturn(newAccessToken);
         when(jwtTokenProvider.getExpirationTime(refreshToken)).thenReturn(1000L * 60 * 60 * 24 * 5); // 5일
         when(jwtTokenProvider.createRefreshToken(socialUniqueId)).thenReturn(newRefreshToken);
 
         // when
-        TokenResponse response = authService.reissue(accessToken, refreshToken, this.response);
+        TokenResponse response = authService.reissue(refreshToken, this.response);
 
         // then
+        assertThat(zipCode).isEqualTo(member.getZipCode());
         assertThat(response.getAccessToken()).isEqualTo(newAccessToken);
         assertThat(response.getRefreshToken()).isEqualTo(newRefreshToken);
     }
@@ -127,7 +143,7 @@ class AuthServiceTest {
 
         // when & then
         assertThrows(InvalidRefreshTokenException.class,
-                () -> authService.reissue(invalidAccessToken, invalidRefreshToken, this.response));
+                () -> authService.reissue(invalidRefreshToken, this.response));
     }
 
     @Test

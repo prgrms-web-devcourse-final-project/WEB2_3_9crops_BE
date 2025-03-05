@@ -929,6 +929,58 @@ class LetterServiceTest {
         verify(letterRepository).save(any(Letter.class));
     }
 
+    @Test
+    @DisplayName("임시 저장 편지 삭제 성공")
+    void delete_temporarySaveLetter_success() throws Exception {
+        //given
+        Long writerId = 1L;
+        Long letterId = 1L;
+
+        Letter letter = Letter.builder()
+                .writerId(writerId)
+                .letterType(LetterType.DIRECT)
+                .category(Category.ETC)
+                .title("제목")
+                .content("내용")
+                .status(Status.SAVED)
+                .fontType(FontType.GYEONGGI)
+                .paperType(PaperType.PAPER)
+                .parentLetterId(null)
+                .receiverId(null)
+                .matchingId(null)
+                .build();
+        ReflectionTestUtils.setField(letter, "id", letterId);
+
+        when(authFacade.getCurrentUserId()).thenReturn(writerId);
+        when(letterRepository.findByIdAndWriterIdAndStatusIsSAVED(any(Long.class),any(Long.class))).thenReturn(Optional.of(letter));
+
+        //when
+        Map<String, Long> response = letterService.deleteTemporarySaveLetter(letterId);
+
+        //then
+        assertEquals(letterId, response.get("letterId"));
+        verify(authFacade).getCurrentUserId();
+        verify(letterRepository).findByIdAndWriterIdAndStatusIsSAVED(letterId, writerId);
+        verify(letterRepository).delete(letter);
+    }
+
+    @Test
+    @DisplayName("임시 저장 편지 삭제 실패 - 존재하지 않는 임시 저장 편지")
+    void delete_temporarySaveLetter_notFound() throws Exception {
+        //given
+        Long letterId = 999L;
+        Long writerId = 1L;
+
+        when(authFacade.getCurrentUserId()).thenReturn(writerId);
+        when(letterRepository.findByIdAndWriterIdAndStatusIsSAVED(any(Long.class),any(Long.class))).thenReturn(Optional.empty());
+
+        //when & then
+        assertThrows(LetterNotFoundException.class,
+                () -> letterService.deleteTemporarySaveLetter(letterId));
+
+        verify(authFacade).getCurrentUserId();
+        verify(letterRepository).findByIdAndWriterIdAndStatusIsSAVED(letterId, writerId);
+    }
 
     @Test
     @DisplayName("오고 있는 편지 조회 성공~")

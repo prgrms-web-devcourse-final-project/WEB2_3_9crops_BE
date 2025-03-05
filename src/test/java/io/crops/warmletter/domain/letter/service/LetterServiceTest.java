@@ -17,6 +17,7 @@ import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
+import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,6 +57,9 @@ class LetterServiceTest {
 
     @Mock
     private MemberFacade memberFacade;
+
+    @Mock
+    private NotificationFacade notificationFacade;
 
     @InjectMocks
     private LetterService letterService;
@@ -121,7 +125,7 @@ class LetterServiceTest {
                 .status(Status.IN_DELIVERY)
                 .matchingId(directLetterRequest.getMatchingId())
                 .build();
-
+        ReflectionTestUtils.setField(savedDirectLetter, "id", 1L);
     }
 
 
@@ -402,6 +406,7 @@ class LetterServiceTest {
         );
         //verify 메서드로 letterRepository.save() 메서드가 정확히 1번 호출되었는지 확인
         verify(letterRepository).save(any(Letter.class));
+        verify(notificationFacade).sendNotification(anyString(), anyLong(), any(), anyString());
     }
 
 
@@ -984,5 +989,40 @@ class LetterServiceTest {
         LetterResponse letterResponse = lettersByStatus.get(0);
         assertNotNull(letterResponse);
         assertEquals(letterDraftResponse.getTitle(), letterResponse.getTitle());
+    }
+
+    @DisplayName("읽지 않은 편지 수 조회 성공 - 0건")
+    @Test
+    void getLetterUnreadCount_Success_CountZero() throws Exception {
+        //given
+        Long memberId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+
+        //when
+        int count = letterService.getLetterUnreadCount();
+
+        //then
+        assertThat(count).isZero();
+
+        verify(authFacade).getCurrentUserId();
+        verify(letterRepository).countLetterUnreadCount(memberId);
+    }
+
+    @DisplayName("읽지 않은 편지 수 조회 성공 - 3건")
+    @Test
+    void getLetterUnreadCount_Success_CountThree() throws Exception {
+        // given
+        Long memberId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+        when(letterRepository.countLetterUnreadCount(memberId)).thenReturn(3);
+
+        // when
+        int count = letterService.getLetterUnreadCount();
+
+        // then
+        assertThat(count).isEqualTo(3);
+
+        verify(authFacade).getCurrentUserId();
+        verify(letterRepository).countLetterUnreadCount(memberId);
     }
 }

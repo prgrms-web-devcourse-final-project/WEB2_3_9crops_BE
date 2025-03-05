@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.timeline.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.eventpost.dto.response.EventPostsResponse;
 import io.crops.warmletter.domain.timeline.dto.response.TimelineResponse;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import io.crops.warmletter.domain.timeline.repository.TimelineRepository;
@@ -10,9 +11,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,26 +39,26 @@ class TimelineServiceTest {
         Long memberId = 1L;
         when(authFacade.getCurrentUserId()).thenReturn(memberId);
 
-        List<TimelineResponse> timelines = new ArrayList<>();
         TimelineResponse timeline1 = TimelineResponse.builder().timelineId(1L).title("1111번 편지").alarmType(AlarmType.LETTER).isRead(false).build();
         TimelineResponse timeline2 = TimelineResponse.builder().timelineId(2L).title("1111번 공유 요청").alarmType(AlarmType.SHARE).isRead(false).build();
-        timelines.add(timeline1);
-        timelines.add(timeline2);
 
-        when(timeLineRepository.findByMemberId(any(Long.class))).thenReturn(timelines);
+        Pageable pageable = PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<TimelineResponse> timelines = List.of(timeline2, timeline1);
+        Page<TimelineResponse> timelinesPage = new PageImpl<>(timelines, pageable, timelines.size());
+
+        when(timeLineRepository.findByMemberId(any(Long.class),any())).thenReturn(timelinesPage);
 
         // when
-        List<TimelineResponse> timelineRespons = timeLineService.getTimelines();
+        Page<TimelineResponse> timelineResponse = timeLineService.getTimelines(pageable);
 
         // then
-        assertNotNull(timelineRespons);
-        assertEquals(timeline1.getTimelineId(), timelineRespons.get(0).getTimelineId());
-        assertEquals(timeline1.getTitle(), timelineRespons.get(0).getTitle());
-        assertEquals(timeline1.getAlarmType(), timelineRespons.get(0).getAlarmType());
-        assertEquals(timeline1.isRead(), timelineRespons.get(0).isRead());
-        assertEquals(timeline2.getTimelineId(), timelineRespons.get(1).getTimelineId());
-        assertEquals(timeline2.getTitle(), timelineRespons.get(1).getTitle());
-        assertEquals(timeline2.getAlarmType(), timelineRespons.get(1).getAlarmType());
-        assertEquals(timeline2.isRead(), timelineRespons.get(1).isRead());
+        assertNotNull(timelineResponse);
+        assertEquals(timeline2.getTimelineId(), timelineResponse.getContent().get(0).getTimelineId());
+        assertEquals(timeline2.getTitle(), timelineResponse.getContent().get(0).getTitle());
+        assertEquals(timeline2.getAlarmType(), timelineResponse.getContent().get(0).getAlarmType());
+        assertEquals(1, timelineResponse.getSize());
+        assertEquals(2, timelineResponse.getTotalElements());
+        assertEquals(2, timelineResponse.getTotalPages());
+
     }
 }

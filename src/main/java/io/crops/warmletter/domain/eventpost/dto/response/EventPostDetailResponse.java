@@ -1,16 +1,13 @@
 package io.crops.warmletter.domain.eventpost.dto.response;
 
-import lombok.AccessLevel;
+import io.crops.warmletter.global.response.PageResponse;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Getter
 @Builder
 public class EventPostDetailResponse {
     private Long eventPostId;
     private String title;
-    private List<EventCommentsResponse> eventPostComments;
+    private PageResponse<EventCommentsResponse> eventPostComments;
 }

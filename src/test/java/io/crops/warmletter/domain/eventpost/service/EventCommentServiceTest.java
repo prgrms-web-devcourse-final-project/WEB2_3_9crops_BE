@@ -1,6 +1,5 @@
 package io.crops.warmletter.domain.eventpost.service;
 
-import io.crops.warmletter.domain.auth.exception.UnauthorizedException;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventCommentRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.EventCommentResponse;
@@ -10,7 +9,6 @@ import io.crops.warmletter.domain.eventpost.exception.EventPostNotFoundException
 import io.crops.warmletter.domain.eventpost.repository.EventCommentRepository;
 import io.crops.warmletter.domain.eventpost.repository.EventPostRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
-import io.crops.warmletter.global.error.exception.AuthException;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,7 +59,7 @@ class EventCommentServiceTest {
                 .build();
         ReflectionTestUtils.setField(eventComment, "id", 1L);
 
-        when(eventPostRepository.existsById(1L)).thenReturn(true);
+        when(eventPostRepository.existsByIdAndIsActiveIsTrue(1L)).thenReturn(true);
         when(eventCommentRepository.save(any(EventComment.class))).thenReturn(eventComment);
 
         //when
@@ -82,7 +80,7 @@ class EventCommentServiceTest {
                 .content("내용")
                 .build();
 
-        when(eventPostRepository.existsById(1L)).thenReturn(false);
+        when(eventPostRepository.existsByIdAndIsActiveIsTrue(1L)).thenReturn(false);
 
         //when
         BusinessException exception = assertThrows(EventPostNotFoundException.class, ()-> eventCommentService.createEventComment(createEventCommentRequest,1L));
@@ -106,7 +104,7 @@ class EventCommentServiceTest {
                 .build();
         ReflectionTestUtils.setField(eventComment, "id", eventCommentId);
 
-        when(eventCommentRepository.findByIdAndWriterId(any(Long.class),any(Long.class))).thenReturn(Optional.of(eventComment));
+        when(eventCommentRepository.findByIdAndWriterIdAndIsActiveIsTrue(any(Long.class),any(Long.class))).thenReturn(Optional.of(eventComment));
 
         //when
         Map<String,Long> deleteEventComment = eventCommentService.deleteEventComment(eventCommentId);
@@ -117,38 +115,15 @@ class EventCommentServiceTest {
     }
 
     @Test
-    @DisplayName("게시판 댓글 삭제 실패 - 존재하지 않는 게시판")
+    @DisplayName("게시판 댓글 삭제 실패 - 존재하지 않는(이미 삭제된) 댓글")
     void delete_eventComment_notFound() {
         // given
-        when(eventCommentRepository.findByIdAndWriterId(any(Long.class),any(Long.class))).thenReturn(Optional.empty());
+        when(eventCommentRepository.findByIdAndWriterIdAndIsActiveIsTrue(any(Long.class),any(Long.class))).thenReturn(Optional.empty());
 
         // when & then
         BusinessException exception = assertThrows(EventCommentNotFoundException.class, () -> eventCommentService.deleteEventComment(999L));
 
         // then
-        assertEquals(ErrorCode.EVENT_COMMENT_NOT_FOUND, exception.getErrorCode());
-    }
-
-    @Test
-    @DisplayName("게시판 댓글 삭제 실패 - 이미 삭제한 댓글")
-    void update_EventPostIsUsedToFalse_AlreadyInUsed(){
-        //given
-        Long eventCommentId = 1L;
-        Long writerId = 1L;
-        when(authFacade.getCurrentUserId()).thenReturn(writerId);
-
-        EventComment eventComment = EventComment.builder()
-                .eventPostId(1L)
-                .writerId(writerId)
-                .content("내용")
-                .build();
-        ReflectionTestUtils.setField(eventComment, "isActive", false);
-
-        when(eventCommentRepository.findByIdAndWriterId(any(Long.class),any(Long.class))).thenReturn(Optional.of(eventComment));
-
-        BusinessException exception = assertThrows(EventCommentNotFoundException.class, ()-> eventCommentService.deleteEventComment(eventCommentId));
-
-        //then
         assertEquals(ErrorCode.EVENT_COMMENT_NOT_FOUND, exception.getErrorCode());
     }
 }

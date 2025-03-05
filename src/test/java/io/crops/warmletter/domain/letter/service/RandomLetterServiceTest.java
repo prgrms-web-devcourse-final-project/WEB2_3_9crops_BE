@@ -6,7 +6,7 @@ import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.CheckLastMatchResponse;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
-import io.crops.warmletter.domain.letter.dto.response.TemporaryMatchingResponse;
+import io.crops.warmletter.domain.letter.dto.response.MatchingResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterMatching;
 import io.crops.warmletter.domain.letter.entity.LetterTemporaryMatching;
@@ -215,8 +215,6 @@ class RandomLetterServiceTest {
     @DisplayName("checkTemporaryMatchedTable - 임시 매칭 데이터가 존재하는 경우")
     void checkTemporaryMatchedTable_exists() {
         Long userId = 1L;
-        when(authFacade.getCurrentUserId()).thenReturn(userId);
-        when(authFacade.getZipCode()).thenReturn("12345");
 
         // 임시 매칭 데이터 생성
         LetterTemporaryMatching tempMatching = LetterTemporaryMatching.builder()
@@ -224,7 +222,6 @@ class RandomLetterServiceTest {
                 .firstMemberId(2L)
                 .secondMemberId(userId)
                 .build();
-        when(letterTemporaryMatchingRepository.findBySecondMemberId(userId)).thenReturn(Optional.ofNullable(tempMatching));
 
         // Letter 생성 (임시 매칭에 해당하는 편지)
         Letter letter = Letter.builder()
@@ -236,9 +233,16 @@ class RandomLetterServiceTest {
                 .writerId(2L)
                 .build();
 
-        when(letterRepository.findById(100L)).thenReturn(Optional.of(letter));
+        Member member = Member.builder()
+                .zipCode("12345")
+                .build();
 
-        TemporaryMatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
+        when(authFacade.getCurrentUserId()).thenReturn(userId);
+        when(letterTemporaryMatchingRepository.findBySecondMemberId(userId)).thenReturn(Optional.ofNullable(tempMatching));
+        when(letterRepository.findById(100L)).thenReturn(Optional.of(letter));
+        when(memberRepository.findById(tempMatching.getFirstMemberId())).thenReturn(Optional.of(member));
+
+        MatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
 
         assertTrue(response.isTemporary());
         assertEquals("테스트 편지", response.getTitle());
@@ -252,7 +256,7 @@ class RandomLetterServiceTest {
         when(authFacade.getCurrentUserId()).thenReturn(1L);
         when(letterTemporaryMatchingRepository.findBySecondMemberId(userId)).thenReturn(Optional.empty());
 
-        TemporaryMatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
+        MatchingResponse response = randomLetterService.checkTemporaryMatchedTable();
 
         assertFalse(response.isTemporary());
     }

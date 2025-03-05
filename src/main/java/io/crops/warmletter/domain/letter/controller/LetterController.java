@@ -98,4 +98,10 @@ public class LetterController implements LetterControllerDocs {
         BaseResponse<List<LetterResponse>> response = BaseResponse.of(responses, "편지 조회 완료");
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/letters/unread/count")
+    public ResponseEntity<BaseResponse<Integer>> getLetterUnreadCount() {
+        int count = letterService.getLetterUnreadCount();
+        return ResponseEntity.ok(BaseResponse.of(count, "읽지 않은 편지 수 조회 완료"));
+    }
 }

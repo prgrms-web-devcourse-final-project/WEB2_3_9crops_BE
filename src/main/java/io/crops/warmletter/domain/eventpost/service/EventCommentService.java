@@ -1,6 +1,5 @@
 package io.crops.warmletter.domain.eventpost.service;
 
-import io.crops.warmletter.domain.auth.exception.UnauthorizedException;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventCommentRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.EventCommentResponse;
@@ -24,7 +23,7 @@ public class EventCommentService {
     private final EventPostRepository eventPostRepository;
 
     public EventCommentResponse createEventComment(CreateEventCommentRequest createEventCommentRequest, Long eventPostId) {
-        if(!eventPostRepository.existsById(eventPostId)) {
+        if(!eventPostRepository.existsByIdAndIsActiveIsTrue(eventPostId)) {
             throw new EventPostNotFoundException();
         }
 
@@ -46,10 +45,7 @@ public class EventCommentService {
 
     public Map<String,Long> deleteEventComment(Long eventCommentId) {
         Long writerId = authFacade.getCurrentUserId();
-        EventComment eventComment = eventCommentRepository.findByIdAndWriterId(eventCommentId,writerId).orElseThrow(EventCommentNotFoundException::new);
-        if(!eventComment.isActive()){
-            throw new EventCommentNotFoundException();
-        }
+        EventComment eventComment = eventCommentRepository.findByIdAndWriterIdAndIsActiveIsTrue(eventCommentId,writerId).orElseThrow(EventCommentNotFoundException::new);
         eventComment.softDelete();
         return Map.of("commentId",eventComment.getId());
     }

@@ -20,5 +20,9 @@ public interface EventPostRepository extends JpaRepository<EventPost, Long>{
             "ep.id,ep.title,ep.isUsed)" +
             "FROM EventPost ep " +
             "WHERE ep.isActive = true")
-    Page<EventPostsResponse> findByActiveIsTrue(Pageable pageable);
+    Page<EventPostsResponse> findByIsActiveIsTrue(Pageable pageable);
+
+    Optional<EventPost> findByIdAndIsActiveIsTrue(Long id);
+
+    boolean existsByIdAndIsActiveIsTrue(Long id);
 }

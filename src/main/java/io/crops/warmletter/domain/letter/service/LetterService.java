@@ -171,10 +171,8 @@ public class LetterService {
 
     @Transactional
     public LetterResponse temporarySaveLetter(Long letterId, TemporarySaveLetterRequest request) {
-        //Long writerId = authFacade.getCurrentUserId();
-        Long writerId = 1L;
-        //String writerZipCode = authFacade.getZipCode();        Long writerId = authFacade.getCurrentUserId();
-        String writerZipCode = "11111";
+        Long writerId = authFacade.getCurrentUserId();
+        String writerZipCode = authFacade.getZipCode();
 
         if (letterId != null) {
             Letter letter = letterRepository.findByIdAndWriterId(letterId, writerId)

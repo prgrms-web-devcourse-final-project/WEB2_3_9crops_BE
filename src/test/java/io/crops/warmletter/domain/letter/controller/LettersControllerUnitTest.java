@@ -80,7 +80,7 @@ class LettersControllerUnitTest {
         when(letterService.getPreviousLetters(1L)).thenReturn(letterResponses);
 
         // when & then
-        mockMvc.perform(get("/api/v1/letters/{letterId}/previous", 1L)
+        mockMvc.perform(get("/api/letters/{letterId}/previous", 1L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())

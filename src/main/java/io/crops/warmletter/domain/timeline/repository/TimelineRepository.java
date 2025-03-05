@@ -16,7 +16,7 @@ import java.util.Optional;
 @Repository
 public interface TimelineRepository extends JpaRepository<Timeline, Long> {
     @Query("SELECT new io.crops.warmletter.domain.timeline.dto.response.TimelineResponse(" +
-            "tl.id, tl.title, tl.alarmType, tl.isRead)" +
+            "tl.id, tl.title, tl.content, tl.alarmType, tl.isRead)" +
             "FROM Timeline tl " +
             "WHERE tl.memberId = :memberId")
     Page<TimelineResponse> findByMemberId(@Param("memberId") Long memberId, Pageable pageable);
@@ -31,4 +31,6 @@ public interface TimelineRepository extends JpaRepository<Timeline, Long> {
 
     @Query("SELECT tl FROM Timeline tl WHERE tl.id IN :ids")
     List<Timeline> findByIds(@Param("ids") List<Long> ids);
+
+
 }

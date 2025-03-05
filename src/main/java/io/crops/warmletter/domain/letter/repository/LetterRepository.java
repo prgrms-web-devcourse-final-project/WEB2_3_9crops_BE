@@ -55,4 +55,11 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
             "and l.isActive = true " +
             "and l.status = 'DELIVERED'")
     int countLetterUnreadCount(Long receiverId);
+
+    @Query("SELECT l FROM Letter l " +
+            "WHERE l.id = :id " +
+            "AND l.writerId = :writerId " +
+            "AND l.isActive = true " +
+            "AND l.status = 'SAVED'")
+    Optional<Letter> findByIdAndWriterIdAndStatusIsSAVED(Long id, Long writerId);
 }

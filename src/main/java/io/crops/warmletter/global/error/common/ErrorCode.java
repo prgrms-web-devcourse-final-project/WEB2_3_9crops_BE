@@ -58,6 +58,7 @@
         DUPLICATE_LETTER_MATCH("LET-008", HttpStatus.CONFLICT, "이미 다른 사용자가 매칭된 편지입니다."),
         PARENT_LETTER_FOUND("LET-009", HttpStatus.NOT_FOUND, "부모 편지를 찾을 수 없습니다."),
         CATEGORY_NOT_FOUND("LET-010", HttpStatus.NOT_FOUND, "카테고리를 찾을 수 없습니다."),
+        ALREADY_EVALUATED_LETTER("LET-011", HttpStatus.BAD_REQUEST, "이미 평가된 편지입니다."),
 
         // Member 관련
         MEMBER_NOT_FOUND("MEM-001", HttpStatus.NOT_FOUND, "유저를 찾을 수 없습니다."),

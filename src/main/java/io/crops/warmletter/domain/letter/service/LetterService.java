@@ -172,6 +172,10 @@ public class LetterService {
 
         Letter letter = letterRepository.findByIdAndReceiverId(letterId, receiverId)
                                         .orElseThrow(LetterNotBelongException::new);
+        if (letter.isEvaluated()) {
+            throw new AlreadyEvaluatedLetterException();
+        }
+
         letter.updateIsEvaluated(true); //편자 평가여부 true변환
 
         memberFacade.applyEvaluationTemperature(letter.getWriterId(), request.getEvaluation());

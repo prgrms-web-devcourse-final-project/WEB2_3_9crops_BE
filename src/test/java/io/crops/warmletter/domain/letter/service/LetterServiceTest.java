@@ -786,6 +786,62 @@ class LetterServiceTest {
         verify(letterRepository).save(letter);
     }
 
+    @DisplayName("편지 평가 실패 - 이미 평가된 편지")
+    @Test
+    void evaluateLetter_WithAlreadyEvaluatedLetter_ShouldThrowException() throws Exception {
+        //given
+        Long writerId = 2L;
+        Long receiverId = 1L;
+        Member member = Member.builder()
+                .socialUniqueId("GOOGLE_12345")
+                .zipCode("1AA2C")
+                .role(Role.USER)
+                .build();
+
+        // Reflection으로 id 설정
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, receiverId);
+
+        Long letterId = 1L;
+        Letter letter = Letter.builder()
+                .writerId(writerId)
+                .receiverId(receiverId)
+                .letterType(LetterType.DIRECT)
+                .category(Category.CONSULT)
+                .title("A사용자 2번 편지에 대한 답장")
+                .content("내용 2")
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .build();
+        // Reflection으로 id 설정
+        Field letterIdField = Letter.class.getDeclaredField("id");
+        letterIdField.setAccessible(true);
+        letterIdField.set(letter, letterId);
+
+        Field isEvaluatedField = Letter.class.getDeclaredField("isEvaluated");
+        isEvaluatedField.setAccessible(true);
+        isEvaluatedField.set(letter, true);
+
+
+        EvaluateLetterRequest request = new EvaluateLetterRequest();
+        LetterEvaluation evaluation = LetterEvaluation.GOOD;
+
+        Field evaluationField = EvaluateLetterRequest.class.getDeclaredField("evaluation");
+        evaluationField.setAccessible(true);
+        evaluationField.set(request, evaluation);
+
+        when(authFacade.getCurrentUserId()).thenReturn(receiverId);
+        when(letterRepository.findByIdAndReceiverId(letterId, receiverId)).thenReturn(Optional.of(letter));
+
+        //when & then
+        assertThrows(AlreadyEvaluatedLetterException.class,
+                () -> letterService.evaluateLetter(letterId, request));
+
+        verify(authFacade).getCurrentUserId();
+        verify(letterRepository).findByIdAndReceiverId(receiverId, letterId);
+    }
+
     @DisplayName("편지 평가 실패 - 편지에 대해 평가할 수 있는 권한 없음")
     @Test
     void evaluateLetter_WithNotBelongLetter_ShouldThrowException() throws Exception {

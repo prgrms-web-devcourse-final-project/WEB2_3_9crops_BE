@@ -17,17 +17,17 @@ import java.util.HashMap;
 
 @Configuration
 @EnableJpaRepositories(
-        basePackages = "io.crops.warmletter.domain",
+        basePackages = "io.crops.warmletter",
         entityManagerFactoryRef = "dataEntityManager",
-        transactionManagerRef = "dataTransactionManager"
+        transactionManagerRef = "transactionManager"
 )
-@EntityScan(basePackages = "io.crops.warmletter.domain")
+@EntityScan(basePackages = "io.crops.warmletter")
 @Profile("!test") // 테스트 환경 제외
 public class DataDBConfig {
 
     @Bean
     @ConfigurationProperties(prefix = "spring.datasource")
-    public DataSource dataDBSource() {
+    public DataSource dataSource() {
         return DataSourceBuilder.create().build();
     }
 
@@ -35,8 +35,8 @@ public class DataDBConfig {
     public LocalContainerEntityManagerFactoryBean dataEntityManager() {
 
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
-        em.setDataSource(dataDBSource());
-        em.setPackagesToScan(new String[]{"io.crops.warmletter.domain"});
+        em.setDataSource(dataSource());
+        em.setPackagesToScan(new String[]{"io.crops.warmletter"});
         em.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
 
         HashMap<String, Object> properties = new HashMap<>();
@@ -48,7 +48,7 @@ public class DataDBConfig {
     }
 
     @Bean
-    public PlatformTransactionManager dataTransactionManager() {
+    public PlatformTransactionManager transactionManager() {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
         transactionManager.setEntityManagerFactory(dataEntityManager().getObject());
         return transactionManager;

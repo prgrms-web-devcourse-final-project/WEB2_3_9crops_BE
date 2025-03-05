@@ -49,7 +49,7 @@ spring:
 
   batch:
     job:
-      enabled: false
+      enabled: true
     jdbc:
       initialize-schema: always
       schema: classpath:org/springframework/batch/core/schema-mysql.sql

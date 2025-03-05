@@ -14,7 +14,7 @@ import javax.sql.DataSource;
 
 @Slf4j
 @Configuration
-@Profile("!test") // 테스트 환경 제외
+@Profile({"!test"}) // 테스트 환경 제외
 public class MetaDBConfig {
 
     @Primary

@@ -118,4 +118,8 @@ public class Letter extends BaseTimeEntity {
     public void updateIsEvaluated(boolean isEvaluated) {
         this.isEvaluated = isEvaluated;
     }
+
+    public void updateStatus(Status status) {
+        this.status = status;
+    }
 }

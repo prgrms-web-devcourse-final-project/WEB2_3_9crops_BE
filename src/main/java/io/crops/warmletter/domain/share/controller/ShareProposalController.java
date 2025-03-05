@@ -1,7 +1,7 @@
 package io.crops.warmletter.domain.share.controller;
 
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
-import io.crops.warmletter.domain.share.dto.request.UpdateProposalStatusRequest;
+import io.crops.warmletter.domain.share.dto.response.ShareInboxResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalStatusResponse;
 import io.crops.warmletter.domain.share.service.ShareProposalService;
@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -35,7 +37,7 @@ public class ShareProposalController {
     public ResponseEntity<BaseResponse<ShareProposalStatusResponse>> approveShareProposal(
             @PathVariable(name = "shareProposalId") Long shareProposalId) {
         return ResponseEntity.ok()
-                .body(new BaseResponse<>(shareProposalService.approveShareProposal(shareProposalId),"공유 요청 성공"));
+                .body(new BaseResponse<>(shareProposalService.approveShareProposal(shareProposalId), "공유 요청 성공"));
     }
 
     @Operation(summary = "편지 공유 요청 거절", description = "특정 ID의 편지 공유 요청을 거절합니다.")
@@ -43,6 +45,14 @@ public class ShareProposalController {
     public ResponseEntity<BaseResponse<ShareProposalStatusResponse>> rejectShareProposal(
             @PathVariable(name = "shareProposalId") Long shareProposalId) {
         return ResponseEntity.ok()
-                .body(new BaseResponse<>(shareProposalService.rejectShareProposal(shareProposalId),"공유 요청 거절"));
+                .body(new BaseResponse<>(shareProposalService.rejectShareProposal(shareProposalId), "공유 요청 거절"));
     }
+    
+    @Operation(summary = "마이페이지 공유 조회", description = " 요청받은 공유 내역 조회 ")
+    @GetMapping("/share-proposals/inbox")
+    public ResponseEntity<BaseResponse<List<ShareInboxResponse>>> getReceivedShareProposals() {
+        return ResponseEntity.ok()
+                .body(new BaseResponse<>(shareProposalService.getReceivedShareProposals(),"요청받은 공유 내역 조회 성공"));
+    }
+
 }

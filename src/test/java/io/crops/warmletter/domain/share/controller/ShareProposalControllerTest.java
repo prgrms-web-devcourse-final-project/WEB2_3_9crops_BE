@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.share.controller;
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
+import io.crops.warmletter.domain.share.dto.response.ShareInboxResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalStatusResponse;
 import io.crops.warmletter.domain.share.enums.ProposalStatus;
@@ -190,5 +191,76 @@ class ShareProposalControllerTest {
         assertThrows(BusinessException.class,
                 () -> shareProposalController.rejectShareProposal(shareProposalId));
         verify(shareProposalService).rejectShareProposal(shareProposalId);
+    }
+
+    @Test
+    @DisplayName("마이페이지 공유 요청받은 내역 조회 성공")
+    void getReceivedShareProposals_Success() {
+        // Given
+        List<ShareInboxResponse> serviceResponses = List.of(
+                ShareInboxResponse.builder()
+                        .shareProposalId(1L)
+                        .requesterZipCode("12345")
+                        .recipientZipCode("67890")
+                        .message("첫 번째 공유 요청입니다")
+                        .status(ProposalStatus.PENDING)
+                        .build(),
+                ShareInboxResponse.builder()
+                        .shareProposalId(2L)
+                        .requesterZipCode("23456")
+                        .recipientZipCode("67890")
+                        .message("두 번째 공유 요청입니다")
+                        .status(ProposalStatus.APPROVED)
+                        .build()
+        );
+
+        when(shareProposalService.getReceivedShareProposals())
+                .thenReturn(serviceResponses);
+
+        // When
+        ResponseEntity<BaseResponse<List<ShareInboxResponse>>> response =
+                shareProposalController.getReceivedShareProposals();
+
+        // Then
+        assertAll(
+                () -> assertNotNull(response),
+                () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
+                () -> assertNotNull(response.getBody()),
+                () -> assertEquals("요청받은 공유 내역 조회 성공", response.getBody().getMessage()),
+                () -> assertEquals(2, response.getBody().getData().size()),
+                () -> assertEquals(1L, response.getBody().getData().get(0).getShareProposalId()),
+                () -> assertEquals("12345", response.getBody().getData().get(0).getRequesterZipCode()),
+                () -> assertEquals("67890", response.getBody().getData().get(0).getRecipientZipCode()),
+                () -> assertEquals("첫 번째 공유 요청입니다", response.getBody().getData().get(0).getMessage()),
+                () -> assertEquals(ProposalStatus.PENDING, response.getBody().getData().get(0).getStatus()),
+                () -> assertEquals(2L, response.getBody().getData().get(1).getShareProposalId()),
+                () -> assertEquals(ProposalStatus.APPROVED, response.getBody().getData().get(1).getStatus())
+        );
+
+        verify(shareProposalService).getReceivedShareProposals();
+    }
+
+    @Test
+    @DisplayName("마이페이지 공유 요청받은 내역 - 빈 목록 조회 성공")
+    void getReceivedShareProposals_EmptyList() {
+        // Given
+        List<ShareInboxResponse> emptyList = List.of();
+        when(shareProposalService.getReceivedShareProposals())
+                .thenReturn(emptyList);
+
+        // When
+        ResponseEntity<BaseResponse<List<ShareInboxResponse>>> response =
+                shareProposalController.getReceivedShareProposals();
+
+        // Then
+        assertAll(
+                () -> assertNotNull(response),
+                () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
+                () -> assertNotNull(response.getBody()),
+                () -> assertEquals("요청받은 공유 내역 조회 성공", response.getBody().getMessage()),
+                () -> assertEquals(0, response.getBody().getData().size())
+        );
+
+        verify(shareProposalService).getReceivedShareProposals();
     }
 }

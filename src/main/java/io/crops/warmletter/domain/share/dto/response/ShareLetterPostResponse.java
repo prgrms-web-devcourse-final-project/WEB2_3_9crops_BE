@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class ShareLetterPostResponse {
+
     private Long id;
     private String content;
     private String writerZipCode;

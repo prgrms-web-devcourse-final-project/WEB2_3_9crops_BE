@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.share.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
+import io.crops.warmletter.domain.share.dto.response.ShareInboxResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalStatusResponse;
 import io.crops.warmletter.domain.share.entity.SharePost;
@@ -365,5 +366,71 @@ class ShareProposalServiceTest {
         verify(shareProposalRepository).findById(shareProposalId);
         verify(sharePostRepository, never()).save(any(SharePost.class));
         verify(shareProposal, never()).updateStatus(any(ProposalStatus.class));
+    }
+    @Test
+    @DisplayName("요청받은 공유 내역 조회 성공")
+    void getReceivedShareProposals_Success() {
+        // Given
+        Long currentUserId = 1L;
+        List<ShareInboxResponse> expectedResponses = List.of(
+                ShareInboxResponse.builder()
+                        .shareProposalId(1L)
+                        .requesterZipCode("12345")
+                        .recipientZipCode("67890")
+                        .message("첫 번째 공유 요청입니다")
+                        .status(ProposalStatus.PENDING)
+                        .build(),
+                ShareInboxResponse.builder()
+                        .shareProposalId(2L)
+                        .requesterZipCode("23456")
+                        .recipientZipCode("67890")
+                        .message("두 번째 공유 요청입니다")
+                        .status(ProposalStatus.APPROVED)
+                        .build()
+        );
+
+        when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
+        when(shareProposalRepository.getAllByRecipientIdOrderByCreatedAtDesc(currentUserId))
+                .thenReturn(expectedResponses);
+
+        // When
+        List<ShareInboxResponse> responses = shareProposalService.getReceivedShareProposals();
+
+        // Then
+        assertAll(
+                () -> assertNotNull(responses),
+                () -> assertEquals(2, responses.size()),
+                () -> assertEquals(1L, responses.get(0).getShareProposalId()),
+                () -> assertEquals("12345", responses.get(0).getRequesterZipCode()),
+                () -> assertEquals("67890", responses.get(0).getRecipientZipCode()),
+                () -> assertEquals("첫 번째 공유 요청입니다", responses.get(0).getMessage()),
+                () -> assertEquals(ProposalStatus.PENDING, responses.get(0).getStatus())
+        );
+
+        verify(authFacade).getCurrentUserId();
+        verify(shareProposalRepository).getAllByRecipientIdOrderByCreatedAtDesc(currentUserId);
+    }
+    @Test
+    @DisplayName("요청받은 공유 내역 - 빈 목록 조회")
+    void getReceivedShareProposals_EmptyList() {
+        // Given
+        Long currentUserId = 1L;
+        List<ShareInboxResponse> emptyList = List.of();
+
+        when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
+        when(shareProposalRepository.getAllByRecipientIdOrderByCreatedAtDesc(currentUserId))
+                .thenReturn(emptyList);
+
+        // When
+        List<ShareInboxResponse> responses = shareProposalService.getReceivedShareProposals();
+
+        // Then
+        assertAll(
+                () -> assertNotNull(responses),
+                () -> assertTrue(responses.isEmpty())
+        );
+
+        verify(authFacade).getCurrentUserId();
+        verify(shareProposalRepository).getAllByRecipientIdOrderByCreatedAtDesc(currentUserId);
     }
 }

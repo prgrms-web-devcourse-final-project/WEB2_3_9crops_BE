@@ -190,7 +190,7 @@ public class LetterService {
         else {
 
             Letter letter = Letter.builder()
-                    .writerId(writerId)
+                    .writerId(1L)
                     .letterType(LetterType.RANDOM)
                     .category(request.getCategory())
                     .title(request.getTitle())

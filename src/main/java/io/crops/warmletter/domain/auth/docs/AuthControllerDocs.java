@@ -25,7 +25,6 @@ public interface AuthControllerDocs {
             })
     @PostMapping("/reissue")
     ResponseEntity<BaseResponse<TokenResponse>> reissue(
-            @RequestHeader("Authorization") String bearerToken,
             @CookieValue(name = "refresh_token") String refreshToken,
             HttpServletResponse response
     );

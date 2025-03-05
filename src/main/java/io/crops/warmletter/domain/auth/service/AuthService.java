@@ -3,7 +3,10 @@ package io.crops.warmletter.domain.auth.service;
 import io.crops.warmletter.domain.auth.dto.TokenResponse;
 import io.crops.warmletter.domain.auth.dto.TokenStorageResponse;
 import io.crops.warmletter.domain.auth.exception.UnauthorizedException;
+import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.enums.Role;
+import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
+import io.crops.warmletter.domain.member.repository.MemberRepository;
 import io.crops.warmletter.global.jwt.enums.TokenType;
 import io.crops.warmletter.global.jwt.exception.InvalidRefreshTokenException;
 import io.crops.warmletter.global.jwt.exception.InvalidTokenException;
@@ -30,25 +33,28 @@ public class AuthService {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final TokenBlacklistService tokenBlacklistService;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final MemberRepository memberRepository;
     private final TokenStorage tokenStorage;
     private final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 14; // 14일
     private final long REFRESH_TOKEN_REISSUE_TIME = REFRESH_TOKEN_EXPIRE_TIME / 2; // 7일
 
-    public TokenResponse reissue(String accessToken, String refreshToken, HttpServletResponse response) {
+    public TokenResponse reissue(String refreshToken, HttpServletResponse response) {
         // 리프레시 토큰 검증
         if (!jwtTokenProvider.validateToken(refreshToken, TokenType.REFRESH)) {
             throw new InvalidRefreshTokenException();
         }
 
-        String socialUniqueId = jwtTokenProvider.getSocialUniqueId(accessToken);
-        Claims claims = jwtTokenProvider.getClaims(accessToken);
+        String socialUniqueId = jwtTokenProvider.getSocialUniqueId(refreshToken);
+        // 사용자 정보 DB에서 조회
+        Member member = memberRepository.findBySocialUniqueId(socialUniqueId)
+                .orElseThrow(MemberNotFoundException::new);
 
+        // 새 액세스 토큰 생성
         String newAccessToken = jwtTokenProvider.createAccessToken(
                 socialUniqueId,
-                Role.valueOf(claims.get("role").toString()),
-                claims.get("zipCode", String.class),
-                claims.get("memberId", Long.class)
+                member.getRole(),
+                member.getZipCode(),
+                member.getId()
         );
 
         // Access Token을 Authorization 헤더에 추가

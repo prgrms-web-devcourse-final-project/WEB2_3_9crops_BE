@@ -21,18 +21,11 @@ public class AuthController implements AuthControllerDocs {
     // Access 토큰이 만료되었을 때 호출
     @PostMapping("/reissue")
     public ResponseEntity<BaseResponse<TokenResponse>> reissue(
-            @RequestHeader("Authorization") String bearerToken,
             @CookieValue(name = "refresh_token") String refreshToken,
             HttpServletResponse response
     ) {
-        if (!bearerToken.startsWith("Bearer ")) {
-            throw new InvalidAccessTokenException();
-        }
 
-        // Bearer 제거하고 토큰만 추출
-        String accessToken = bearerToken.substring(7);
-
-        TokenResponse tokenResponse = authService.reissue(accessToken, refreshToken, response);
+        TokenResponse tokenResponse = authService.reissue(refreshToken, response);
 
         return ResponseEntity.ok(BaseResponse.of(tokenResponse, "토큰 재발급 완료"));
     }

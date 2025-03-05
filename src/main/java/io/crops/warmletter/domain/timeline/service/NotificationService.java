@@ -21,7 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class NotificationService {
     private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
     private final AuthFacade authFacade;
@@ -46,6 +45,7 @@ public class NotificationService {
     }
 
     // 편지 수신, 신고 조치, 공유 요청, 공유 게시글 등록 시 호출 필요
+    @Transactional
     public void createNotification(String senderZipCode, Long receiverId, AlarmType alarmType, String data){
         Timeline.TimelineBuilder builder = Timeline.builder()
                 .memberId(receiverId)
@@ -94,7 +94,7 @@ public class NotificationService {
             }
         }
     }
-
+    @Transactional
     public ReadNotificationResponse updateNotificationRead(Long notificationId){
         Long memberId = authFacade.getCurrentUserId();
         Timeline timeline = timelineRepository.findByIdAndMemberId(notificationId, memberId).orElseThrow(NotificationNotFoundException::new);
@@ -108,6 +108,7 @@ public class NotificationService {
                 .build();
     }
 
+    @Transactional
     public List<ReadNotificationResponse> updateNotificationAllRead(){
         Long memberId = authFacade.getCurrentUserId();
         List<Timeline> timelinesBeforeUpdate = timelineRepository.findByMemberIdAndIsReadFalse(memberId);

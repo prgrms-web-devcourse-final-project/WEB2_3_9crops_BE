@@ -568,6 +568,50 @@ class LetterServiceTest {
         verify(letterMatchingRepository).findById(matchingId);
         verify(memberRepository).findById(2L);
     }
+    @Test
+    @DisplayName("이전 편지 목록 조회 - 부모 편지 ID가 null인 경우 테스트")
+    void getPreviousLetters_withNullParentLetterId() {
+        // 현재 사용자 ID 설정
+        Long myId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(myId);
+
+        Long letterId = 5L;
+        Long writerId = 2L;
+        Letter letter = Letter.builder()
+                .writerId(writerId)
+                .title("부모 편지 ID가 null인 편지 제목")
+                .content("부모 편지 ID가 null인 편지 내용")
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .status(Status.DELIVERED)
+                .parentLetterId(null) // 부모 편지 ID를 null로 설정
+                .build();
+        ReflectionTestUtils.setField(letter, "id", letterId);
+
+        // 편지 작성자 회원 정보
+        Member writer = Member.builder()
+                .zipCode("54321")
+                .build();
+
+        when(letterRepository.findById(letterId)).thenReturn(Optional.of(letter));
+        when(memberRepository.findById(writerId)).thenReturn(Optional.of(writer));
+
+        // when
+        List<LetterResponse> responses = letterService.getPreviousLetters(letterId);
+
+        // then
+        assertAll("부모 편지 ID가 null인 경우 편지 목록 검증",
+                () -> assertNotNull(responses, "반환된 목록은 null이 아니어야 함"),
+                () -> assertEquals(1, responses.size(), "단일 편지가 반환되어야 함"),
+                () -> assertEquals("부모 편지 ID가 null인 편지 제목", responses.get(0).getTitle()),
+                () -> assertEquals("부모 편지 ID가 null인 편지 내용", responses.get(0).getContent()),
+                () -> assertEquals("54321", responses.get(0).getZipCode())
+        );
+
+        verify(letterRepository).findById(letterId);
+        verify(memberRepository).findById(writerId);
+    }
+
 
     @Test
     @DisplayName("getPreviousLetters - 매칭 정보가 없으면 MatchingNotFoundException 발생")

@@ -54,4 +54,7 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
     int countByReceiverIdAndIsReadIsFalseAndIsActiveIsTrue(Long receiverId);
 
     Page<Letter> findByStatusAndDeliveryCompletedAtLessThanEqual(Status status, LocalDateTime dateTime, Pageable pageable);
+
+//    List<Letter> findByStatusAndDeliveryCompletedAtLessThanEqual(Status status, LocalDateTime dateTime);
+
 }

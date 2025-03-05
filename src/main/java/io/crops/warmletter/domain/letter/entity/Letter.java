@@ -39,10 +39,8 @@ public class Letter extends BaseTimeEntity {
     @Column(nullable = false)
     private Status status;  // 배송 상태 (IN_DELIVERY, DELIVERED 등)
 
-    @Column(nullable = false)
     private LocalDateTime deliveryStartedAt;    // 배송 시작 시간
 
-    @Column(nullable = false)
     private LocalDateTime deliveryCompletedAt;  // 배송 도착 시간
 
     private boolean isRead;          // 열람 여부 (YES/NO 대신 boolean 처리)
@@ -76,7 +74,7 @@ public class Letter extends BaseTimeEntity {
         this.content = content;
         this.status = status;
         this.deliveryStartedAt = LocalDateTime.now();
-        this.deliveryCompletedAt = LocalDateTime.now().plusHours(1); //편지 생성 시, 답장 시 한 시간 뒤에 도착
+        this.deliveryCompletedAt = LocalDateTime.now().plusMinutes(1); //편지 생성 시, 답장 시 한 시간 뒤에 도착
         this.isRead = false;
         this.fontType = fontType;
         this.paperType = paperType;

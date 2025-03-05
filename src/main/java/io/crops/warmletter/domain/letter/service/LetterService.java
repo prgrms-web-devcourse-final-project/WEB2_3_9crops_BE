@@ -116,6 +116,7 @@ public class LetterService {
 
         List<LetterResponse> responses = new ArrayList<>();
         for (Letter findLetter : lettersByParentId) {
+            //이전편지 조회 시 enum이 전송됨만 구현
             String zipCode = memberRepository.findById(findLetter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode();
             LetterResponse response = LetterResponse.fromEntityForPreviousLetters(findLetter,zipCode);
             responses.add(response);

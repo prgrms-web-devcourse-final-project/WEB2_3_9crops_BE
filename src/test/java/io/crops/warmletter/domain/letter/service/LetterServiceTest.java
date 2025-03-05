@@ -489,6 +489,131 @@ class LetterServiceTest {
     }
 
     @Test
+    @DisplayName("이전 편지 목록 조회 - 일부 편지 상태가 DELIVERED가 아닌 경우 테스트")
+    void getPreviousLetters_withNonDeliveredLetters() {
+        // 현재 사용자 ID 설정
+        Long myId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(myId);
+
+        Long replyLetterId = 5L;
+        Long parentLetterId = 10L;
+        Long matchingId = 100L;
+        Letter replyLetter = Letter.builder()
+                .writerId(myId) // 답장 쓴 사람이 현재 사용자라고 가정
+                .parentLetterId(parentLetterId)
+                .matchingId(matchingId)
+                .title("답장 제목")
+                .content("답장 내용")
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .status(Status.DELIVERED)
+                .build();
+        ReflectionTestUtils.setField(replyLetter, "id", replyLetterId);
+
+        // 매칭 정보
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(myId)
+                .secondMemberId(2L)
+                .build();
+        ReflectionTestUtils.setField(matching, "id", matchingId);
+
+        // 이전 편지 목록: 다양한 상태의 편지들 포함
+        Letter deliveredLetter = Letter.builder()
+                .writerId(2L)
+                .receiverId(myId)
+                .parentLetterId(parentLetterId)
+                .letterType(LetterType.DIRECT)
+                .title("배달된 편지 제목")
+                .content("배달된 편지 내용")
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .status(Status.DELIVERED)
+                .build();
+        ReflectionTestUtils.setField(deliveredLetter, "id", 11L);
+
+        Letter pendingLetter = Letter.builder()
+                .writerId(2L)
+                .receiverId(myId)
+                .parentLetterId(parentLetterId)
+                .letterType(LetterType.DIRECT)
+                .title("저장 중인 편지 제목")
+                .content("저장 중인 편지 내용")
+                .fontType(FontType.KYOBO)
+                .paperType(PaperType.BASIC)
+                .status(Status.SAVED)
+                .build();
+        ReflectionTestUtils.setField(pendingLetter, "id", 12L);
+
+        List previousLetters = List.of(deliveredLetter, pendingLetter);
+
+        when(letterRepository.findById(replyLetterId)).thenReturn(Optional.of(replyLetter));
+        when(letterRepository.findLettersByParentLetterId(parentLetterId)).thenReturn(previousLetters);
+        when(letterMatchingRepository.findById(matchingId)).thenReturn(Optional.of(matching));
+        when(memberRepository.findById(2L)).thenReturn(Optional.of(Member.builder().zipCode("12345").build()));
+
+        // when
+        List<LetterResponse> responses = letterService.getPreviousLetters(replyLetterId);
+
+        // then
+        assertAll("이전 편지 목록 검증",
+                () -> assertNotNull(responses),
+                () -> assertEquals(1, responses.size(), "DELIVERED 상태인 편지만 반환되어야 함"),
+                () -> assertEquals("배달된 편지 제목", responses.get(0).getTitle()),
+                () -> assertEquals("배달된 편지 내용", responses.get(0).getContent()),
+                () -> assertEquals("12345", responses.get(0).getZipCode())
+        );
+
+        verify(letterRepository).findById(replyLetterId);
+        verify(letterRepository).findLettersByParentLetterId(parentLetterId);
+        verify(letterMatchingRepository).findById(matchingId);
+        verify(memberRepository).findById(2L);
+    }
+    @Test
+    @DisplayName("이전 편지 목록 조회 - 부모 편지 ID가 null인 경우 테스트")
+    void getPreviousLetters_withNullParentLetterId() {
+        // 현재 사용자 ID 설정
+        Long myId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(myId);
+
+        Long letterId = 5L;
+        Long writerId = 2L;
+        Letter letter = Letter.builder()
+                .writerId(writerId)
+                .title("부모 편지 ID가 null인 편지 제목")
+                .content("부모 편지 ID가 null인 편지 내용")
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .status(Status.DELIVERED)
+                .parentLetterId(null) // 부모 편지 ID를 null로 설정
+                .build();
+        ReflectionTestUtils.setField(letter, "id", letterId);
+
+        // 편지 작성자 회원 정보
+        Member writer = Member.builder()
+                .zipCode("54321")
+                .build();
+
+        when(letterRepository.findById(letterId)).thenReturn(Optional.of(letter));
+        when(memberRepository.findById(writerId)).thenReturn(Optional.of(writer));
+
+        // when
+        List<LetterResponse> responses = letterService.getPreviousLetters(letterId);
+
+        // then
+        assertAll("부모 편지 ID가 null인 경우 편지 목록 검증",
+                () -> assertNotNull(responses, "반환된 목록은 null이 아니어야 함"),
+                () -> assertEquals(1, responses.size(), "단일 편지가 반환되어야 함"),
+                () -> assertEquals("부모 편지 ID가 null인 편지 제목", responses.get(0).getTitle()),
+                () -> assertEquals("부모 편지 ID가 null인 편지 내용", responses.get(0).getContent()),
+                () -> assertEquals("54321", responses.get(0).getZipCode())
+        );
+
+        verify(letterRepository).findById(letterId);
+        verify(memberRepository).findById(writerId);
+    }
+
+
+    @Test
     @DisplayName("getPreviousLetters - 매칭 정보가 없으면 MatchingNotFoundException 발생")
     void getPreviousLetters_matchingNotFound() {
         // given
@@ -703,6 +828,62 @@ class LetterServiceTest {
         // then
         assertTrue(letter.isRead());
         verify(letterRepository).save(letter);
+    }
+
+    @DisplayName("편지 평가 실패 - 이미 평가된 편지")
+    @Test
+    void evaluateLetter_WithAlreadyEvaluatedLetter_ShouldThrowException() throws Exception {
+        //given
+        Long writerId = 2L;
+        Long receiverId = 1L;
+        Member member = Member.builder()
+                .socialUniqueId("GOOGLE_12345")
+                .zipCode("1AA2C")
+                .role(Role.USER)
+                .build();
+
+        // Reflection으로 id 설정
+        Field idField = Member.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(member, receiverId);
+
+        Long letterId = 1L;
+        Letter letter = Letter.builder()
+                .writerId(writerId)
+                .receiverId(receiverId)
+                .letterType(LetterType.DIRECT)
+                .category(Category.CONSULT)
+                .title("A사용자 2번 편지에 대한 답장")
+                .content("내용 2")
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .build();
+        // Reflection으로 id 설정
+        Field letterIdField = Letter.class.getDeclaredField("id");
+        letterIdField.setAccessible(true);
+        letterIdField.set(letter, letterId);
+
+        Field isEvaluatedField = Letter.class.getDeclaredField("isEvaluated");
+        isEvaluatedField.setAccessible(true);
+        isEvaluatedField.set(letter, true);
+
+
+        EvaluateLetterRequest request = new EvaluateLetterRequest();
+        LetterEvaluation evaluation = LetterEvaluation.GOOD;
+
+        Field evaluationField = EvaluateLetterRequest.class.getDeclaredField("evaluation");
+        evaluationField.setAccessible(true);
+        evaluationField.set(request, evaluation);
+
+        when(authFacade.getCurrentUserId()).thenReturn(receiverId);
+        when(letterRepository.findByIdAndReceiverId(letterId, receiverId)).thenReturn(Optional.of(letter));
+
+        //when & then
+        assertThrows(AlreadyEvaluatedLetterException.class,
+                () -> letterService.evaluateLetter(letterId, request));
+
+        verify(authFacade).getCurrentUserId();
+        verify(letterRepository).findByIdAndReceiverId(receiverId, letterId);
     }
 
     @DisplayName("편지 평가 실패 - 편지에 대해 평가할 수 있는 권한 없음")

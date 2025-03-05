@@ -6,6 +6,7 @@ import io.crops.warmletter.domain.letter.dto.request.TemporarySaveLetterRequest;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.*;
+import io.crops.warmletter.domain.letter.exception.AlreadyEvaluatedLetterException;
 import io.crops.warmletter.domain.letter.exception.LetterNotBelongException;
 import io.crops.warmletter.domain.letter.exception.LetterNotFoundException;
 import io.crops.warmletter.domain.letter.service.LetterService;
@@ -79,7 +80,7 @@ class LettersControllerUnitTest {
         when(letterService.getPreviousLetters(1L)).thenReturn(letterResponses);
 
         // when & then
-        mockMvc.perform(get("/api/v1/letters/{letterId}/previous", 1L)
+        mockMvc.perform(get("/api/letters/{letterId}/previous", 1L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
@@ -144,6 +145,37 @@ class LettersControllerUnitTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("LET-006"))
                 .andExpect(jsonPath("$.message").value("편지에 대한 권한이 없습니다."));
+
+        verify(letterService).evaluateLetter(
+                eq(invalidLetterId),
+                any(EvaluateLetterRequest.class)
+        );
+    }
+
+    @DisplayName("편지 평가하기 API 호출 실패 - 이미 평가된 편지")
+    @Test
+    void evaluateLetter_Fail_AlreadyEvaluatedLetter() throws Exception {
+        //given
+        Long invalidLetterId = 999L;
+
+        EvaluateLetterRequest request = new EvaluateLetterRequest();
+        LetterEvaluation evaluation = LetterEvaluation.GOOD;
+
+        Field evaluationField = EvaluateLetterRequest.class.getDeclaredField("evaluation");
+        evaluationField.setAccessible(true);
+        evaluationField.set(request, evaluation);
+
+        doThrow(new AlreadyEvaluatedLetterException())
+                .when(letterService)
+                .evaluateLetter(eq(invalidLetterId), any(EvaluateLetterRequest.class));
+
+        //when & then
+        mockMvc.perform(post("/api/letters/" + invalidLetterId + "/evaluate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("LET-011"))
+                .andExpect(jsonPath("$.message").value("이미 평가된 편지입니다."));
 
         verify(letterService).evaluateLetter(
                 eq(invalidLetterId),

@@ -112,21 +112,30 @@ public class LetterService {
         Letter letter = letterRepository.findById(letterId).orElseThrow(LetterNotFoundException::new);
         Long parentLetterId = letter.getParentLetterId(); //답장하는 편지의 부모 id
 
-        Long matchingId = letter.getMatchingId();
-        LetterMatching letterMatching = letterMatchingRepository.findById(matchingId).orElseThrow(MatchingNotFoundException::new);
-        if (!letterMatching.getFirstMemberId().equals(myId) && !letterMatching.getSecondMemberId().equals(myId)) {
-            throw new MatchingNotBelongException();
-        }
+        if(parentLetterId == null){
+            String zipCode = memberRepository.findById(letter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode();
+            LetterResponse response = LetterResponse.fromEntityForPreviousLetters(letter,zipCode);
+            return List.of(response);
 
-        List<Letter> lettersByParentId = letterRepository.findLettersByParentLetterId(parentLetterId); //부모아이디로 편지 찾기
+        }else{
+            Long matchingId = letter.getMatchingId();
+            LetterMatching letterMatching = letterMatchingRepository.findById(matchingId).orElseThrow(MatchingNotFoundException::new);
+            if (!letterMatching.getFirstMemberId().equals(myId) && !letterMatching.getSecondMemberId().equals(myId)) {
+                throw new MatchingNotBelongException();
+            }
 
-        List<LetterResponse> responses = new ArrayList<>();
-        for (Letter findLetter : lettersByParentId) {
-            String zipCode = memberRepository.findById(findLetter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode();
-            LetterResponse response = LetterResponse.fromEntityForPreviousLetters(findLetter,zipCode);
-            responses.add(response);
+            List<Letter> lettersByParentId = letterRepository.findLettersByParentLetterId(parentLetterId); //부모아이디로 편지 찾기
+            List<LetterResponse> responses = new ArrayList<>();
+
+            for (Letter findLetter : lettersByParentId) {
+                if(findLetter.getStatus().equals(Status.DELIVERED)){
+                    String zipCode = memberRepository.findById(findLetter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode();
+                    LetterResponse response = LetterResponse.fromEntityForPreviousLetters(findLetter,zipCode);
+                    responses.add(response);
+                }
+            }
+            return responses;
         }
-        return responses;
     }
 
     @Transactional //더티채킹
@@ -163,6 +172,10 @@ public class LetterService {
 
         Letter letter = letterRepository.findByIdAndReceiverId(letterId, receiverId)
                                         .orElseThrow(LetterNotBelongException::new);
+        if (letter.isEvaluated()) {
+            throw new AlreadyEvaluatedLetterException();
+        }
+
         letter.updateIsEvaluated(true); //편자 평가여부 true변환
 
         memberFacade.applyEvaluationTemperature(letter.getWriterId(), request.getEvaluation());

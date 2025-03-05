@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -88,6 +89,14 @@ public class LetterController implements LetterControllerDocs {
                 .body(new BaseResponse<>(letterService.temporarySaveLetter(letterId, request),"임시 저장 완료 "));
     }
 
+    /**
+     * 임시저장 편지 삭제
+     */
+    @DeleteMapping("/letters/{letterId}/temporary-save")
+    public ResponseEntity<BaseResponse<Map<String,Long>>> deleteTemporarySaveLetter(@PathVariable Long letterId) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new BaseResponse<>(letterService.deleteTemporarySaveLetter(letterId),"임시 저장 편지 삭제 완료"));
+    }
 
     /**
      * 오고 있는 편지 조회, 임시 저장된 편지 리스트 조회

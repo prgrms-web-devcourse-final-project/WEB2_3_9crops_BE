@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static io.crops.warmletter.global.error.common.ErrorCode.INVALID_INPUT_VALUE;
@@ -203,6 +204,17 @@ public class LetterService {
 
             return LetterResponse.fromEntity(letter, writerZipCode);
         }
+    }
+
+    /**
+     * 임시 저장 편지 삭제
+     */
+    @Transactional
+    public Map<String, Long> deleteTemporarySaveLetter(Long letterId) {
+        Long writerId = authFacade.getCurrentUserId();
+        Letter letter = letterRepository.findByIdAndWriterIdAndStatusIsSAVED(letterId,writerId).orElseThrow(LetterNotFoundException::new);
+        letterRepository.delete(letter);
+        return Map.of("letterId",letter.getId());
     }
 
     /**

@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -282,7 +283,27 @@ class LettersControllerUnitTest {
                 any(TemporarySaveLetterRequest.class)
         );
     }
-    
+
+    @Test
+    @DisplayName("DELETE 임시 저장 편지 삭제 성공")
+    void delete_temporarySaveLetter_success() throws Exception {
+        // given
+        Long letterId = 1L;
+
+        Map<String, Long> response = Map.of("letterId",letterId);
+
+        when(letterService.deleteTemporarySaveLetter(any(Long.class))).thenReturn(response);
+
+        // when & then
+        mockMvc.perform(delete("/api/letters/{letterId}/temporary-save", letterId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("임시 저장 편지 삭제 완료"))
+                .andExpect(jsonPath("$.data.letterId").value(letterId))
+                .andDo(print());
+
+        verify(letterService).deleteTemporarySaveLetter(any(Long.class));
+    }
+
     @DisplayName("안 읽은 편지 조회 API 호출 성공")
     @Test
     void getLetterUnreadCount_Success() throws Exception {

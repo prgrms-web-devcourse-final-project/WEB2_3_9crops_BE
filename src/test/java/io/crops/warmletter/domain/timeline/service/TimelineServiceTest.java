@@ -55,10 +55,10 @@ class TimelineServiceTest {
         assertNotNull(timelineResponse);
         assertEquals(timeline2.getTimelineId(), timelineResponse.getContent().get(0).getTimelineId());
         assertEquals(timeline2.getTitle(), timelineResponse.getContent().get(0).getTitle());
+        assertEquals(timeline2.getContent(), timelineResponse.getContent().get(0).getContent());
         assertEquals(timeline2.getAlarmType(), timelineResponse.getContent().get(0).getAlarmType());
         assertEquals(1, timelineResponse.getSize());
         assertEquals(2, timelineResponse.getTotalElements());
         assertEquals(2, timelineResponse.getTotalPages());
-
     }
 }

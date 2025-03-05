@@ -9,6 +9,7 @@ import lombok.Getter;
 public class TimelineResponse {
     private Long timelineId;
     private String title;
+    private String content;
     private AlarmType alarmType;
     private boolean isRead;
 }

@@ -155,20 +155,16 @@ class NotificationServiceTest {
     @Test
     @DisplayName("알림 전송 성공")
     void create_sendEventToClient_success() throws IOException{
+        String senderZipCode = "11111";
         Long receiverId = 1L;
-        String title = "12345님이 편지를 보냈습니다.";
         AlarmType alarmType = AlarmType.LETTER;
-
-        NotificationResponse notificationResponse = NotificationResponse.builder()
-                .title(title)
-                .alarmType(alarmType.toString())
-                .build();
+        String data = "1";
 
         emitters.put(receiverId, emitter);
 
         doNothing().when(emitter).send(any(SseEmitter.SseEventBuilder.class));
 
-        notificationService.sendEventToClient(receiverId, notificationResponse);
+        notificationService.createNotification(senderZipCode,receiverId,alarmType,data);
 
         // Then
         verify(emitter, times(1)).send(any(SseEmitter.SseEventBuilder.class));
@@ -177,16 +173,12 @@ class NotificationServiceTest {
     @Test
     @DisplayName("알림 전송 실패 - 일치하는 receiverId 없음")
     void create_sendEventToClient_notExistsReceiverId() throws IOException {
+        String senderZipCode = "11111";
         Long receiverId = 1L;
-        String title = "12345님이 편지를 보냈습니다.";
         AlarmType alarmType = AlarmType.LETTER;
+        String data = "1";
 
-        NotificationResponse notificationResponse = NotificationResponse.builder()
-                .title(title)
-                .alarmType(alarmType.toString())
-                .build();
-
-        notificationService.sendEventToClient(receiverId, notificationResponse);
+        notificationService.createNotification(senderZipCode,receiverId,alarmType,data);
 
         verify(emitter, never()).send(any(SseEmitter.SseEventBuilder.class));
     }

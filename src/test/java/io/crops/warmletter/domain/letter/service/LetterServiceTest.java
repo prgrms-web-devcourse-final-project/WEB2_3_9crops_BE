@@ -489,6 +489,87 @@ class LetterServiceTest {
     }
 
     @Test
+    @DisplayName("이전 편지 목록 조회 - 일부 편지 상태가 DELIVERED가 아닌 경우 테스트")
+    void getPreviousLetters_withNonDeliveredLetters() {
+        // 현재 사용자 ID 설정
+        Long myId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(myId);
+
+        Long replyLetterId = 5L;
+        Long parentLetterId = 10L;
+        Long matchingId = 100L;
+        Letter replyLetter = Letter.builder()
+                .writerId(myId) // 답장 쓴 사람이 현재 사용자라고 가정
+                .parentLetterId(parentLetterId)
+                .matchingId(matchingId)
+                .title("답장 제목")
+                .content("답장 내용")
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .status(Status.DELIVERED)
+                .build();
+        ReflectionTestUtils.setField(replyLetter, "id", replyLetterId);
+
+        // 매칭 정보
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(myId)
+                .secondMemberId(2L)
+                .build();
+        ReflectionTestUtils.setField(matching, "id", matchingId);
+
+        // 이전 편지 목록: 다양한 상태의 편지들 포함
+        Letter deliveredLetter = Letter.builder()
+                .writerId(2L)
+                .receiverId(myId)
+                .parentLetterId(parentLetterId)
+                .letterType(LetterType.DIRECT)
+                .title("배달된 편지 제목")
+                .content("배달된 편지 내용")
+                .fontType(FontType.HIMCHAN)
+                .paperType(PaperType.COMFORT)
+                .status(Status.DELIVERED)
+                .build();
+        ReflectionTestUtils.setField(deliveredLetter, "id", 11L);
+
+        Letter pendingLetter = Letter.builder()
+                .writerId(2L)
+                .receiverId(myId)
+                .parentLetterId(parentLetterId)
+                .letterType(LetterType.DIRECT)
+                .title("저장 중인 편지 제목")
+                .content("저장 중인 편지 내용")
+                .fontType(FontType.KYOBO)
+                .paperType(PaperType.BASIC)
+                .status(Status.SAVED)
+                .build();
+        ReflectionTestUtils.setField(pendingLetter, "id", 12L);
+
+        List previousLetters = List.of(deliveredLetter, pendingLetter);
+
+        when(letterRepository.findById(replyLetterId)).thenReturn(Optional.of(replyLetter));
+        when(letterRepository.findLettersByParentLetterId(parentLetterId)).thenReturn(previousLetters);
+        when(letterMatchingRepository.findById(matchingId)).thenReturn(Optional.of(matching));
+        when(memberRepository.findById(2L)).thenReturn(Optional.of(Member.builder().zipCode("12345").build()));
+
+        // when
+        List<LetterResponse> responses = letterService.getPreviousLetters(replyLetterId);
+
+        // then
+        assertAll("이전 편지 목록 검증",
+                () -> assertNotNull(responses),
+                () -> assertEquals(1, responses.size(), "DELIVERED 상태인 편지만 반환되어야 함"),
+                () -> assertEquals("배달된 편지 제목", responses.get(0).getTitle()),
+                () -> assertEquals("배달된 편지 내용", responses.get(0).getContent()),
+                () -> assertEquals("12345", responses.get(0).getZipCode())
+        );
+
+        verify(letterRepository).findById(replyLetterId);
+        verify(letterRepository).findLettersByParentLetterId(parentLetterId);
+        verify(letterMatchingRepository).findById(matchingId);
+        verify(memberRepository).findById(2L);
+    }
+
+    @Test
     @DisplayName("getPreviousLetters - 매칭 정보가 없으면 MatchingNotFoundException 발생")
     void getPreviousLetters_matchingNotFound() {
         // given

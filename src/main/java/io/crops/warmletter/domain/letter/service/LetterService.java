@@ -128,9 +128,11 @@ public class LetterService {
             List<LetterResponse> responses = new ArrayList<>();
 
             for (Letter findLetter : lettersByParentId) {
-                String zipCode = memberRepository.findById(findLetter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode();
-                LetterResponse response = LetterResponse.fromEntityForPreviousLetters(findLetter,zipCode);
-                responses.add(response);
+                if(findLetter.getStatus().equals(Status.DELIVERED)){
+                    String zipCode = memberRepository.findById(findLetter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode();
+                    LetterResponse response = LetterResponse.fromEntityForPreviousLetters(findLetter,zipCode);
+                    responses.add(response);
+                }
             }
             return responses;
         }

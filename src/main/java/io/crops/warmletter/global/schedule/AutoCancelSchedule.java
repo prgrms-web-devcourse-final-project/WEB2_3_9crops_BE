@@ -24,7 +24,7 @@ public class AutoCancelSchedule {
     private final LetterRepository letterRepository;
 
     @Transactional
-    @Scheduled(cron = "0 */1 * * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 */3 * * * *", zone = "Asia/Seoul")
     public void checkAndDeleteExpiredMatchings() {
         String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         log.info("--------- 자동 매칭 취소 처리 시작: {} ---------", currentTime);

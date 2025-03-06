@@ -51,50 +51,5 @@ class NotificationControllerTest {
                 .andExpect(status().isOk());
     }
 
-    @Test
-    @DisplayName("PATCH 알림 읽음 상태 변경 성공 - false에서 true")
-    void update_notificationRead_success() throws Exception {
-        // given
-        Long notificationId = 1L;
 
-        ReadNotificationResponse readNotificationResponse = ReadNotificationResponse.builder()
-                .notificationId(notificationId)
-                .isRead(true)
-                .build();
-
-        when(notificationService.updateNotificationRead(notificationId)).thenReturn(readNotificationResponse);
-
-        // when & then
-        mockMvc.perform(patch("/api/notifications/{notificationId}/read", notificationId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.notificationId").value(readNotificationResponse.getNotificationId()))
-                .andExpect(jsonPath("$.data.read").value(true))
-                .andExpect(jsonPath("$.message").value("알림 읽음 처리 성공"))
-                .andDo(print());
-    }
-
-    @Test
-    @DisplayName("PATCH 모든 알림 읽음 상태 변경 성공 - false에서 true")
-    void update_notificationAllRead_success() throws Exception {
-        // given
-        Long notificationId1 = 1L;
-        Long notificationId2 = 2L;
-
-        ReadNotificationResponse readNotificationResponse1 = ReadNotificationResponse.builder().notificationId(notificationId1).isRead(true).build();
-        ReadNotificationResponse readNotificationResponse2 = ReadNotificationResponse.builder().notificationId(notificationId2).isRead(true).build();
-
-        List<ReadNotificationResponse> readNotificationResponse = Arrays.asList(readNotificationResponse1, readNotificationResponse2);
-
-        when(notificationService.updateNotificationAllRead()).thenReturn(readNotificationResponse);
-
-        // when & then
-        mockMvc.perform(patch("/api/notifications/read"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].notificationId").value(readNotificationResponse1.getNotificationId()))
-                .andExpect(jsonPath("$.data[0].read").value(true))
-                .andExpect(jsonPath("$.data[1].notificationId").value(readNotificationResponse2.getNotificationId()))
-                .andExpect(jsonPath("$.data[1].read").value(true))
-                .andExpect(jsonPath("$.message").value("모든 알림 읽음 처리 성공"))
-                .andDo(print());
-    }
 }

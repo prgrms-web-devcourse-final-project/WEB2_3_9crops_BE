@@ -41,7 +41,9 @@ public class ShareProposalRepositoryImpl implements ShareProposalRepositoryCusto
                 .from(shareProposal)
                 .join(requesterMember).on(shareProposal.requesterId.eq(requesterMember.id))
                 .join(recipientMember).on(shareProposal.recipientId.eq(recipientMember.id))
-                .where(shareProposal.recipientId.eq(receiverId))
+                .where(shareProposal.recipientId.eq(receiverId)
+                        .and(shareProposal.status.eq(ProposalStatus.PENDING))
+                )
                 .orderBy(shareProposal.createdAt.desc())
                 .fetch();
     }

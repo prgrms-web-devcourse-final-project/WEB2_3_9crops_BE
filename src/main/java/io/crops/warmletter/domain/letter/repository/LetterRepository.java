@@ -5,6 +5,7 @@ import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.Status;
+import io.crops.warmletter.domain.timeline.dto.response.LetterAlarmResponse;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -68,9 +69,11 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
 
     List<Letter> findByStatusAndDeliveryCompletedAtLessThanEqual(Status status, LocalDateTime now);
 
-    @Query("SELECT l.writerId, m.zipCode FROM Letter l " +
+    @Query("SELECT new io.crops.warmletter.domain.timeline.dto.response.LetterAlarmResponse(" +
+            "l.writerId, m.zipCode) " +
+            "FROM Letter l " +
             "JOIN Member m ON l.writerId = m.id " +
             "WHERE l.status = 'IN_DELIVERY' " +
             "AND l.deliveryCompletedAt <= :now")
-    List<Object[]> findZipCodeByLettersToComplete(LocalDateTime now);
+    List<LetterAlarmResponse> findZipCodeByLettersToComplete(LocalDateTime now);
 }

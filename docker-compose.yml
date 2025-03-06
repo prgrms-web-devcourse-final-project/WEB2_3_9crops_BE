@@ -8,6 +8,7 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=${DATASOURCE_PASSWORD}
       - MYSQL_DATABASE=crops
+      - TZ=Asia/Seoul
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d

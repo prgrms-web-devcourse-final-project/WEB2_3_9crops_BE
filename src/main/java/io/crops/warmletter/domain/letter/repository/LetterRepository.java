@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -66,4 +67,10 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
     Optional<Letter> findByIdAndWriterIdAndStatusIsSAVED(Long id, Long writerId);
 
     List<Letter> findByStatusAndDeliveryCompletedAtLessThanEqual(Status status, LocalDateTime now);
+
+    @Query("SELECT l.writerId, m.zipCode FROM Letter l " +
+            "JOIN Member m ON l.writerId = m.id " +
+            "WHERE l.status = 'IN_DELIVERY' " +
+            "AND l.deliveryCompletedAt <= :now")
+    List<Object[]> findZipCodeByLettersToComplete(LocalDateTime now);
 }

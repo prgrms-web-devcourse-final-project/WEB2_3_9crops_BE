@@ -176,4 +176,41 @@ class SharePostControllerTest {
         verify(sharePostService).getPostDetail(sharePostId);
     }
 
+    @Test
+    @DisplayName("내가 요청한 공유 게시글 조회 성공")
+    void getMySharePosts_Success() throws Exception {
+        // given
+        List<SharePostResponse> myPosts = List.of(sharePostResponse1, sharePostResponse2);
+        when(sharePostService.getMySharePosts()).thenReturn(myPosts);
+
+        // when & then
+        mockMvc.perform(get("/api/share-posts/me")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[0].content").value("to share my post"))
+                .andExpect(jsonPath("$.data[1].content").value("to share my post1"))
+                .andExpect(jsonPath("$.message").value("나의 공유 게시글 조회 성공"))
+                .andDo(print());
+
+        verify(sharePostService).getMySharePosts();
+    }
+
+    @Test
+    @DisplayName("내가 요청한 공유 게시글이 없으면 빈 값 반환")
+    void getMySharePosts_EmptyList() throws Exception {
+        // given
+        when(sharePostService.getMySharePosts()).thenReturn(Collections.emptyList());
+
+        // when & then
+        mockMvc.perform(get("/api/share-posts/me")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data").isEmpty())
+                .andExpect(jsonPath("$.message").value("나의 공유 게시글 조회 성공"))
+                .andDo(print());
+
+        verify(sharePostService).getMySharePosts();
+    }
 }

@@ -284,5 +284,45 @@ class SharePostServiceTest {
         verify(sharePostRepository, never()).findAllActiveSharePostsWithZipCodes(any());
     }
 
+    @Test
+    @DisplayName("내가 요청한 활성화된 공유 게시글 조회 성공")
+    void getMySharePosts_ReturnsRequestedActivePosts() {
+        Long memberId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+
+        List<SharePostResponse> expectedResponses = List.of(
+                new SharePostResponse(1L, 1L, "12345", "67890", "내가 요청한 게시물 1", true, LocalDateTime.now()),
+                new SharePostResponse(2L, 2L, "12345", "24680", "내가 요청한 게시물 2", true, LocalDateTime.now().minusDays(1))
+        );
+
+        when(sharePostRepository.findMyRequestedActiveSharePosts(memberId)).thenReturn(expectedResponses);
+
+        List<SharePostResponse> result = sharePostService.getMySharePosts();
+
+        assertAll(
+                () -> assertThat(result).hasSize(2),
+                () -> assertThat(result.get(0).getContent()).isEqualTo("내가 요청한 게시물 1"),
+                () -> assertThat(result.get(1).getContent()).isEqualTo("내가 요청한 게시물 2"),
+                () -> assertThat(result.get(0).getWriterZipCode()).isEqualTo("12345"),
+                () -> assertThat(result.get(1).getWriterZipCode()).isEqualTo("12345")
+        );
+
+        verify(authFacade).getCurrentUserId();
+        verify(sharePostRepository).findMyRequestedActiveSharePosts(memberId);
+    }
+
+    @Test
+    @DisplayName("내가 요청한 활성화된 공유 게시글이 없을 경우 빈 값 반환")
+    void getMySharePosts_ReturnsEmptyList_WhenNoRequestedActivePost() {
+        Long memberId = 1L;
+        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+        when(sharePostRepository.findMyRequestedActiveSharePosts(memberId)).thenReturn(Collections.emptyList());
+
+        List<SharePostResponse> result = sharePostService.getMySharePosts();
+
+        assertThat(result).isEmpty();
+        verify(authFacade).getCurrentUserId();
+        verify(sharePostRepository).findMyRequestedActiveSharePosts(memberId);
+    }
 
 }

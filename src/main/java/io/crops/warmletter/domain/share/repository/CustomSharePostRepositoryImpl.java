@@ -1,15 +1,25 @@
 package io.crops.warmletter.domain.share.repository;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import io.crops.warmletter.domain.letter.entity.QLetter;
 import io.crops.warmletter.domain.member.entity.QMember;
 import io.crops.warmletter.domain.share.dto.response.ShareLetterPostResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
+import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.entity.QSharePost;
 import io.crops.warmletter.domain.share.entity.QShareProposal;
 import io.crops.warmletter.domain.share.entity.QShareProposalLetter;
+import io.crops.warmletter.domain.share.enums.ProposalStatus;
+import io.crops.warmletter.global.response.BaseResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -71,6 +81,30 @@ public class CustomSharePostRepositoryImpl implements CustomSharePostRepository 
                 .build();
 
         return Optional.of(response);
+    }
+
+    @Override
+    public List<SharePostResponse> findMyRequestedActiveSharePosts(Long memberId) {
+        return queryFactory
+                .select(Projections.constructor(SharePostResponse.class,
+                        SHARE_POST.id,
+                        SHARE_POST.shareProposalId,
+                        WRITER.zipCode,
+                        RECEIVER.zipCode,
+                        SHARE_POST.content,
+                        SHARE_POST.isActive,
+                        SHARE_POST.createdAt))
+                .from(SHARE_POST)
+                .join(PROPOSAL).on(SHARE_POST.shareProposalId.eq(PROPOSAL.id))
+                .join(WRITER).on(PROPOSAL.requesterId.eq(WRITER.id))
+                .join(RECEIVER).on(PROPOSAL.recipientId.eq(RECEIVER.id))
+                .where(
+                        PROPOSAL.requesterId.eq(memberId)
+                                .and(SHARE_POST.isActive.isTrue())
+                                .and(PROPOSAL.status.eq(ProposalStatus.APPROVED))
+                )
+                .orderBy(SHARE_POST.createdAt.desc())
+                .fetch();
     }
 }
 

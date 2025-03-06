@@ -50,7 +50,9 @@ public class LetterResponse {
 
     private final Long matchingId; //편지 조회
 
-    private final boolean evaluated; //편지 평가 여부
+    private final Boolean evaluated; //편지 평가 여부
+
+    private final Long memberId;
 
 
     //공통 변환
@@ -74,12 +76,15 @@ public class LetterResponse {
     }
 
     //이전편지 변환
-    public static LetterResponse fromEntityForPreviousLetters(Letter letter, String zipCode) {
+    public static LetterResponse fromEntityForPreviousLetters(Letter letter, String zipCode, Long myId, Long matchingId) {
         return LetterResponse.builder()
-                .letterId(letter.getId())
+                .letterId(letter.getId()) //이전 편지의 정보들
                 .zipCode(zipCode)
                 .title(letter.getTitle())
                 .content(letter.getContent())
+                .category(letter.getCategory())
+                .memberId(myId)         //편지를 쓴 자기 자신의 id -> 이전 편지의 정보가 아님~!
+                .matchingId(matchingId)
                 .build();
     }
 
@@ -106,6 +111,27 @@ public class LetterResponse {
                 .title(letter.getTitle())
                 .deliveryStartedAt(letter.getDeliveryStartedAt())
                 .deliveryCompletedAt(letter.getDeliveryCompletedAt())
+                .build();
+    }
+
+    // 임시 저장(draft) 변환 메서드 추가
+    public static LetterResponse fromDraftLetter(LetterDraftResponse draft, String zipCode) {
+        return builder()
+                .letterId(draft.getLetterId())
+                .writerId(draft.getWriterId())
+                .receiverId(draft.getReceiverId())
+                .parentLetterId(draft.getParentLetterId())
+                .zipCode(zipCode)
+                .title(draft.getTitle())
+                .content(draft.getContent())
+                .category(draft.getCategory())
+                .paperType(draft.getPaperType())
+                .fontType(draft.getFontType())
+                .status(draft.getStatus())
+                .matched(draft.isMatched())
+                .deliveryStartedAt(draft.getDeliveryStartedAt())
+                .deliveryCompletedAt(draft.getDeliveryCompletedAt())
+                .matchingId(draft.getMatchingId())
                 .build();
     }
 }

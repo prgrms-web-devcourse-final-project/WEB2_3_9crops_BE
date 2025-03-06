@@ -41,9 +41,9 @@ public interface LetterMatchingRepository extends JpaRepository<LetterMatching, 
             "COALESCE(COUNT(l), 0)" +
             ") " +
             "FROM LetterMatching lm " +
-            "LEFT JOIN Letter l ON lm.id = l.matchingId AND l.status = 'DELIVERED' " +
+            "LEFT JOIN Letter l ON lm.id = l.matchingId AND l.status = 'DELIVERED' AND l.isActive = true " +
             "JOIN Member m ON (CASE WHEN lm.firstMemberId = :myId THEN lm.secondMemberId ELSE lm.firstMemberId END) = m.id " +
-            "WHERE lm.firstMemberId = :myId OR lm.secondMemberId = :myId " +
+            "WHERE (lm.firstMemberId = :myId OR lm.secondMemberId = :myId) AND lm.isActive = true " +
             "GROUP BY lm.id, m.zipCode, lm.isActive " +
             "ORDER BY lm.id DESC")
     List<MailboxResponse> findMailboxDetails(@Param("myId") Long myId);

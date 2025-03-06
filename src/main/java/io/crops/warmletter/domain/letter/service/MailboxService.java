@@ -42,7 +42,7 @@ public class MailboxService {
         // 1. 현재 로그인된 사용자 ID 조회
         Long myId = authFacade.getCurrentUserId();
 
-        // 2. matchingId로 LetterMatching 조회 (존재하지 않으면 MatchingNotFoundException 발생)
+        // 2. matchingId로 LetterMatching 조회
         LetterMatching matching = letterMatchingRepository.findById(matchingId)
                 .orElseThrow(MatchingNotFoundException::new);
 
@@ -51,8 +51,8 @@ public class MailboxService {
             throw new MatchingNotBelongException();
         }
 
-        // 4. LetterRepository에서 matchingId에 해당하는 편지들을 조회(정렬 및 페이징 적용)
-        Page<Letter> letterPage = letterRepository.findByMatchingIdOrderByIdDesc(matchingId, pageable);
+        // 4. LetterRepository에서 matchingId에 해당하는 편지들을 조회
+        Page<Letter> letterPage = letterRepository.findByMatchingIdAndIsActiveTrueOrderByIdDesc(matchingId, pageable);
 
         // 5. 조회된 Letter 엔티티들을 MailboxDetailResponse DTO로 변환
         Page<MailboxDetailResponse> responses = letterPage.map(letter ->

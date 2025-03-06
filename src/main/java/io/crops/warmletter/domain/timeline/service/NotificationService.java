@@ -9,6 +9,7 @@ import io.crops.warmletter.domain.timeline.exception.NotificationNotFoundExcepti
 import io.crops.warmletter.domain.timeline.repository.TimelineRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -86,51 +87,29 @@ public class NotificationService {
         if (emitter != null) {
             try {
                 emitter.send(SseEmitter.event()
-                        .name("notification")
                         .data(notificationResponse, MediaType.APPLICATION_JSON));
             } catch (IOException e) {
-                emitters.remove(receiverId);
                 emitter.complete();
+                emitters.remove(receiverId);
+
             }
         }
     }
-    @Transactional
-    public ReadNotificationResponse updateNotificationRead(Long notificationId){
-        Long memberId = authFacade.getCurrentUserId();
-        Timeline timeline = timelineRepository.findByIdAndMemberId(notificationId, memberId).orElseThrow(NotificationNotFoundException::new);
-        if(!timeline.isRead()){
-            timeline.notificationRead();
+
+    // 연결을 확인하기 위한 Heartbeat를 30초마다 실행
+    @Scheduled(fixedRate = 30000)
+    public void sendHeartbeat() {
+        for (Map.Entry<Long, SseEmitter> entry : emitters.entrySet()) {
+            Long memberId = entry.getKey();
+            SseEmitter emitter = entry.getValue();
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("heartbeat")
+                        .data("ping"));
+            } catch (IOException e) {
+                emitter.complete();
+                emitters.remove(memberId);
+            }
         }
-
-        return ReadNotificationResponse.builder()
-                .notificationId(timeline.getId())
-                .isRead(timeline.isRead())
-                .build();
-    }
-
-    @Transactional
-    public List<ReadNotificationResponse> updateNotificationAllRead(){
-        Long memberId = authFacade.getCurrentUserId();
-        List<Timeline> timelinesBeforeUpdate = timelineRepository.findByMemberIdAndIsReadFalse(memberId);
-
-        // 추후 try catch 로 예외 처리 예정
-        timelineRepository.updateIsReadByMemberIdAndIsReadFalse(memberId);
-
-        List<ReadNotificationResponse> timelineResponses = new ArrayList<>();
-
-        List<Long> updatedTimelineIds = timelinesBeforeUpdate.stream()
-                .map(Timeline::getId)
-                .toList();
-
-        List<Timeline> updatedTimelines = timelineRepository.findByIds(updatedTimelineIds);
-
-        for(Timeline timeline : updatedTimelines ){
-            timelineResponses.add(ReadNotificationResponse.builder()
-                    .notificationId(timeline.getId())
-                    .isRead(timeline.isRead())
-                    .build());
-        }
-
-        return timelineResponses;
     }
 }

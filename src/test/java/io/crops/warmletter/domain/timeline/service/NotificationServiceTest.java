@@ -1,18 +1,14 @@
 package io.crops.warmletter.domain.timeline.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
-import io.crops.warmletter.domain.timeline.dto.response.NotificationResponse;
-import io.crops.warmletter.domain.timeline.dto.response.ReadNotificationResponse;
 import io.crops.warmletter.domain.timeline.entity.Timeline;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
-import io.crops.warmletter.domain.timeline.exception.NotificationNotFoundException;
 import io.crops.warmletter.domain.timeline.repository.TimelineRepository;
-import io.crops.warmletter.global.error.common.ErrorCode;
-import io.crops.warmletter.global.error.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -21,13 +17,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.awt.desktop.ScreenSleepEvent;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -184,89 +180,75 @@ class NotificationServiceTest {
     }
 
     @Test
-    @DisplayName("알림 읽음 상태 변경 성공 - false 에서 true")
-    void update_notificationRead_success(){
-        //given
-        Long notificationId = 1L;
-        Long memberId = 1L;
-        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+    @DisplayName("하트비트 전송 성공")
+    void send_heartbeat_success() throws IOException {
+        // given
+        Long memberId1 = 1L;
+        Long memberId2 = 2L;
 
-        Timeline timeline = Timeline.builder().memberId(memberId).title("제목").content("내용").alarmType(AlarmType.LETTER).build();
-        ReflectionTestUtils.setField(timeline, "id", notificationId);
+        SseEmitter emitter1 = Mockito.mock(SseEmitter.class);
+        SseEmitter emitter2 = Mockito.mock(SseEmitter.class);
 
-        when(timelineRepository.findByIdAndMemberId(any(Long.class),any(Long.class))).thenReturn(Optional.of(timeline));
+        emitters.put(memberId1, emitter1);
+        emitters.put(memberId2, emitter2);
 
-        //when
-        ReadNotificationResponse readNotificationResponse = notificationService.updateNotificationRead(notificationId);
+        // when
+        notificationService.sendHeartbeat();
 
-        //then
-        assertEquals(notificationId, readNotificationResponse.getNotificationId());
-        assertTrue(readNotificationResponse.isRead());
+        // then
+        // SseEmitter.SseEventBuilder를 사용하는 send 메서드를 명시적으로 검증
+        ArgumentCaptor<SseEmitter.SseEventBuilder> captor = ArgumentCaptor.forClass(SseEmitter.SseEventBuilder.class);
+
+        Mockito.verify(emitter1).send(captor.capture());
+        Mockito.verify(emitter2).send(captor.capture());
+
+        // 캡처된 인자들 검사 (선택사항)
+        List<SseEmitter.SseEventBuilder> capturedBuilders = captor.getAllValues();
+        assertThat(capturedBuilders).hasSize(2);
     }
 
     @Test
-    @DisplayName("알림 읽음 상태 변경 성공 - 변경 없음")
-    void update_notificationAlreadyRead_success(){
-        //given
-        Long notificationId = 1L;
-        Long memberId = 1L;
-        when(authFacade.getCurrentUserId()).thenReturn(memberId);
+    @DisplayName("하트비트 전송 실패 - 이미터가 비어있을 때")
+    void send_heartbeat_notExistsEmitter() {
+        // given
+        // emitters가 비어 있는 상태
 
-        Timeline timeline = Timeline.builder().memberId(memberId).title("제목").content("내용").alarmType(AlarmType.LETTER).build();
-        ReflectionTestUtils.setField(timeline, "id", notificationId);
-        ReflectionTestUtils.setField(timeline, "isRead", true);
-
-        when(timelineRepository.findByIdAndMemberId(any(Long.class),any(Long.class))).thenReturn(Optional.of(timeline));
-
-        //when
-        ReadNotificationResponse readNotificationResponse = notificationService.updateNotificationRead(notificationId);
-
-        //then
-        assertEquals(notificationId, readNotificationResponse.getNotificationId());
-        assertTrue(readNotificationResponse.isRead());
+        // when & then
+        // 예외가 발생하지 않고 정상적으로 실행되어야 함
+        assertThatCode(() -> notificationService.sendHeartbeat())
+                .doesNotThrowAnyException();
     }
 
     @Test
-    @DisplayName("알림 읽음 상태 변경 실패 - 일치하는 notificaitonId 없음 ")
-    void update_notification_notFound(){
-        //given
-        Long memberId = 1L;
-        when(authFacade.getCurrentUserId()).thenReturn(memberId);
-        when(timelineRepository.findByIdAndMemberId(any(Long.class),any(Long.class))).thenThrow(new NotificationNotFoundException());
+    @DisplayName("하트비트 전송 실패 - 하트비트 전송 중 예외 발생 시 이미터 제거")
+    void sendHeartbeat_IOExcep() throws IOException {
+        // given
+        Long memberId1 = 1L;
+        Long memberId2 = 2L;
 
-        //when
-        BusinessException exception = assertThrows(NotificationNotFoundException.class, ()-> notificationService.updateNotificationRead(999L));
+        SseEmitter emitter1 = Mockito.mock(SseEmitter.class);
+        SseEmitter emitter2 = Mockito.mock(SseEmitter.class);
 
-        //then
-        assertEquals(ErrorCode.NOTIFICATION_NOT_FOUND, exception.getErrorCode());
+        // emitter1이 예외를 던지도록 설정
+        Mockito.doThrow(new IOException("Connection lost")).when(emitter1).send(Mockito.any(SseEmitter.SseEventBuilder.class));
+
+        emitters.put(memberId1, emitter1);
+        emitters.put(memberId2, emitter2);
+
+        // when
+        notificationService.sendHeartbeat();
+
+        // then
+        // emitter1.send()가 호출되었는지 확인
+        Mockito.verify(emitter1).send(Mockito.any(SseEmitter.SseEventBuilder.class));
+        // 예외 발생 후 emitter1.complete()가 호출되었는지 확인
+        Mockito.verify(emitter1).complete();
+        // emitter1이 emitters에서 제거되었는지 확인
+        assertThat(emitters).hasSize(1);
+        assertThat(emitters).containsKey(memberId2);
+        assertThat(emitters).doesNotContainKey(memberId1);
+
+        // emitter2.send()는 정상적으로 호출되었는지 확인
+        Mockito.verify(emitter2).send(Mockito.any(SseEmitter.SseEventBuilder.class));
     }
-
-    @Test
-    @DisplayName("모든 알림 읽음 상태 변경 성공 - false 에서 true")
-    void update_notificationAllRead_success(){
-        //given
-        Long memberId = 1L;
-        when(authFacade.getCurrentUserId()).thenReturn(memberId);
-
-        Timeline timeline1 = Timeline.builder().memberId(memberId).title("제목1").content("내용1").alarmType(AlarmType.LETTER).build();
-        ReflectionTestUtils.setField(timeline1, "id", 1L);
-        Timeline timeline3 = Timeline.builder().memberId(memberId).title("제목3").content("내용3").alarmType(AlarmType.LETTER).build();
-        ReflectionTestUtils.setField(timeline3, "id", 3L);
-
-        List<Timeline> timelines = Arrays.asList(timeline1, timeline3);
-        when(timelineRepository.findByMemberIdAndIsReadFalse(any(Long.class))).thenReturn(timelines);
-
-        ReflectionTestUtils.setField(timeline1, "isRead", true);
-        ReflectionTestUtils.setField(timeline3, "isRead", true);
-        when(timelineRepository.findByIds(any())).thenReturn(timelines);
-        //when
-        List<ReadNotificationResponse> readNotificationResponse = notificationService.updateNotificationAllRead();
-
-        //then
-        assertEquals(1L, readNotificationResponse.get(0).getNotificationId());
-        assertTrue(readNotificationResponse.get(0).isRead());
-        assertEquals(3L, readNotificationResponse.get(1).getNotificationId());
-        assertTrue(readNotificationResponse.get(1).isRead());
-    }
-
 }

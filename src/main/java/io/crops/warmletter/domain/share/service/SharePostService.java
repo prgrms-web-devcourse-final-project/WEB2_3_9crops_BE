@@ -1,4 +1,5 @@
 package io.crops.warmletter.domain.share.service;
+import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.exception.SharePageException;
@@ -11,12 +12,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class SharePostService {
 
     private final SharePostRepository sharePostRepository;
+    private final AuthFacade authFacade;
 
     @Transactional(readOnly = true)
     public Page<SharePostResponse> getAllPosts(Pageable pageable) {
@@ -33,5 +37,12 @@ public class SharePostService {
 
         return sharePostRepository.findDetailById(sharePostId)
                 .orElseThrow(() -> new SharePostNotFoundException());
+    }
+
+    @Transactional(readOnly = true)
+    public List<SharePostResponse> getMySharePosts() {
+        Long memberId = authFacade.getCurrentUserId();
+
+        return sharePostRepository.findMyRequestedActiveSharePosts(memberId);
     }
 }

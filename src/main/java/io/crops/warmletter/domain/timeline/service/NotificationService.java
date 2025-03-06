@@ -31,12 +31,8 @@ public class NotificationService {
 
         emitters.put(memberId, emitter);
 
-        emitter.onCompletion(() -> {
-            emitters.remove(memberId);
-            log.info("SSE 연결 종료");}); // 연결 종료 시 제거
-        emitter.onTimeout(() -> {
-            log.info("SSE 연결 타임아웃 발생");
-            emitter.complete();}); // 타임아웃 시 제거
+        emitter.onCompletion(() -> handleCompletion(memberId));
+        emitter.onTimeout(() -> handleTimeout(memberId, emitter));
 
         NotificationResponse notificationResponse = NotificationResponse.builder()
                 .title("사용자 " + memberId + " EventStream 생성")
@@ -45,6 +41,17 @@ public class NotificationService {
         sendEventToClient(memberId, notificationResponse);
 
         return emitter;
+    }
+
+    protected void handleCompletion(Long memberId) {
+        emitters.remove(memberId);
+        log.info("SSE 연결 종료");
+    }
+
+    protected void handleTimeout(Long memberId, SseEmitter emitter) {
+        emitters.remove(memberId);
+        log.info("SSE 연결 타임아웃 발생");
+        emitter.complete();
     }
 
     // 편지 수신, 신고 조치, 공유 요청, 공유 게시글 등록 시 호출 필요

@@ -18,13 +18,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.awt.desktop.ScreenSleepEvent;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -69,6 +70,38 @@ class NotificationServiceTest {
 
         assertNotNull(sseEmitter);
         assertTrue(emitters.containsKey(memberId));
+    }
+
+    @Test
+    @DisplayName("SSE가 완료될 때 onCompletion이 호출 성공")
+    void test_sseEmitter_onCompletion() {
+        // Given
+        Long memberId = 1L;
+
+        SseEmitter emitter = new SseEmitter(600_000L);
+        emitters.put(memberId, emitter);
+
+        // When: 분리한 handleTimeout 메서드 직접 호출
+        notificationService.handleCompletion(memberId);
+
+        // Then: emitters에서 제거되었는지 확인
+        assertFalse(emitters.containsKey(memberId));
+    }
+
+    @Test
+    @DisplayName("SSE가 타임아웃될 때 onTimeout이 호출")
+    void test_sseEmitter_onTimeout() throws InterruptedException {
+        // Given
+        Long memberId = 1L;
+
+        SseEmitter emitter = new SseEmitter(600_000L);
+        emitters.put(memberId, emitter);
+
+        // When: 분리한 handleTimeout 메서드 직접 호출
+        notificationService.handleTimeout(memberId, emitter);
+
+        // Then: emitters에서 제거되었는지 확인
+        assertFalse(emitters.containsKey(memberId));
     }
 
     @Test

@@ -37,8 +37,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -50,6 +53,7 @@ public class ReportService {
     private final EventCommentRepository eventCommentRepository;
     private final MemberRepository memberRepository;
     private final ShareProposalRepository shareProposalRepository;
+    private final ReportModerationService reportModerationService;
 
     private final AuthFacade authFacde;
     private final NotificationFacade notificationFacade;
@@ -59,7 +63,6 @@ public class ReportService {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(ReportNotFoundException::new);
 
-        //신고 대상 찾기 (Letter, SharePost, EventComment 중 하나)
         Long targetMemberId = getTargetMemberId(report);
         Member reportedMember = memberRepository.findById(targetMemberId)
                 .orElseThrow(MemberNotFoundException::new);
@@ -71,18 +74,17 @@ public class ReportService {
                 .build();
         reportRepository.save(report);
         if (request.getStatus() == ReportStatus.RESOLVED) {
-            deactivateTarget(report);
-            reportedMember.increaseWarningCount();
-            memberRepository.save(reportedMember);
+            boolean deactivated = deactivateTarget(report);
+            if (deactivated) {
+                reportedMember.increaseWarningCount();
+                memberRepository.save(reportedMember);
+            }
             resolvePendingReports(report);
             // targetMemberId로 알림 전송 TODO : 배포 후 테스트 예정
             notificationFacade.sendNotification(null, targetMemberId, AlarmType.REPORT, report.getAdminMemo()+"§"+reportedMember.getWarningCount());
         }
         return new UpdateReportResponse(report,reportedMember);
     }
-
-
-
 
     public Page<ReportsResponse> getAllReports(String reportType, String status, Pageable pageable) {
         return reportRepository.findAllWithFilters(reportType, status, pageable);
@@ -91,8 +93,9 @@ public class ReportService {
     @Transactional
     public ReportResponse createReport(CreateReportRequest request) {
         Long memberId = authFacde.getCurrentUserId();
-//        Long memberId = 10L;
-        validateRequest(request, memberId);
+        Map<String, String> reportedContentMap = new HashMap<>();
+        validateRequest(request, memberId, reportedContentMap);
+        String reportedContent = reportedContentMap.get("content");
         Report.ReportBuilder builder = Report.builder()
                 .memberId(memberId)  // 고정 신고자 ID 사용
                 .reasonType(request.getReasonType())
@@ -113,25 +116,79 @@ public class ReportService {
         }
         Report report = builder.build();
         Report savedReport = reportRepository.save(report);
+        CompletableFuture.runAsync(() -> {
+            Map<String, String> moderationResult = reportModerationService.moderateText(reportedContent, request.getReasonType(), request.getReason());
+            updateReportWithAIResult(savedReport.getId(), moderationResult);
+        });
         return new ReportResponse(savedReport);
-
     }
 
+    @Transactional
+    public void updateReportWithAIResult(Long reportId, Map<String, String> moderationResult) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(ReportNotFoundException::new);
 
-    void deactivateTarget(Report report) {
-        if (report.getLetterId() != null) {
-            Letter letter = letterRepository.findById(report.getLetterId())
-                    .orElseThrow(LetterNotFoundException::new);
-            letter.inactive();
-        } else if (report.getSharePostId() != null) {
-            SharePost sharePost = sharePostRepository.findById(report.getSharePostId())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.SHARE_POST_NOT_FOUND));
-            sharePost.deactivate();
-        } else if (report.getEventCommentId() != null) {
-            EventComment eventComment = eventCommentRepository.findById(report.getEventCommentId())
-                    .orElseThrow(EventCommentNotFoundException::new);
-            eventComment.softDelete();
+        String status = moderationResult.get("status"); // "PENDING" 또는 "RESOLVED"
+        report = report.toBuilder()
+                .reportStatus(ReportStatus.valueOf(status))
+                .adminMemo("신고되었습니다.")
+                .build();
+        reportRepository.save(report);
+
+        if ("RESOLVED".equalsIgnoreCase(status)) {
+            if (deactivateTarget(report)) {
+                Long targetMemberId = getTargetMemberId(report);
+                Member reportedMember = memberRepository.findById(targetMemberId)
+                        .orElseThrow(MemberNotFoundException::new);
+                reportedMember.increaseWarningCount();
+                memberRepository.save(reportedMember);
+            }
+            resolvePendingReports(report);
         }
+    }
+
+    private boolean deactivateTarget(Report report) {
+        if (report.getLetterId() != null) {
+            return deactivateLetter(report.getLetterId());
+        } else if (report.getSharePostId() != null) {
+            return deactivateSharePost(report.getSharePostId());
+        } else if (report.getEventCommentId() != null) {
+            return deactivateEventComment(report.getEventCommentId());
+        }
+        return false;
+    }
+
+    private boolean deactivateLetter(Long letterId) {
+        Letter letter = letterRepository.findById(letterId)
+                .orElseThrow(LetterNotFoundException::new);
+        if (letter.isActive()) {
+            letter.inactive();  // 활성 상태 -> 비활성 상태로 전환
+            letterRepository.save(letter);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean deactivateSharePost(Long sharePostId) {
+        SharePost sharePost = sharePostRepository.findById(sharePostId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.SHARE_POST_NOT_FOUND));
+        if (sharePost.isActive()) {
+            sharePost.deactivate();
+            sharePostRepository.save(sharePost);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean deactivateEventComment(Long eventCommentId) {
+        EventComment eventComment = eventCommentRepository.findById(eventCommentId)
+                .orElseThrow(EventCommentNotFoundException::new);
+        if (eventComment.isActive()) {
+            eventComment.softDelete();
+            eventCommentRepository.save(eventComment);
+            return true;
+        }
+        return false;
     }
 
 
@@ -173,7 +230,7 @@ public class ReportService {
 
 
 
-    void validateRequest(CreateReportRequest request, Long memberId) {
+    void validateRequest(CreateReportRequest request, Long memberId, Map<String, String> reportedContentMap) {
         // 공통: 신고 대상 ID 중 하나만 있어야 함
         boolean isLetter = request.getLetterId() != null;
         boolean isSharePost = request.getSharePostId() != null;
@@ -182,21 +239,51 @@ public class ReportService {
         if(count != 1) {
             throw new InvalidReportRequestException();
         }
+        checkDuplicateReport(request, memberId);
+        fetchReportedContent(request, reportedContentMap);
+    }
 
-
-        // 타입별 추가 검증
+    void fetchReportedContent(CreateReportRequest request, Map<String, String> reportedContentMap) {
         switch (request.getReportType()) {
             case LETTER:
-                validateLetterReport(request, memberId);
+                Letter letter = letterRepository.findById(request.getLetterId())
+                        .orElseThrow(LetterNotFoundException::new);
+                reportedContentMap.put("content", "제목: " + letter.getTitle() + " 내용: " + letter.getContent());
                 break;
             case SHARE_POST:
-                validateSharePostReport(request, memberId);
+                SharePost sharePost = sharePostRepository.findById(request.getSharePostId())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.SHARE_POST_NOT_FOUND));
+                reportedContentMap.put("content", "내용: " + sharePost.getContent());
                 break;
             case EVENT_COMMENT:
-                validateEventCommentReport(request, memberId);
+                EventComment eventComment = eventCommentRepository.findById(request.getEventCommentId())
+                        .orElseThrow(EventCommentNotFoundException::new);
+                reportedContentMap.put("content", "내용: " + eventComment.getContent());
                 break;
         }
     }
+
+    void checkDuplicateReport(CreateReportRequest request, Long memberId) {
+        switch (request.getReportType()) {
+            case LETTER:
+                if (reportRepository.existsByLetterIdAndMemberId(request.getLetterId(), memberId)) {
+                    throw new DuplicateReportException();
+                }
+                break;
+            case SHARE_POST:
+                if (reportRepository.existsBySharePostIdAndMemberId(request.getSharePostId(), memberId)) {
+                    throw new DuplicateReportException();
+                }
+                break;
+            case EVENT_COMMENT:
+                if (reportRepository.existsByEventCommentIdAndMemberId(request.getEventCommentId(), memberId)) {
+                    throw new DuplicateReportException();
+                }
+                break;
+        }
+    }
+
+
 
     void validateLetterReport(CreateReportRequest request, Long memberId) {
         if (!letterRepository.existsById(request.getLetterId())) {

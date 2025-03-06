@@ -24,12 +24,12 @@ import io.crops.warmletter.domain.report.exception.InvalidReportRequestException
 import io.crops.warmletter.domain.report.exception.ReportNotFoundException;
 import io.crops.warmletter.domain.report.repository.ReportRepository;
 import io.crops.warmletter.domain.share.entity.SharePost;
+import io.crops.warmletter.domain.share.exception.SharePostNotFoundException;
+import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalRepository;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
-import io.crops.warmletter.global.error.common.ErrorCode;
-import io.crops.warmletter.global.error.exception.BusinessException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -171,7 +171,7 @@ public class ReportService {
 
     private boolean deactivateSharePost(Long sharePostId) {
         SharePost sharePost = sharePostRepository.findById(sharePostId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.SHARE_POST_NOT_FOUND));
+                .orElseThrow(SharePostNotFoundException::new);
         if (sharePost.isActive()) {
             sharePost.deactivate();
             sharePostRepository.save(sharePost);
@@ -200,7 +200,7 @@ public class ReportService {
         }
         if (report.getSharePostId() != null) {
             return shareProposalRepository.findById(report.getSharePostId())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.SHARE_PROPOSAL_NOTFOUND))
+                    .orElseThrow(ShareProposalNotFoundException::new)
                     .getRequesterId();
         }
         if (report.getEventCommentId() != null) {
@@ -252,7 +252,7 @@ public class ReportService {
                 break;
             case SHARE_POST:
                 SharePost sharePost = sharePostRepository.findById(request.getSharePostId())
-                        .orElseThrow(() -> new BusinessException(ErrorCode.SHARE_POST_NOT_FOUND));
+                        .orElseThrow(SharePostNotFoundException::new);
                 reportedContentMap.put("content", "내용: " + sharePost.getContent());
                 break;
             case EVENT_COMMENT:
@@ -296,7 +296,7 @@ public class ReportService {
 
     void validateSharePostReport(CreateReportRequest request, Long memberId) {
         if(!sharePostRepository.existsById(request.getSharePostId())) {
-            throw new BusinessException(ErrorCode.SHARE_POST_NOT_FOUND);
+            throw new SharePostNotFoundException();
         }
         // sharePostRepository.existsById() 등 추가 검증 가능
         if(reportRepository.existsBySharePostIdAndMemberId(request.getSharePostId(), memberId)) {

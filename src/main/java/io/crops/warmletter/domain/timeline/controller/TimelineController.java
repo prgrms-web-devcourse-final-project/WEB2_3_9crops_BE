@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.timeline.controller;
 
+import io.crops.warmletter.domain.timeline.dto.response.ReadNotificationResponse;
 import io.crops.warmletter.domain.timeline.dto.response.TimelineResponse;
 import io.crops.warmletter.domain.timeline.service.TimelineService;
 import io.crops.warmletter.global.response.BaseResponse;
@@ -12,9 +13,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,5 +32,17 @@ public class TimelineController {
         Pageable timelinesPageable = PageableConverter.convertToPageable(pageable);
 
         return ResponseEntity.ok(BaseResponse.of(new PageResponse<>(timeLineService.getTimelines(timelinesPageable)),"타임라인 조회 성공"));
+    }
+
+    @PatchMapping("/notifications/{notificationId}/read")
+    @Operation(summary = "알림 읽음 처리", description = "로그인한 사용자의 특정 알림을 읽음 처리합니다.")
+    public ResponseEntity<BaseResponse<ReadNotificationResponse>> updateNotificationRead(@PathVariable Long notificationId) {
+        return ResponseEntity.ok(BaseResponse.of(timeLineService.updateNotificationRead(notificationId),"알림 읽음 처리 성공"));
+    }
+
+    @PatchMapping("/notifications/read")
+    @Operation(summary = "모든 알림 읽음 처리", description = "로그인한 사용자의 모든 알림을 읽음 처리합니다.")
+    public ResponseEntity<BaseResponse<List<ReadNotificationResponse>>> updateNotificationAllRead() {
+        return ResponseEntity.ok(BaseResponse.of(timeLineService.updateNotificationAllRead(),"모든 알림 읽음 처리 성공"));
     }
 }

@@ -75,6 +75,10 @@ redirect:
     uri: ${PROD_REDIRECT_BASE_URI}
 server:
   domain: ${PROD_SERVER_DOMAIN}
+google:
+  api:
+    key: ${GOOGLE_API_KEY}
+    url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GOOGLE_API_KEY}"
 # 초반에만 확인용으로 로그를 출력하고 추후 삭제 예정
 logging:
   level:
@@ -152,6 +156,11 @@ redirect:
     uri: ${REDIRECT_BASE_URI}
 server:
   domain: ${SERVER_DOMAIN}
+google:
+  api:
+    key: ${GOOGLE_API_KEY}
+    url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GOOGLE_API_KEY}"
+
 logging:
   level:
     root: INFO

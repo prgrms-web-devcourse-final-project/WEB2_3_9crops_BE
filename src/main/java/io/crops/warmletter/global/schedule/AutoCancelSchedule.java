@@ -28,8 +28,9 @@ public class AutoCancelSchedule {
     private final LetterTemporaryMatchingRepository letterTemporaryMatchingRepository;
     private final LetterRepository letterRepository;
 
-    @Scheduled(cron = "0 */1 * * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "10 */1 * * * *", zone = "Asia/Seoul")
     public void runAutoMatchingCancelJob()throws Exception {
+        log.info("[runAutoMatchingCancelJob] 실행");
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm");
         String date = dateFormat.format(new Date());
 
@@ -42,36 +43,4 @@ public class AutoCancelSchedule {
 
         jobLauncher.run(jobRegistry.getJob("autoCancelJob"), jobParameters);
     }
-
-//    @Transactional
-//    @Scheduled(cron = "0 */3 * * * *", zone = "Asia/Seoul")
-//    public void checkAndDeleteExpiredMatchings() {
-//        log.info("수동 만료 처리 시작");
-//        List<LetterTemporaryMatching> expiredMatchings =
-//                letterTemporaryMatchingRepository.findAll().stream()
-//                        .filter(m -> m.getReplyDeadLine().isBefore(LocalDateTime.now()) ||
-//                                m.getReplyDeadLine().isEqual(LocalDateTime.now()))
-//                        .collect(Collectors.toList());
-//
-//        log.info("찾은 만료 매칭 수: {}", expiredMatchings.size());
-//
-//        for (LetterTemporaryMatching matching : expiredMatchings) {
-//            log.info("매칭 ID: {}, 기한: {}, 현재: {}",
-//                    matching.getId(), matching.getReplyDeadLine(), LocalDateTime.now());
-//
-//            // 편지 처리
-//            letterRepository.findById(matching.getLetterId())
-//                    .ifPresent(letter -> {
-//                        letter.updateLetterType(LetterType.RANDOM);
-//                        letterRepository.save(letter);
-//                        log.info("편지 타입 변경됨: {}", letter.getId());
-//                    });
-//        }
-//
-//        // 삭제 처리
-//        if (!expiredMatchings.isEmpty()) {
-//            letterTemporaryMatchingRepository.deleteAll(expiredMatchings);
-//            log.info("매칭 {} 개 삭제됨", expiredMatchings.size());
-//        }
-//    }
 }

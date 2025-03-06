@@ -44,6 +44,7 @@ public class AutoCancelBatch {
 
     @Bean
     public Job autoCancelJob() {
+        log.info("[autoCancelJob] 실행");
         return new JobBuilder("autoCancelJob", jobRepository)
                 .incrementer(new RunIdIncrementer())
                 .start(autoCancelStep())
@@ -52,6 +53,7 @@ public class AutoCancelBatch {
 
     @Bean
     public Step autoCancelStep(){
+        log.info("[autoCancelStep] 실행");
         return new StepBuilder("autoCancelStep", jobRepository)
                 .<LetterTemporaryMatching, LetterTemporaryMatching>chunk(5, platformTransactionManager)
                 .reader(autoCancelReader())
@@ -60,8 +62,10 @@ public class AutoCancelBatch {
                 .build();
     }
 
+    @Bean
     public RepositoryItemReader<LetterTemporaryMatching> autoCancelReader() {
         LocalDateTime now = LocalDateTime.now();
+        log.info("[autoCancelReader] 실행");
         log.info("현재 시간: {}, 포맷팅된 시간: {}", now, now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
         // 직접 조회하여 문제 파악
@@ -118,7 +122,7 @@ public class AutoCancelBatch {
     @Bean
     public ItemProcessor<LetterTemporaryMatching, LetterTemporaryMatching> autoCancelProcessor() {
         return letterTempMatching -> {
-            log.info("처리 중인 만료 매칭: ID={}, 기한={}",
+            log.info("[autoCancelProcessor] 처리 중인 만료 매칭: ID={}, 기한={}",
                     letterTempMatching.getId(), letterTempMatching.getReplyDeadLine());
 
                     // 연관된 편지의 타입을 RANDOM으로 변경
@@ -126,6 +130,7 @@ public class AutoCancelBatch {
                     .orElse(null);
 
             if (letter != null) {
+                log.info("[autoCancelProcessor] letter은 null이 아닙니다.");
                 letter.updateLetterType(LetterType.RANDOM);
                 letterRepository.save(letter);
             }else{
@@ -137,6 +142,7 @@ public class AutoCancelBatch {
 
     @Bean
     public RepositoryItemWriter<LetterTemporaryMatching> autoCancelWriter() {
+        log.info("[autoCancelWriter] 자동 취소 까지 완료");
         RepositoryItemWriter<LetterTemporaryMatching> writer = new RepositoryItemWriter<>();
         writer.setRepository(letterTemporaryMatchingRepository);
         writer.setMethodName("delete");

@@ -47,12 +47,12 @@ spring:
     activate:
       on-profile: local
 
-  batch:
-    job:
-      enabled: true
-    jdbc:
-      initialize-schema: always
-      schema: classpath:org/springframework/batch/core/schema-mysql.sql
+#  batch:
+#    job:
+#      enabled: true
+#    jdbc:
+#      initialize-schema: always
+#      schema: classpath:org/springframework/batch/core/schema-mysql.sql
   datasource-meta:
     driver-class-name: com.mysql.cj.jdbc.Driver
     jdbc-url: ${META_DATASOURCE_URL}

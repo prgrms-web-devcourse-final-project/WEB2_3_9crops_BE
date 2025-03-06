@@ -50,7 +50,7 @@ public class LetterResponse {
 
     private final Long matchingId; //편지 조회
 
-    private final boolean evaluated; //편지 평가 여부
+    private final Boolean evaluated; //편지 평가 여부
 
     private final Long memberId;
 
@@ -111,6 +111,27 @@ public class LetterResponse {
                 .title(letter.getTitle())
                 .deliveryStartedAt(letter.getDeliveryStartedAt())
                 .deliveryCompletedAt(letter.getDeliveryCompletedAt())
+                .build();
+    }
+
+    // 임시 저장(draft) 변환 메서드 추가
+    public static LetterResponse fromDraftLetter(LetterDraftResponse draft, String zipCode) {
+        return builder()
+                .letterId(draft.getLetterId())
+                .writerId(draft.getWriterId())
+                .receiverId(draft.getReceiverId())
+                .parentLetterId(draft.getParentLetterId())
+                .zipCode(zipCode)
+                .title(draft.getTitle())
+                .content(draft.getContent())
+                .category(draft.getCategory())
+                .paperType(draft.getPaperType())
+                .fontType(draft.getFontType())
+                .status(draft.getStatus())
+                .matched(draft.isMatched())
+                .deliveryStartedAt(draft.getDeliveryStartedAt())
+                .deliveryCompletedAt(draft.getDeliveryCompletedAt())
+                .matchingId(draft.getMatchingId())
                 .build();
     }
 }

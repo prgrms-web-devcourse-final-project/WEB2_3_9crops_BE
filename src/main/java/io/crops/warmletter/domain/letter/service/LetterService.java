@@ -97,7 +97,7 @@ public class LetterService {
         Letter letter = builder.build();
         Letter savedLetter = letterRepository.save(letter);
 
-        String zipCode = authFacade.getZipCode(); //현제 로그인한 유저 ZipCode
+        String zipCode = authFacade.getZipCode();
 
         // 알림 전송
         if(request.getReceiverId() != null){
@@ -115,7 +115,7 @@ public class LetterService {
 
         if(parentLetterId == null){
             String zipCode = memberRepository.findById(letter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode();
-            LetterResponse response = LetterResponse.fromEntityForPreviousLetters(letter,zipCode);
+            LetterResponse response = LetterResponse.fromEntityForPreviousLetters(letter,zipCode,myId, null);
             return List.of(response);
 
         }else{
@@ -131,7 +131,7 @@ public class LetterService {
             for (Letter findLetter : lettersByParentId) {
                 if(findLetter.getStatus().equals(Status.DELIVERED)){
                     String zipCode = memberRepository.findById(findLetter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode();
-                    LetterResponse response = LetterResponse.fromEntityForPreviousLetters(findLetter,zipCode);
+                    LetterResponse response = LetterResponse.fromEntityForPreviousLetters(findLetter,zipCode, myId, letterMatching.getId());
                     responses.add(response);
                 }
             }
@@ -247,25 +247,9 @@ public class LetterService {
 
         } else if ("draft".equals(formattedStatus)) {
             // 임시 저장 편지이면서 상태가 SAVED인 편지 조회 (작성자 기준)
-            List<LetterDraftResponse> drafts = letterRepository.findDraftLettersWithMatching(currentUserId, Status.SAVED);
-            return drafts.stream()
-                    .map(draft -> LetterResponse.builder()
-                            .letterId(draft.getLetterId())
-                            .writerId(draft.getWriterId())
-                            .receiverId(draft.getReceiverId())
-                            .parentLetterId(draft.getParentLetterId())
-                            .zipCode(authFacade.getZipCode())
-                            .title(draft.getTitle())
-                            .content(draft.getContent())
-                            .category(draft.getCategory())
-                            .paperType(draft.getPaperType())
-                            .fontType(draft.getFontType())
-                            .status(draft.getStatus())
-                            .matched(draft.isMatched())
-                            .deliveryStartedAt(draft.getDeliveryStartedAt())
-                            .deliveryCompletedAt(draft.getDeliveryCompletedAt())
-                            .matchingId(draft.getMatchingId())
-                            .build())
+            return letterRepository.findDraftLettersWithMatching(currentUserId, Status.SAVED)
+                    .stream()
+                    .map(draft -> LetterResponse.fromDraftLetter(draft, authFacade.getZipCode()))
                     .collect(Collectors.toList());
         } else {
             throw new BusinessException(INVALID_INPUT_VALUE);

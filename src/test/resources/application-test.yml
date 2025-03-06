@@ -26,6 +26,15 @@ jwt:
 redirect:
   base:
     uri: http://localhost:8080
+
+google:
+  api:
+    key: sdsadwdlsdklasdjiwlkdskljdiwjskljdsdi
+    url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=sdsadwdlsdklasdjiwlkdskljdiwjskljdsdi"
+
+server:
+  domain: localhost:8080
+
 logging:
   level:
     root: INFO

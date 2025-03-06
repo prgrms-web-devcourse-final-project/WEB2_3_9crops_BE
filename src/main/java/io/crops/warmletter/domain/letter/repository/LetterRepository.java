@@ -38,7 +38,7 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
 
     Optional<Letter> findByIdAndWriterId(Long letterId, Long writerId);
 
-    Page<Letter> findByMatchingIdOrderByIdDesc(Long matchingId, Pageable pageable);
+    Page<Letter> findByMatchingIdAndIsActiveTrueOrderByIdDesc(Long matchingId, Pageable pageable);
 
     List<Letter> findByReceiverIdAndStatus(Long currentUserId, Status status);
 

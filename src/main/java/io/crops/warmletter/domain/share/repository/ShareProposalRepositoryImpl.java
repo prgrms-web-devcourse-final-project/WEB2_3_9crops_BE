@@ -4,6 +4,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import io.crops.warmletter.domain.member.entity.QMember;
 import io.crops.warmletter.domain.share.dto.response.ShareInboxResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
+import io.crops.warmletter.domain.share.enums.ProposalStatus;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
 import static io.crops.warmletter.domain.member.entity.QMember.member;

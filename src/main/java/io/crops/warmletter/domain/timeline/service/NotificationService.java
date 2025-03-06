@@ -95,6 +95,7 @@ public class NotificationService {
                         .data(notificationResponse, MediaType.APPLICATION_JSON));
                 log.info("사용자 ID : {}으로 알림 전송 성공", receiverId);
             } catch (IOException e) {
+                emitters.remove(receiverId);
                 log.warn("사용자 ID : {}으로 알림 전송 실패",receiverId);
                 emitter.complete();
             }
@@ -112,6 +113,7 @@ public class NotificationService {
                         .name("heartbeat")
                         .data("ping"));
             } catch (IOException e) {
+                emitters.remove(memberId);
                 log.warn("사용자 ID : {} 대상 Heartbeat 전송 실패",memberId);
                 emitter.complete();
             }

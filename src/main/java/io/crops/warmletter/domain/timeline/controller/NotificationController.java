@@ -25,16 +25,4 @@ public class NotificationController {
     public SseEmitter subscribeNotification() {
         return notificationService.subscribeNotification();
     }
-
-    @PatchMapping("/{notificationId}/read")
-    @Operation(summary = "알림 읽음 처리", description = "로그인한 사용자의 특정 알림을 읽음 처리합니다.")
-    public ResponseEntity<BaseResponse<ReadNotificationResponse>> updateNotificationRead(@PathVariable Long notificationId) {
-        return ResponseEntity.ok(BaseResponse.of(notificationService.updateNotificationRead(notificationId),"알림 읽음 처리 성공"));
-    }
-
-    @PatchMapping("/read")
-    @Operation(summary = "모든 알림 읽음 처리", description = "로그인한 사용자의 모든 알림을 읽음 처리합니다.")
-    public ResponseEntity<BaseResponse<List<ReadNotificationResponse>>> updateNotificationAllRead() {
-        return ResponseEntity.ok(BaseResponse.of(notificationService.updateNotificationAllRead(),"모든 알림 읽음 처리 성공"));
-    }
 }

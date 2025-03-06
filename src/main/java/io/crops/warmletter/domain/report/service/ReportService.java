@@ -142,6 +142,7 @@ public class ReportService {
                         .orElseThrow(MemberNotFoundException::new);
                 reportedMember.increaseWarningCount();
                 memberRepository.save(reportedMember);
+                notificationFacade.sendNotification(null, targetMemberId, AlarmType.REPORT, report.getAdminMemo()+"§"+reportedMember.getWarningCount());
             }
             resolvePendingReports(report);
         }

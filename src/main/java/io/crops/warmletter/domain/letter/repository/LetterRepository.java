@@ -5,6 +5,7 @@ import io.crops.warmletter.domain.letter.dto.response.RandomLetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.Category;
 import io.crops.warmletter.domain.letter.enums.Status;
+import io.crops.warmletter.domain.timeline.dto.response.LetterAlarmResponse;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -66,4 +68,12 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
     Optional<Letter> findByIdAndWriterIdAndStatusIsSAVED(Long id, Long writerId);
 
     List<Letter> findByStatusAndDeliveryCompletedAtLessThanEqual(Status status, LocalDateTime now);
+
+    @Query("SELECT new io.crops.warmletter.domain.timeline.dto.response.LetterAlarmResponse(" +
+            "l.writerId, m.zipCode) " +
+            "FROM Letter l " +
+            "JOIN Member m ON l.writerId = m.id " +
+            "WHERE l.status = 'IN_DELIVERY' " +
+            "AND l.deliveryCompletedAt <= :now")
+    List<LetterAlarmResponse> findZipCodeByLettersToComplete(LocalDateTime now);
 }

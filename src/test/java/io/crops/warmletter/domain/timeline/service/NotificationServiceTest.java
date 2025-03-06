@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.timeline.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.timeline.dto.response.NotificationResponse;
 import io.crops.warmletter.domain.timeline.entity.Timeline;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import io.crops.warmletter.domain.timeline.repository.TimelineRepository;
@@ -17,13 +18,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.awt.desktop.ScreenSleepEvent;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -60,13 +62,66 @@ class NotificationServiceTest {
 
     @Test
     @DisplayName("알림 구독 생성 성공")
-    void get_notificationSub_success() {
+    void get_notificationSub_success() throws IOException {
         Long memberId = 1L;
         when(authFacade.getCurrentUserId()).thenReturn(memberId);
 
         SseEmitter sseEmitter = notificationService.subscribeNotification();
 
         assertNotNull(sseEmitter);
+        assertTrue(emitters.containsKey(memberId));
+    }
+
+    @Test
+    @DisplayName("SSE가 완료될 때 onCompletion이 호출 성공")
+    void test_sseEmitter_onCompletion() {
+        // Given
+        Long memberId = 1L;
+
+        SseEmitter emitter = new SseEmitter(600_000L);
+        emitters.put(memberId, emitter);
+
+        // When: 분리한 handleTimeout 메서드 직접 호출
+        notificationService.handleCompletion(memberId);
+
+        // Then: emitters에서 제거되었는지 확인
+        assertFalse(emitters.containsKey(memberId));
+    }
+
+    @Test
+    @DisplayName("SSE가 타임아웃될 때 onTimeout이 호출")
+    void test_sseEmitter_onTimeout() throws InterruptedException {
+        // Given
+        Long memberId = 1L;
+
+        SseEmitter emitter = new SseEmitter(600_000L);
+        emitters.put(memberId, emitter);
+
+        // When: 분리한 handleTimeout 메서드 직접 호출
+        notificationService.handleTimeout(memberId, emitter);
+
+        // Then: emitters에서 제거되었는지 확인
+        assertFalse(emitters.containsKey(memberId));
+    }
+
+    @Test
+    @DisplayName("알림 생성 성공 - SENDING")
+    void create_notificationSENDING_success() {
+        String zipCode = "12345";
+        Long receiverId = 1L;
+        AlarmType alarmType = AlarmType.SENDING;
+        String letterId = "1";
+
+        Timeline timeline = Timeline.builder()
+                .memberId(receiverId)
+                .title(zipCode+"님이 편지를 보냈습니다.")
+                .content(letterId)
+                .alarmType(alarmType)
+                .build();
+
+        when(timelineRepository.save(any(Timeline.class))).thenReturn(timeline);
+
+        notificationService.createNotification(zipCode,receiverId, AlarmType.SENDING, letterId);
     }
 
     @Test
@@ -75,11 +130,11 @@ class NotificationServiceTest {
         String zipCode = "12345";
         Long receiverId = 1L;
         AlarmType alarmType = AlarmType.LETTER;
-        String letterId = "1";
+        String letterId = null;
 
         Timeline timeline = Timeline.builder()
                 .memberId(receiverId)
-                .title(zipCode+"님이 편지를 보냈습니다.")
+                .title(zipCode+"님의 편지가 도착했습니다.")
                 .content(letterId)
                 .alarmType(alarmType)
                 .build();
@@ -180,6 +235,38 @@ class NotificationServiceTest {
     }
 
     @Test
+    @DisplayName("알림 전송 실패 - IOException")
+    void create_sendEventToClient_exception() throws IOException {
+        // given
+        String senderZipCode = "11111";
+        Long receiverId = 1L;
+        AlarmType alarmType = AlarmType.LETTER;
+        String data = "1";
+
+        Long memberId1 = 1L;
+
+        // emitter1이 예외를 던지도록 설정
+        doThrow(new IOException()).when(emitter).send(any(SseEmitter.SseEventBuilder.class));
+
+        emitters.put(memberId1, emitter);;
+
+        // when
+        notificationService.createNotification(senderZipCode,receiverId,alarmType,data);
+
+        // then
+        // emitter1.send()가 호출되었는지 확인
+        verify(emitter).send(any(SseEmitter.SseEventBuilder.class));
+        // 예외 발생 후 emitter1.complete()가 호출되었는지 확인
+        verify(emitter).complete();
+        // emitter1이 emitters에서 제거되었는지 확인
+        assertThat(emitters).hasSize(0);
+        assertThat(emitters).doesNotContainKey(memberId1);
+
+        // emitter1.send()는 정상적으로 호출되었는지 확인
+        Mockito.verify(emitter).send(Mockito.any(SseEmitter.SseEventBuilder.class));
+    }
+
+    @Test
     @DisplayName("하트비트 전송 성공")
     void send_heartbeat_success() throws IOException {
         // given
@@ -230,7 +317,7 @@ class NotificationServiceTest {
         SseEmitter emitter2 = Mockito.mock(SseEmitter.class);
 
         // emitter1이 예외를 던지도록 설정
-        Mockito.doThrow(new IOException("Connection lost")).when(emitter1).send(Mockito.any(SseEmitter.SseEventBuilder.class));
+        Mockito.doThrow(new IOException()).when(emitter1).send(Mockito.any(SseEmitter.SseEventBuilder.class));
 
         emitters.put(memberId1, emitter1);
         emitters.put(memberId2, emitter2);

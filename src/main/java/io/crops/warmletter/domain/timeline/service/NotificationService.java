@@ -2,12 +2,11 @@ package io.crops.warmletter.domain.timeline.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.timeline.dto.response.NotificationResponse;
-import io.crops.warmletter.domain.timeline.dto.response.ReadNotificationResponse;
 import io.crops.warmletter.domain.timeline.entity.Timeline;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
-import io.crops.warmletter.domain.timeline.exception.NotificationNotFoundException;
 import io.crops.warmletter.domain.timeline.repository.TimelineRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -15,11 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
@@ -33,8 +31,8 @@ public class NotificationService {
 
         emitters.put(memberId, emitter);
 
-        emitter.onCompletion(() -> emitters.remove(memberId)); // 연결 종료 시 제거
-        emitter.onTimeout(() -> emitters.remove(memberId)); // 타임아웃 시 제거
+        emitter.onCompletion(() -> handleCompletion(memberId));
+        emitter.onTimeout(() -> handleTimeout(memberId, emitter));
 
         NotificationResponse notificationResponse = NotificationResponse.builder()
                 .title("사용자 " + memberId + " EventStream 생성")
@@ -43,6 +41,17 @@ public class NotificationService {
         sendEventToClient(memberId, notificationResponse);
 
         return emitter;
+    }
+
+    protected void handleCompletion(Long memberId) {
+        emitters.remove(memberId);
+        log.info("SSE 연결 종료");
+    }
+
+    protected void handleTimeout(Long memberId, SseEmitter emitter) {
+        emitters.remove(memberId);
+        log.info("SSE 연결 타임아웃 발생");
+        emitter.complete();
     }
 
     // 편지 수신, 신고 조치, 공유 요청, 공유 게시글 등록 시 호출 필요
@@ -55,8 +64,11 @@ public class NotificationService {
                 .alarmType(alarmType);
 
         switch(alarmType) {
-            case LETTER:
+            case SENDING:
                 builder.title(senderZipCode+"님이 편지를 보냈습니다.");
+                break;
+            case LETTER:
+                builder.title(senderZipCode+"님의 편지가 도착했습니다.");
                 break;
             case REPORT:
                 builder.title("따숨님, 최근 활동에 대해 경고를 받으셨어요.");
@@ -82,16 +94,17 @@ public class NotificationService {
         sendEventToClient(receiverId,notificationResponse);
     }
 
-    private void sendEventToClient(Long receiverId, NotificationResponse notificationResponse){
+    protected void sendEventToClient(Long receiverId, NotificationResponse notificationResponse){
         SseEmitter emitter = emitters.get(receiverId);
         if (emitter != null) {
             try {
                 emitter.send(SseEmitter.event()
                         .data(notificationResponse, MediaType.APPLICATION_JSON));
+                log.info("사용자 ID : {}으로 알림 전송 성공", receiverId);
             } catch (IOException e) {
-                emitter.complete();
                 emitters.remove(receiverId);
-
+                log.warn("사용자 ID : {}으로 알림 전송 실패",receiverId);
+                emitter.complete();
             }
         }
     }
@@ -107,8 +120,9 @@ public class NotificationService {
                         .name("heartbeat")
                         .data("ping"));
             } catch (IOException e) {
-                emitter.complete();
                 emitters.remove(memberId);
+                log.warn("사용자 ID : {} 대상 Heartbeat 전송 실패",memberId);
+                emitter.complete();
             }
         }
     }

@@ -52,6 +52,8 @@ public class LetterResponse {
 
     private final boolean evaluated; //편지 평가 여부
 
+    private final Long memberId;
+
 
     //공통 변환
     public static LetterResponse fromEntity(Letter letter, String zipCode) {
@@ -74,12 +76,15 @@ public class LetterResponse {
     }
 
     //이전편지 변환
-    public static LetterResponse fromEntityForPreviousLetters(Letter letter, String zipCode) {
+    public static LetterResponse fromEntityForPreviousLetters(Letter letter, String zipCode, Long myId, Long matchingId) {
         return LetterResponse.builder()
-                .letterId(letter.getId())
+                .letterId(letter.getId()) //이전 편지의 정보들
                 .zipCode(zipCode)
                 .title(letter.getTitle())
                 .content(letter.getContent())
+                .category(letter.getCategory())
+                .memberId(myId)         //편지를 쓴 자기 자신의 id -> 이전 편지의 정보가 아님~!
+                .matchingId(matchingId)
                 .build();
     }
 

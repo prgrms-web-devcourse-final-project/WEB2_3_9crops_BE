@@ -75,7 +75,7 @@ public class ReportService {
             reportedMember.increaseWarningCount();
             memberRepository.save(reportedMember);
             resolvePendingReports(report);
-            // targetMemberId로 알림 전송 TODO : 배포 후 테스트 예정
+            // targetMemberId로 알림 전송
             notificationFacade.sendNotification(null, targetMemberId, AlarmType.REPORT, report.getAdminMemo()+"§"+reportedMember.getWarningCount());
         }
         return new UpdateReportResponse(report,reportedMember);

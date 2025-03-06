@@ -99,8 +99,9 @@ public class LetterService {
 
         String zipCode = authFacade.getZipCode(); //현제 로그인한 유저 ZipCode
 
+        // 알림 전송
         if(request.getReceiverId() != null){
-            notificationFacade.sendNotification(zipCode,request.getReceiverId(), AlarmType.LETTER,savedLetter.getId().toString());
+            notificationFacade.sendNotification(zipCode,request.getReceiverId(), AlarmType.SENDING,null);
         }
 
         return LetterResponse.fromEntity(savedLetter, zipCode);

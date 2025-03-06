@@ -4,6 +4,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import io.crops.warmletter.domain.member.entity.QMember;
 import io.crops.warmletter.domain.share.dto.response.ShareInboxResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
+import io.crops.warmletter.domain.share.enums.ProposalStatus;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
 import static io.crops.warmletter.domain.member.entity.QMember.member;
@@ -41,7 +42,9 @@ public class ShareProposalRepositoryImpl implements ShareProposalRepositoryCusto
                 .from(shareProposal)
                 .join(requesterMember).on(shareProposal.requesterId.eq(requesterMember.id))
                 .join(recipientMember).on(shareProposal.recipientId.eq(recipientMember.id))
-                .where(shareProposal.recipientId.eq(receiverId))
+                .where(shareProposal.recipientId.eq(receiverId)
+                        .and(shareProposal.status.eq(ProposalStatus.PENDING))
+                )
                 .orderBy(shareProposal.createdAt.desc())
                 .fetch();
     }

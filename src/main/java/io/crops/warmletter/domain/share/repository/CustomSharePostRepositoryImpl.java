@@ -1,5 +1,4 @@
 package io.crops.warmletter.domain.share.repository;
-
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -12,14 +11,7 @@ import io.crops.warmletter.domain.share.entity.QSharePost;
 import io.crops.warmletter.domain.share.entity.QShareProposal;
 import io.crops.warmletter.domain.share.entity.QShareProposalLetter;
 import io.crops.warmletter.domain.share.enums.ProposalStatus;
-import io.crops.warmletter.global.response.BaseResponse;
-import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,10 +24,10 @@ public class CustomSharePostRepositoryImpl implements CustomSharePostRepository 
         this.queryFactory = queryFactory;
     }
 
-    private static final QSharePost SHARE_POST = QSharePost.sharePost;
-    private static final QShareProposal PROPOSAL = QShareProposal.shareProposal;
-    private static final QShareProposalLetter PROPOSAL_LETTER = QShareProposalLetter.shareProposalLetter;
-    private static final QLetter LETTER = QLetter.letter;
+    private static final QSharePost SHARE_POST = new QSharePost("sharePost");
+    private static final QShareProposal PROPOSAL = new QShareProposal("shareProposal");
+    private static final QShareProposalLetter PROPOSAL_LETTER = new QShareProposalLetter("shareProposalLetter");
+    private static final QLetter LETTER = new QLetter("letter");
     private static final QMember WRITER = new QMember("writer");
     private static final QMember RECEIVER = new QMember("receiver");
 

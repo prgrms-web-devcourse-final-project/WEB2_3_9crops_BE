@@ -2,12 +2,14 @@ package io.crops.warmletter.domain.share.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
 import io.crops.warmletter.domain.share.dto.response.ShareInboxResponse;
+import io.crops.warmletter.domain.share.dto.response.ShareProposalDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalStatusResponse;
 import io.crops.warmletter.domain.share.entity.SharePost;
 import io.crops.warmletter.domain.share.entity.ShareProposal;
 import io.crops.warmletter.domain.share.entity.ShareProposalLetter;
 import io.crops.warmletter.domain.share.enums.ProposalStatus;
+import io.crops.warmletter.domain.share.exception.ShareProposalAccessException;
 import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException;
 import io.crops.warmletter.domain.share.repository.*;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
@@ -104,5 +106,18 @@ public class ShareProposalService {
         Long memberId = authFacade.getCurrentUserId();
 
         return shareProposalRepository.getAllByRecipientIdOrderByCreatedAtDesc(memberId);
+    }
+
+    public ShareProposalDetailResponse getShareProposalDetail(Long shareProposalId) {
+        Long memberId = authFacade.getCurrentUserId();
+
+        ShareProposal shareProposal = shareProposalRepository.findById(shareProposalId)
+                .orElseThrow(() -> new ShareProposalNotFoundException());
+
+        if (!shareProposal.getRecipientId().equals(memberId)) {
+            throw new ShareProposalAccessException();
+        }
+
+        return shareProposalRepository.findShareProposalDetailById(shareProposalId);
     }
 }

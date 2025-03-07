@@ -1,12 +1,11 @@
 package io.crops.warmletter.domain.share.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
-import io.crops.warmletter.domain.share.dto.response.ShareInboxResponse;
-import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
-import io.crops.warmletter.domain.share.dto.response.ShareProposalStatusResponse;
+import io.crops.warmletter.domain.share.dto.response.*;
 import io.crops.warmletter.domain.share.entity.SharePost;
 import io.crops.warmletter.domain.share.entity.ShareProposal;
 import io.crops.warmletter.domain.share.enums.ProposalStatus;
+import io.crops.warmletter.domain.share.exception.ShareProposalAccessException;
 import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalLetterRepository;
@@ -22,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -433,4 +433,98 @@ class ShareProposalServiceTest {
         verify(authFacade).getCurrentUserId();
         verify(shareProposalRepository).getAllByRecipientIdOrderByCreatedAtDesc(currentUserId);
     }
+
+    @Test
+    @DisplayName("공유 요청 상세 조회 성공")
+    void getShareProposalDetail_Success() {
+        // Given
+        Long shareProposalId = 1L;
+        Long currentUserId = 2L;
+
+        ShareProposal shareProposal = mock(ShareProposal.class);
+        when(shareProposal.getRecipientId()).thenReturn(currentUserId);
+
+        ShareProposalDetailResponse expectedResponse = ShareProposalDetailResponse.builder()
+                .shareProposalId(shareProposalId)
+                .requesterZipCode("12345")
+                .recipientZipCode("67890")
+                .message("공유 요청 메시지")
+                .status(ProposalStatus.PENDING)
+                .letters(List.of(
+                        ShareLetterPostResponse.builder()
+                                .id(1L)
+                                .content("첫 번째 편지 내용")
+                                .writerZipCode("12345")
+                                .receiverZipCode("67890")
+                                .createdAt(LocalDateTime.now())
+                                .build()
+                ))
+                .build();
+
+        when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
+        when(shareProposalRepository.findById(shareProposalId)).thenReturn(Optional.of(shareProposal));
+        when(shareProposalRepository.findShareProposalDetailById(shareProposalId)).thenReturn(expectedResponse);
+
+        // When
+        ShareProposalDetailResponse response = shareProposalService.getShareProposalDetail(shareProposalId);
+
+        // Then
+        assertAll(
+                () -> assertNotNull(response),
+                () -> assertEquals(shareProposalId, response.getShareProposalId()),
+                () -> assertEquals("12345", response.getRequesterZipCode()),
+                () -> assertEquals("67890", response.getRecipientZipCode()),
+                () -> assertEquals("공유 요청 메시지", response.getMessage()),
+                () -> assertEquals(ProposalStatus.PENDING, response.getStatus()),
+                () -> assertEquals(1, response.getLetters().size())
+        );
+
+        verify(authFacade).getCurrentUserId();
+        verify(shareProposalRepository).findById(shareProposalId);
+        verify(shareProposalRepository).findShareProposalDetailById(shareProposalId);
+    }
+
+
+    @Test
+    @DisplayName("공유 요청 상세 조회 - 존재하지 않는 요청시 예외 발생")
+    void getShareProposalDetail_NotFound() {
+        // Given
+        Long shareProposalId = 9L;
+        Long currentUserId = 2L;
+
+        when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
+        when(shareProposalRepository.findById(shareProposalId)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(ShareProposalNotFoundException.class,
+                () -> shareProposalService.getShareProposalDetail(shareProposalId));
+
+        verify(authFacade).getCurrentUserId();
+        verify(shareProposalRepository).findById(shareProposalId);
+        verify(shareProposalRepository, never()).findShareProposalDetailById(any());
+    }
+
+    @Test
+    @DisplayName("공유 요청 상세 조회 - 접근 권한 없을 때 예외 발생")
+    void getShareProposalDetail_AccessDenied() {
+        // Given
+        Long shareProposalId = 1L;
+        Long currentUserId = 3L;
+        Long recipientId = 2L;
+
+        ShareProposal shareProposal = mock(ShareProposal.class);
+        when(shareProposal.getRecipientId()).thenReturn(recipientId);
+
+        when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
+        when(shareProposalRepository.findById(shareProposalId)).thenReturn(Optional.of(shareProposal));
+
+        // When & Then
+        assertThrows(ShareProposalAccessException.class,
+                () -> shareProposalService.getShareProposalDetail(shareProposalId));
+
+        verify(authFacade).getCurrentUserId();
+        verify(shareProposalRepository).findById(shareProposalId);
+        verify(shareProposalRepository, never()).findShareProposalDetailById(any());
+    }
+    
 }

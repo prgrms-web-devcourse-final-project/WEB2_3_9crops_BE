@@ -1,9 +1,9 @@
 package io.crops.warmletter.domain.share.controller;
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
-import io.crops.warmletter.domain.share.dto.response.ShareInboxResponse;
-import io.crops.warmletter.domain.share.dto.response.ShareProposalResponse;
-import io.crops.warmletter.domain.share.dto.response.ShareProposalStatusResponse;
+import io.crops.warmletter.domain.share.dto.response.*;
 import io.crops.warmletter.domain.share.enums.ProposalStatus;
+import io.crops.warmletter.domain.share.exception.ShareProposalAccessException;
+import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException;
 import io.crops.warmletter.domain.share.service.ShareProposalService;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import java.time.LocalDateTime;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -58,7 +59,7 @@ class ShareProposalControllerTest {
         assertAll(
                 () -> assertNotNull(response),
                 () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
-                () -> assertEquals("요청 완료", response.getBody().getMessage()),
+                () -> assertEquals("공유 요청 완료", response.getBody().getMessage()),
                 () -> assertEquals(1L, response.getBody().getData().getShareProposalId()),
                 () -> assertEquals("12345", response.getBody().getData().getZipCode()),
                 () -> assertEquals(ProposalStatus.PENDING, response.getBody().getData().getStatus())
@@ -110,7 +111,7 @@ class ShareProposalControllerTest {
                 () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
                 () -> assertNotNull(response.getBody()),
                 () -> assertEquals(serviceResponse, response.getBody().getData()),
-                () -> assertEquals("공유 요청 성공", response.getBody().getMessage()),
+                () -> assertEquals("공유 요청 승인 성공", response.getBody().getMessage()),
                 () -> verify(shareProposalService).approveShareProposal(shareProposalId)
         );
     }
@@ -174,7 +175,7 @@ class ShareProposalControllerTest {
                 () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
                 () -> assertNotNull(response.getBody()),
                 () -> assertEquals(serviceResponse, response.getBody().getData()),
-                () -> assertEquals("공유 요청 거절", response.getBody().getMessage()),
+                () -> assertEquals("공유 요청 거절 성공", response.getBody().getMessage()),
                 () -> verify(shareProposalService).rejectShareProposal(shareProposalId)
         );
     }
@@ -262,5 +263,92 @@ class ShareProposalControllerTest {
         );
 
         verify(shareProposalService).getReceivedShareProposals();
+    }
+
+    @Test
+    @DisplayName("공유 요청 상세 조회 성공")
+    void getShareProposalDetail_Success() {
+        // Given
+        Long shareProposalId = 1L;
+        ShareProposalDetailResponse serviceResponse = ShareProposalDetailResponse.builder()
+                .shareProposalId(shareProposalId)
+                .requesterZipCode("12345")
+                .recipientZipCode("67890")
+                .message("공유 요청 메시지")
+                .status(ProposalStatus.PENDING)
+                .letters(List.of(
+                        ShareLetterPostResponse.builder()
+                                .id(1L)
+                                .content("첫 번째 편지 내용")
+                                .writerZipCode("12345")
+                                .receiverZipCode("67890")
+                                .createdAt(LocalDateTime.now())
+                                .build(),
+                        ShareLetterPostResponse.builder()
+                                .id(2L)
+                                .content("두 번째 편지 내용")
+                                .writerZipCode("12345")
+                                .receiverZipCode("67890")
+                                .createdAt(LocalDateTime.now())
+                                .build()
+                ))
+                .build();
+
+        when(shareProposalService.getShareProposalDetail(shareProposalId))
+                .thenReturn(serviceResponse);
+
+        // When
+        ResponseEntity<BaseResponse<ShareProposalDetailResponse>> response =
+                shareProposalController.getShareProposalDetail(shareProposalId);
+
+        // Then
+        assertAll(
+                () -> assertNotNull(response),
+                () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
+                () -> assertNotNull(response.getBody()),
+                () -> assertEquals("공유 요청 상세 조회 성공", response.getBody().getMessage()),
+                () -> assertEquals(shareProposalId, response.getBody().getData().getShareProposalId()),
+                () -> assertEquals("12345", response.getBody().getData().getRequesterZipCode()),
+                () -> assertEquals("67890", response.getBody().getData().getRecipientZipCode()),
+                () -> assertEquals("공유 요청 메시지", response.getBody().getData().getMessage()),
+                () -> assertEquals(ProposalStatus.PENDING, response.getBody().getData().getStatus()),
+                () -> assertEquals(2, response.getBody().getData().getLetters().size())
+        );
+
+        verify(shareProposalService).getShareProposalDetail(shareProposalId);
+    }
+
+    @Test
+    @DisplayName("공유 요청 상세 조회 - 존재하지 않는 요청시 예외 발생")
+    void getShareProposalDetail_NotFound() {
+        // Given
+        Long shareProposalId = 999L;
+        when(shareProposalService.getShareProposalDetail(shareProposalId))
+                .thenThrow(new ShareProposalNotFoundException());
+
+        // When
+        assertThrows(ShareProposalNotFoundException.class,
+                () -> shareProposalController.getShareProposalDetail(shareProposalId),
+                "존재하지 않으니까 터트림 "
+        );
+
+        verify(shareProposalService).getShareProposalDetail(shareProposalId);
+    }
+
+    @Test
+    @DisplayName("공유 요청 상세 조회 - 접근 권한 없을 때 예외 발생")
+    void getShareProposalDetail_AccessDenied() {
+        // Given
+        Long shareProposalId = 1L;
+        when(shareProposalService.getShareProposalDetail(shareProposalId))
+                .thenThrow(new ShareProposalAccessException());
+
+        // When
+        assertThrows(ShareProposalAccessException.class,
+                () -> shareProposalController.getShareProposalDetail(shareProposalId),
+                "권한 없어서 터트림 "
+        );
+
+        verify(shareProposalService).getShareProposalDetail(shareProposalId);
     }
 }

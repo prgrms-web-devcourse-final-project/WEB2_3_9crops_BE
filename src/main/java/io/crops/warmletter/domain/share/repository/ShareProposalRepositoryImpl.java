@@ -79,7 +79,7 @@ public class ShareProposalRepositoryImpl implements ShareProposalRepositoryCusto
                 .from(SHARE_PROPOSAL)
                 .join(REQUESTER_MEMBER).on(SHARE_PROPOSAL.requesterId.eq(REQUESTER_MEMBER.id))
                 .join(RECIPIENT_MEMBER).on(SHARE_PROPOSAL.recipientId.eq(RECIPIENT_MEMBER.id))
-                .leftJoin(shareProposalLetter).on(SHARE_PROPOSAL.id.eq(shareProposalLetter.proposalId))
+                .join(shareProposalLetter).on(SHARE_PROPOSAL.id.eq(shareProposalLetter.proposalId))
                 .leftJoin(letter).on(shareProposalLetter.letterId.eq(letter.id))
                 .leftJoin(letterWriterMember).on(letter.writerId.eq(letterWriterMember.id))
                 .leftJoin(letterReceiverMember).on(letter.receiverId.eq(letterReceiverMember.id))

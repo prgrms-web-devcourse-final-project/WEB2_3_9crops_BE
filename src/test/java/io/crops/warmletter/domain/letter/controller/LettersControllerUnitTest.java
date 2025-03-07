@@ -214,95 +214,85 @@ class LettersControllerUnitTest {
         );
     }
     @Test
-    @DisplayName("POST /api/letters/{letterId}/temporary-save - 편지 임시 저장 성공 테스트")
+    @DisplayName("POST /api/letters/temporary-save - 편지 임시 저장 성공 테스트")
     void temporarySaveLetter_success() throws Exception {
         // given
-        Long letterId = 1L;
+        Long writerId = 2L;
 
-        TemporarySaveLetterRequest request = new TemporarySaveLetterRequest();
-        request.setTitle("임시 저장 제목");
-        request.setContent("임시 저장할 내용입니다.");
-        request.setCategory(Category.ETC);
-        request.setPaperType(PaperType.PAPER);
-        request.setFontType(FontType.GYEONGGI);
+        Long receiverId = 1L;
+        Long matchingId = 1L;
+        Long parentLetterId = 1L;
+        String title = "임시 저장 제목(처음)";
+        String content = "임시 저장 내용(처음)";
+        Category category = Category.CONSULT;
+        PaperType paperType = PaperType.BASIC;
+        FontType fontType = FontType.DEFAULT;
+
+        TemporarySaveLetterRequest request = new TemporarySaveLetterRequest(
+            null, receiverId, matchingId, parentLetterId, title, content, category, paperType, fontType
+        );
+
+        Long letterId = 10L;
+        String zipCode = "11111";
 
         LetterResponse expectedResponse = LetterResponse.builder()
                 .letterId(letterId)
-                .writerId(1L)
-                .title("임시 저장 제목")
-                .content("임시 저장할 내용입니다.")
-                .category(Category.ETC)
-                .paperType(PaperType.PAPER)
-                .fontType(FontType.GYEONGGI)
+                .writerId(writerId)
+                .receiverId(receiverId)
+                .parentLetterId(parentLetterId)
+                .zipCode(zipCode)
+                .title(title)
+                .content(content)
+                .category(category)
+                .paperType(paperType)
+                .fontType(fontType)
+                .status(Status.SAVED)
+                .matchingId(matchingId)
                 .build();
 
-        when(letterService.temporarySaveLetter(eq(letterId), any(TemporarySaveLetterRequest.class)))
+        when(letterService.temporarySaveLetter(any(TemporarySaveLetterRequest.class)))
                 .thenReturn(expectedResponse);
 
         // when & then
-        mockMvc.perform(post("/api/letters/{letterId}/temporary-save", letterId)
+        mockMvc.perform(post("/api/letters/temporary-save")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("임시 저장 완료 "))
-                .andExpect(jsonPath("$.data.letterId").value(letterId))
-                .andExpect(jsonPath("$.data.title").value("임시 저장 제목"))
-                .andExpect(jsonPath("$.data.content").value("임시 저장할 내용입니다."))
-                .andExpect(jsonPath("$.data.category").value("ETC"))
-                .andExpect(jsonPath("$.data.paperType").value("PAPER"))
-                .andExpect(jsonPath("$.data.fontType").value("GYEONGGI"))
+                .andExpect(jsonPath("$.data.title").value(expectedResponse.getTitle()))
+                .andExpect(jsonPath("$.data.content").value(expectedResponse.getContent()))
+                .andExpect(jsonPath("$.data.category").value(expectedResponse.getCategory().toString()))
+                .andExpect(jsonPath("$.data.paperType").value(expectedResponse.getPaperType().toString()))
+                .andExpect(jsonPath("$.data.fontType").value(expectedResponse.getFontType().toString()))
                 .andDo(print());
 
-        verify(letterService).temporarySaveLetter(eq(letterId), any(TemporarySaveLetterRequest.class));
-    }
-
-
-
-    @Test
-    @DisplayName("POST /api/letters/{letterId}/temporary-save - 존재하지 않는 편지 임시 저장 실패 테스트")
-    void temporarySaveLetter_fail_letterNotFound() throws Exception {
-        // given
-        Long nonExistentLetterId = 999L;
-
-        TemporarySaveLetterRequest request = new TemporarySaveLetterRequest();
-        request.setTitle("임시 저장 제목");
-        request.setContent("임시 저장할 내용입니다.");
-
-        doThrow(new LetterNotFoundException())
-                .when(letterService)
-                .temporarySaveLetter(eq(nonExistentLetterId), any(TemporarySaveLetterRequest.class));
-
-        // when & then
-        mockMvc.perform(post("/api/letters/{letterId}/temporary-save", nonExistentLetterId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("LET-001"))
-                .andExpect(jsonPath("$.message").value("해당 편지를 찾을 수 없습니다."))
-                .andDo(print());
-
-        verify(letterService).temporarySaveLetter(
-                eq(nonExistentLetterId),
-                any(TemporarySaveLetterRequest.class)
-        );
+        verify(letterService).temporarySaveLetter(any(TemporarySaveLetterRequest.class));
     }
 
     @Test
-    @DisplayName("POST /api/letters/{letterId}/temporary-save - 권한 없는 편지 임시 저장 실패 테스트")
+    @DisplayName("POST /api/letters/temporary-save - 권한 없는 편지 임시 저장 실패 테스트")
     void temporarySaveLetter_fail_notBelongLetter() throws Exception {
         // given
-        Long unauthorizedLetterId = 888L;
+        Long invalidLetterId = 999L;
+        Long receiverId = 1L;
+        Long matchingId = 1L;
+        Long parentLetterId = 1L;
+        String title = "임시 저장 제목(처음)";
+        String content = "임시 저장 내용(처음)";
+        Category category = Category.CONSULT;
+        PaperType paperType = PaperType.BASIC;
+        FontType fontType = FontType.DEFAULT;
 
-        TemporarySaveLetterRequest request = new TemporarySaveLetterRequest();
-        request.setTitle("임시 저장 제목");
-        request.setContent("임시 저장할 내용입니다.");
+        TemporarySaveLetterRequest request = new TemporarySaveLetterRequest(
+                invalidLetterId, receiverId, matchingId, parentLetterId, title, content, category, paperType, fontType
+        );
 
         doThrow(new LetterNotBelongException())
                 .when(letterService)
-                .temporarySaveLetter(eq(unauthorizedLetterId), any(TemporarySaveLetterRequest.class));
+                .temporarySaveLetter(any(TemporarySaveLetterRequest.class));
 
         // when & then
-        mockMvc.perform(post("/api/letters/{letterId}/temporary-save", unauthorizedLetterId)
+        mockMvc.perform(post("/api/letters/temporary-save")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
@@ -311,7 +301,6 @@ class LettersControllerUnitTest {
                 .andDo(print());
 
         verify(letterService).temporarySaveLetter(
-                eq(unauthorizedLetterId),
                 any(TemporarySaveLetterRequest.class)
         );
     }

@@ -115,7 +115,7 @@ public class LetterService {
 
         if(parentLetterId == null){
             String zipCode = memberRepository.findById(letter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode();
-            LetterResponse response = LetterResponse.fromEntityForPreviousLetters(letter,zipCode,myId, null);
+            LetterResponse response = LetterResponse.fromEntityForPreviousLetters(letter, zipCode, null);
             return List.of(response);
 
         }else{
@@ -131,7 +131,7 @@ public class LetterService {
             for (Letter findLetter : lettersByParentId) {
                 if(findLetter.getStatus().equals(Status.DELIVERED)){
                     String zipCode = memberRepository.findById(findLetter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode();
-                    LetterResponse response = LetterResponse.fromEntityForPreviousLetters(findLetter,zipCode, myId, letterMatching.getId());
+                    LetterResponse response = LetterResponse.fromEntityForPreviousLetters(findLetter, zipCode, letterMatching.getId());
                     responses.add(response);
                 }
             }

@@ -961,96 +961,186 @@ class LetterServiceTest {
         verify(memberFacade).applyEvaluationTemperature(writerId, evaluation);
     }
 
+    @DisplayName("최초 임시 저장 편지 성공")
     @Test
-    @DisplayName("기존 편지 임시 저장 성공 테스트")
-    void temporarySaveExistingLetter_success() throws Exception {
-        // given
-        Long letterId = 1L;
+    void temporarySaveLetter_FirstSave_Success() {
+        //given
         Long writerId = 1L;
+        String writerZipCode = "1A2A3";
+
+        Long receiverId = 1L;
         Long matchingId = 1L;
+        Long parentLetterId = 1L;
+        String title = "임시 저장 제목(처음)";
+        String content = "임시 저장 내용(처음)";
+        Category category = Category.CONSULT;
+        PaperType paperType = PaperType.BASIC;
+        FontType fontType = FontType.DEFAULT;
 
-        // Letter를 mock으로 생성
-        Letter existingLetter = mock(Letter.class);
-        // mock 객체에 필요한 getter 메서드 동작 정의
-        when(existingLetter.getId()).thenReturn(letterId);
-        when(existingLetter.getTitle()).thenReturn("임시 저장 제목");
-        when(existingLetter.getContent()).thenReturn("임시 저장 내용");
-        when(existingLetter.getMatchingId()).thenReturn(matchingId);
-        when(existingLetter.getCategory()).thenReturn(Category.ETC);
-        when(existingLetter.getFontType()).thenReturn(FontType.HIMCHAN);
-        when(existingLetter.getPaperType()).thenReturn(PaperType.COMFORT);
-        when(existingLetter.getStatus()).thenReturn(Status.SAVED);
+        TemporarySaveLetterRequest request = new TemporarySaveLetterRequest(
+                null, receiverId, matchingId, parentLetterId, title, content, category, paperType, fontType
+        );
 
-        // 임시 저장 요청 객체 생성
-        TemporarySaveLetterRequest request = new TemporarySaveLetterRequest();
-        Field titleField = TemporarySaveLetterRequest.class.getDeclaredField("title");
-        Field contentField = TemporarySaveLetterRequest.class.getDeclaredField("content");
-        Field categoryField = TemporarySaveLetterRequest.class.getDeclaredField("category");
-        Field fontField = TemporarySaveLetterRequest.class.getDeclaredField("fontType");
-        Field paperTypeField = TemporarySaveLetterRequest.class.getDeclaredField("paperType");
-        Field receiverIdField = TemporarySaveLetterRequest.class.getDeclaredField("receiverId");
-        Field matchingIdField = TemporarySaveLetterRequest.class.getDeclaredField("matchingId");
-        Field parentLetterIdField = TemporarySaveLetterRequest.class.getDeclaredField("parentLetterId");
+        Letter letter = Letter.builder()
+                .writerId(writerId)
+                .receiverId(request.getReceiverId())
+                .matchingId(request.getMatchingId())
+                .parentLetterId(request.getParentLetterId())
+                .title(request.getTitle())
+                .content(request.getContent())
+                .category(request.getCategory())
+                .paperType(request.getPaperType())
+                .fontType(request.getFontType())
+                .status(Status.SAVED)
+                .build();
 
-        titleField.setAccessible(true);
-        contentField.setAccessible(true);
-        categoryField.setAccessible(true);
-        fontField.setAccessible(true);
-        paperTypeField.setAccessible(true);
-        receiverIdField.setAccessible(true);
-        matchingIdField.setAccessible(true);
-        parentLetterIdField.setAccessible(true);
-
-        titleField.set(request, "임시 저장 제목");
-        contentField.set(request, "임시 저장 내용");
-        categoryField.set(request, Category.ETC);
-        fontField.set(request, FontType.HIMCHAN);
-        paperTypeField.set(request, PaperType.COMFORT);
-        receiverIdField.set(request, null);
-        matchingIdField.set(request, matchingId);
-        parentLetterIdField.set(request, null);
-
-        // 서비스 메서드 모킹
-        when(letterRepository.findByIdAndWriterId(letterId, writerId)).thenReturn(Optional.of(existingLetter));
         when(authFacade.getCurrentUserId()).thenReturn(writerId);
-        when(authFacade.getZipCode()).thenReturn("12345");
+        when(authFacade.getZipCode()).thenReturn(writerZipCode);
+        when(letterRepository.save(any(Letter.class))).thenReturn(letter);
 
-        // void 메서드 모킹 (doNothing 사용)
-        doNothing().when(existingLetter).updateTemporarySave(
-                request.getReceiverId(),
-                request.getMatchingId(),
-                request.getParentLetterId(),
-                request.getCategory(),
-                request.getTitle(),
-                request.getContent()
+        //when
+        LetterResponse letterResponse = letterService.temporarySaveLetter(request);
+
+        //then
+        assertThat(writerId).isEqualTo(letterResponse.getWriterId());
+        assertThat(writerZipCode).isEqualTo(letterResponse.getZipCode());
+        assertThat(receiverId).isEqualTo(letterResponse.getReceiverId());
+        assertThat(matchingId).isEqualTo(letterResponse.getMatchingId());
+        assertThat(parentLetterId).isEqualTo(letterResponse.getParentLetterId());
+        assertThat(title).isEqualTo(letterResponse.getTitle());
+        assertThat(content).isEqualTo(letterResponse.getContent());
+        assertThat(category).isEqualTo(letterResponse.getCategory());
+        assertThat(paperType).isEqualTo(letterResponse.getPaperType());
+        assertThat(fontType).isEqualTo(letterResponse.getFontType());
+
+        verify(authFacade).getCurrentUserId();
+        verify(authFacade).getZipCode();
+        verify(letterRepository).save(any(Letter.class));
+    }
+
+    @DisplayName("존재하는 임시저장 편지 저장")
+    @Test
+    void temporarySaveLetter_AlreadyExistTemporaryLetter_Success() throws Exception {
+        //given
+        Long writerId = 1L;
+        String writerZipCode = "1A2A3";
+
+        Long letterId = 3L;
+        Long receiverId = 1L;
+        Long matchingId = 1L;
+        Long parentLetterId = 1L;
+        String title = "임시 저장 제목(존재)";
+        String content = "임시 저장 내용(존재)";
+        Category category = Category.CONSULT;
+        PaperType paperType = PaperType.BASIC;
+        FontType fontType = FontType.DEFAULT;
+
+        TemporarySaveLetterRequest request = new TemporarySaveLetterRequest(
+                letterId, receiverId, matchingId, parentLetterId, title, content, category, paperType, fontType
         );
 
-        // when
-        LetterResponse response = letterService.temporarySaveLetter(letterId, request);
+        // 기존 편지 객체 생성
+        Letter existingLetter = Letter.builder()
+                .writerId(writerId)
+                .receiverId(receiverId)
+                .matchingId(matchingId)
+                .parentLetterId(parentLetterId)
+                .title("기존 제목") // 업데이트 전 제목
+                .content("기존 내용") // 업데이트 전 내용
+                .category(category)
+                .paperType(PaperType.PAPER) // 업데이트 전 종이 타입
+                .fontType(FontType.HIMCHAN) // 업데이트 전 폰트 타입
+                .status(Status.SAVED)
+                .build();
 
-        // then
-        assertAll("기존 편지 임시 저장 응답 검증",
-                () -> assertNotNull(response),
-                () -> assertEquals(letterId, response.getLetterId()),
-                () -> assertEquals("임시 저장 제목", response.getTitle()),
-                () -> assertEquals("임시 저장 내용", response.getContent()),
-                () -> assertEquals(matchingId, response.getMatchingId()),
-                () -> assertEquals(Category.ETC, response.getCategory()),
-                () -> assertEquals(FontType.HIMCHAN, response.getFontType()),
-                () -> assertEquals(PaperType.COMFORT, response.getPaperType()),
-                () -> assertEquals(Status.SAVED, response.getStatus()),
-                () -> assertEquals("12345", response.getZipCode())
-        );
+        // Reflection으로 id 설정
+        Field idField = Letter.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(existingLetter, letterId);
 
+        // 업데이트된 편지 객체 (save 메소드 반환용)
+        Letter updatedLetter = Letter.builder()
+                .title(title)
+                .content(content)
+                .paperType(paperType)
+                .fontType(fontType)
+                .build();
+
+        // Reflection으로 id 설정
+        Field updateIdField = Letter.class.getDeclaredField("id");
+        updateIdField.setAccessible(true);
+        updateIdField.set(updatedLetter, letterId);
+
+        when(authFacade.getCurrentUserId()).thenReturn(writerId);
+        when(authFacade.getZipCode()).thenReturn(writerZipCode);
+        when(letterRepository.findByIdAndWriterId(letterId, writerId)).thenReturn(Optional.of(existingLetter));
+
+        //when
+        LetterResponse letterResponse = letterService.temporarySaveLetter(request);
+
+        //then
+        assertThat(title).isEqualTo(letterResponse.getTitle());
+        assertThat(content).isEqualTo(letterResponse.getContent());
+        assertThat(paperType).isEqualTo(letterResponse.getPaperType());
+        assertThat(fontType).isEqualTo(letterResponse.getFontType());
+
+        verify(authFacade).getCurrentUserId();
+        verify(authFacade).getZipCode();
         verify(letterRepository).findByIdAndWriterId(letterId, writerId);
-        verify(existingLetter).updateTemporarySave(
-                request.getReceiverId(),
-                request.getMatchingId(),
-                request.getParentLetterId(),
-                request.getCategory(),
-                request.getTitle(),
-                request.getContent()
+    }
+
+    @DisplayName("임시 저장 편지 수정 권한이 없을 때")
+    @Test
+    void temporarySaveLetter_NotBelongLetter_ShouldThrowException() throws Exception {
+        //given
+        Long writerId = 1L;
+        String writerZipCode = "1A2A3";
+
+        Long invalidLetterId = 3L;
+        Long receiverId = 1L;
+        Long matchingId = 1L;
+        Long parentLetterId = 1L;
+        String title = "임시 저장 제목(존재)";
+        String content = "임시 저장 내용(존재)";
+        Category category = Category.CONSULT;
+        PaperType paperType = PaperType.BASIC;
+        FontType fontType = FontType.DEFAULT;
+
+        TemporarySaveLetterRequest request = new TemporarySaveLetterRequest(
+                invalidLetterId, receiverId, matchingId, parentLetterId, title, content, category, paperType, fontType
         );
+
+        // 기존 편지 객체 생성
+        Letter existingLetter = Letter.builder()
+                .writerId(writerId)
+                .receiverId(receiverId)
+                .matchingId(matchingId)
+                .parentLetterId(parentLetterId)
+                .title("기존 제목") // 업데이트 전 제목
+                .content("기존 내용") // 업데이트 전 내용
+                .category(category)
+                .paperType(PaperType.PAPER) // 업데이트 전 종이 타입
+                .fontType(FontType.HIMCHAN) // 업데이트 전 폰트 타입
+                .status(Status.SAVED)
+                .build();
+
+        // Reflection으로 id 설정
+        Field idField = Letter.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(existingLetter, invalidLetterId);
+
+        when(authFacade.getCurrentUserId()).thenReturn(writerId);
+        when(authFacade.getZipCode()).thenReturn(writerZipCode);
+        when(letterRepository.findByIdAndWriterId(invalidLetterId, writerId)).thenReturn(Optional.empty());
+
+        //when & then
+        assertThrows(LetterNotBelongException.class,
+                () -> letterService.temporarySaveLetter(request)
+        );
+
+        verify(authFacade).getCurrentUserId();
+        verify(authFacade).getZipCode();
+        verify(letterRepository).findByIdAndWriterId(invalidLetterId, writerId);
     }
 
     @Test

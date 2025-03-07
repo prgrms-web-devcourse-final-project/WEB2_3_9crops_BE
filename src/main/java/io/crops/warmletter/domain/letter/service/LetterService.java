@@ -192,6 +192,7 @@ public class LetterService {
 
         if (request.getLetterId() == null) {
             letter = Letter.builder()
+                    .writerId(writerId)
                     .receiverId(request.getReceiverId())
                     .matchingId(request.getMatchingId())
                     .parentLetterId(request.getParentLetterId())

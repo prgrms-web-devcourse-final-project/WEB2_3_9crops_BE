@@ -41,8 +41,8 @@ spring:
             scope: email
 
           kakao:
-            client-id: ${KAKAO_CLIENT_ID}
-            client-secret: ${KAKAO_CLIENT_SECRET}
+            client-id: ${PROD_KAKAO_CLIENT_ID}
+            client-secret: ${PROD_KAKAO_CLIENT_SECRET}
             redirect-uri: "https://${PROD_SERVER_DOMAIN}/login/oauth2/code/kakao"
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post

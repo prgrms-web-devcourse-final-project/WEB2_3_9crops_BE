@@ -92,8 +92,9 @@ public class Letter extends BaseTimeEntity {
     }
 
 
-    public void updateTemporarySave(Long receiverId, Long parentLetterId, Category category, String title, String content) {
+    public void updateTemporarySave(Long receiverId, Long matchingId, Long parentLetterId, Category category, String title, String content) {
         this.receiverId = receiverId;
+        this.matchingId = matchingId;
         this.parentLetterId = parentLetterId;
         this.category = category;
         this.title = title;

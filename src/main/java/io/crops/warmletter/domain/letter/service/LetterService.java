@@ -188,36 +188,19 @@ public class LetterService {
         Long writerId = authFacade.getCurrentUserId();
         String writerZipCode = authFacade.getZipCode();
 
-        if (letterId != null) {
-            Letter letter = letterRepository.findByIdAndWriterId(letterId, writerId)
-                    .orElseThrow(LetterNotBelongException::new);
+        Letter letter = letterRepository.findByIdAndWriterId(letterId, writerId)
+                .orElseThrow(LetterNotBelongException::new);
 
-            letter.updateTemporarySave(
-                    request.getReceiverId(),
-                    request.getParentLetterId(),
-                    request.getCategory(),
-                    request.getTitle(),
-                    request.getContent()
-            );
+        letter.updateTemporarySave(
+                request.getReceiverId(),
+                request.getMatchingId(),
+                request.getParentLetterId(),
+                request.getCategory(),
+                request.getTitle(),
+                request.getContent()
+        );
 
-            return LetterResponse.fromEntity(letter, writerZipCode);
-        }
-        else {
-
-            Letter letter = Letter.builder()
-                    .writerId(1L)
-                    .letterType(LetterType.RANDOM)
-                    .category(request.getCategory())
-                    .title(request.getTitle())
-                    .content(request.getContent())
-                    .status(Status.SAVED)
-                    .fontType(request.getFontType())
-                    .paperType(request.getPaperType())
-                    .build();
-            letterRepository.save(letter);
-
-            return LetterResponse.fromEntity(letter, writerZipCode);
-        }
+        return LetterResponse.fromEntity(letter, writerZipCode);
     }
 
     /**

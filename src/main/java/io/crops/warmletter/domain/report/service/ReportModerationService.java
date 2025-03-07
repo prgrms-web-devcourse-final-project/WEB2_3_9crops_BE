@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.report.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crops.warmletter.domain.report.enums.ReasonType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,14 +27,30 @@ public class ReportModerationService {
         Map<String, Object> requestBody = buildRequestBody(prompt);
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
 
-        ResponseEntity<Map> response = new RestTemplate().exchange(apiUrl, HttpMethod.POST, requestEntity, Map.class);
+        log.info("사용 중인 API URL: {}", apiUrl);
 
-        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            log.info("AI Studio 응답: {}", response.getBody());
-            Map<String, String> result = parseResponse(response.getBody());
-            if (result != null) {
-                return result;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonRequestBody = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(requestBody);
+
+            log.info("API 요청 시작 - URL: {}", apiUrl);
+            log.info("JSON 요청 바디: \n{}", jsonRequestBody);
+            log.info("요청 헤더: {}", headers);
+
+            ResponseEntity<Map> response = new RestTemplate().exchange(apiUrl, HttpMethod.POST, requestEntity, Map.class);
+
+
+            log.info("API 응답 코드: {}", response.getStatusCode());
+            log.info("API 응답 바디: {}", response.getBody());
+
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                Map<String, String> result = parseResponse(response.getBody());
+                if (result != null) {
+                    return result;
+                }
             }
+        } catch (Exception e) {
+            log.error("🚨 API 요청 실패: {}", e.getMessage(), e);
         }
         return defaultResult("AI 응답 없음 또는 오류 발생");
     }

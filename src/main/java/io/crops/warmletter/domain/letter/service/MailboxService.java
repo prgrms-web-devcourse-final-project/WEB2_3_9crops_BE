@@ -10,7 +10,6 @@ import io.crops.warmletter.domain.letter.exception.MatchingNotBelongException;
 import io.crops.warmletter.domain.letter.exception.MatchingNotFoundException;
 import io.crops.warmletter.domain.letter.repository.LetterMatchingRepository;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
-import io.crops.warmletter.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -28,7 +27,6 @@ public class MailboxService {
 
     private final LetterMatchingRepository letterMatchingRepository;
     private final LetterRepository letterRepository;
-    private final MemberRepository memberRepository;
     private final AuthFacade authFacade;
 
     public List<MailboxResponse> getMailbox(){
@@ -52,7 +50,7 @@ public class MailboxService {
         }
 
         // 4. LetterRepository에서 matchingId에 해당하는 편지들을 조회
-        Page<Letter> letterPage = letterRepository.findByMatchingIdAndIsActiveTrueOrderByIdDesc(matchingId, pageable);
+        Page<Letter> letterPage = letterRepository.findDeliveredOrMyLettersByMatchingId(matchingId, myId, pageable);
 
         // 5. 조회된 Letter 엔티티들을 MailboxDetailResponse DTO로 변환
         Page<MailboxDetailResponse> responses = letterPage.map(letter ->

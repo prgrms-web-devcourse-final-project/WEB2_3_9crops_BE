@@ -15,7 +15,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 
@@ -39,8 +38,14 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
 
     Optional<Letter> findByIdAndWriterId(Long letterId, Long writerId);
 
-    Page<Letter> findByMatchingIdAndIsActiveTrueOrderByIdDesc(Long matchingId, Pageable pageable);
-
+    @Query("SELECT l FROM Letter l WHERE l.matchingId = :matchingId AND l.isActive = true " +
+            "AND (l.writerId = :currentUserId OR l.status = 'DELIVERED') " +
+            "ORDER BY l.id DESC")
+    Page<Letter> findDeliveredOrMyLettersByMatchingId(
+            @Param("matchingId") Long matchingId,
+            @Param("userId") Long currentUserId,
+            Pageable pageable
+    );
     List<Letter> findByReceiverIdAndStatus(Long currentUserId, Status status);
 
     @Query("SELECT new io.crops.warmletter.domain.letter.dto.response.LetterDraftResponse(" +

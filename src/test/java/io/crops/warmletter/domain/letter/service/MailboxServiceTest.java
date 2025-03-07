@@ -236,7 +236,7 @@ class MailboxServiceTest {
         Pageable pageable = PageRequest.of(0, 10, Sort.by("id").descending());
         Page<Letter> letterPage = new PageImpl<>(letters, pageable, letters.size());
 
-        when(letterRepository.findByMatchingIdAndIsActiveTrueOrderByIdDesc(matchingId, pageable)).thenReturn(letterPage);
+        when(letterRepository.findDeliveredOrMyLettersByMatchingId(matchingId, myId, pageable)).thenReturn(letterPage);
 
         // when
         Page<MailboxDetailResponse> result = mailBoxService.detailMailbox(matchingId, pageable);
@@ -253,7 +253,7 @@ class MailboxServiceTest {
         // 호출 검증
         verify(authFacade).getCurrentUserId();
         verify(letterMatchingRepository).findById(matchingId);
-        verify(letterRepository).findByMatchingIdAndIsActiveTrueOrderByIdDesc(matchingId, pageable);
+        verify(letterRepository).findDeliveredOrMyLettersByMatchingId(matchingId, myId, pageable);
     }
 
 

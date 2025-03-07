@@ -14,6 +14,8 @@ public class TemporarySaveLetterRequest {
 
     private Long receiverId;
 
+    private Long matchingId;
+
     private Long parentLetterId;
 
     @NotBlank(message = "제목을 입력해주세요.")

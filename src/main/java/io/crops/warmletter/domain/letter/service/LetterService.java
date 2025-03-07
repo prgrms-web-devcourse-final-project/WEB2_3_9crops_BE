@@ -192,6 +192,7 @@ public class LetterService {
 
         letter.updateTemporarySave(
                 request.getReceiverId(),
+                request.getMatchingId(),
                 request.getParentLetterId(),
                 request.getCategory(),
                 request.getTitle(),

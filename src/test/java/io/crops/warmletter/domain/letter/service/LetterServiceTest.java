@@ -967,6 +967,7 @@ class LetterServiceTest {
         // given
         Long letterId = 1L;
         Long writerId = 1L;
+        Long matchingId = 1L;
 
         // Letter를 mock으로 생성
         Letter existingLetter = mock(Letter.class);
@@ -974,6 +975,7 @@ class LetterServiceTest {
         when(existingLetter.getId()).thenReturn(letterId);
         when(existingLetter.getTitle()).thenReturn("임시 저장 제목");
         when(existingLetter.getContent()).thenReturn("임시 저장 내용");
+        when(existingLetter.getMatchingId()).thenReturn(matchingId);
         when(existingLetter.getCategory()).thenReturn(Category.ETC);
         when(existingLetter.getFontType()).thenReturn(FontType.HIMCHAN);
         when(existingLetter.getPaperType()).thenReturn(PaperType.COMFORT);
@@ -987,6 +989,7 @@ class LetterServiceTest {
         Field fontField = TemporarySaveLetterRequest.class.getDeclaredField("fontType");
         Field paperTypeField = TemporarySaveLetterRequest.class.getDeclaredField("paperType");
         Field receiverIdField = TemporarySaveLetterRequest.class.getDeclaredField("receiverId");
+        Field matchingIdField = TemporarySaveLetterRequest.class.getDeclaredField("matchingId");
         Field parentLetterIdField = TemporarySaveLetterRequest.class.getDeclaredField("parentLetterId");
 
         titleField.setAccessible(true);
@@ -995,6 +998,7 @@ class LetterServiceTest {
         fontField.setAccessible(true);
         paperTypeField.setAccessible(true);
         receiverIdField.setAccessible(true);
+        matchingIdField.setAccessible(true);
         parentLetterIdField.setAccessible(true);
 
         titleField.set(request, "임시 저장 제목");
@@ -1003,6 +1007,7 @@ class LetterServiceTest {
         fontField.set(request, FontType.HIMCHAN);
         paperTypeField.set(request, PaperType.COMFORT);
         receiverIdField.set(request, null);
+        matchingIdField.set(request, matchingId);
         parentLetterIdField.set(request, null);
 
         // 서비스 메서드 모킹
@@ -1013,6 +1018,7 @@ class LetterServiceTest {
         // void 메서드 모킹 (doNothing 사용)
         doNothing().when(existingLetter).updateTemporarySave(
                 request.getReceiverId(),
+                request.getMatchingId(),
                 request.getParentLetterId(),
                 request.getCategory(),
                 request.getTitle(),
@@ -1028,6 +1034,7 @@ class LetterServiceTest {
                 () -> assertEquals(letterId, response.getLetterId()),
                 () -> assertEquals("임시 저장 제목", response.getTitle()),
                 () -> assertEquals("임시 저장 내용", response.getContent()),
+                () -> assertEquals(matchingId, response.getMatchingId()),
                 () -> assertEquals(Category.ETC, response.getCategory()),
                 () -> assertEquals(FontType.HIMCHAN, response.getFontType()),
                 () -> assertEquals(PaperType.COMFORT, response.getPaperType()),
@@ -1038,6 +1045,7 @@ class LetterServiceTest {
         verify(letterRepository).findByIdAndWriterId(letterId, writerId);
         verify(existingLetter).updateTemporarySave(
                 request.getReceiverId(),
+                request.getMatchingId(),
                 request.getParentLetterId(),
                 request.getCategory(),
                 request.getTitle(),

@@ -59,7 +59,7 @@ class ShareProposalControllerTest {
         assertAll(
                 () -> assertNotNull(response),
                 () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
-                () -> assertEquals("요청 완료", response.getBody().getMessage()),
+                () -> assertEquals("공유 요청 완료", response.getBody().getMessage()),
                 () -> assertEquals(1L, response.getBody().getData().getShareProposalId()),
                 () -> assertEquals("12345", response.getBody().getData().getZipCode()),
                 () -> assertEquals(ProposalStatus.PENDING, response.getBody().getData().getStatus())
@@ -111,7 +111,7 @@ class ShareProposalControllerTest {
                 () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
                 () -> assertNotNull(response.getBody()),
                 () -> assertEquals(serviceResponse, response.getBody().getData()),
-                () -> assertEquals("공유 요청 성공", response.getBody().getMessage()),
+                () -> assertEquals("공유 요청 승인 성공", response.getBody().getMessage()),
                 () -> verify(shareProposalService).approveShareProposal(shareProposalId)
         );
     }
@@ -175,7 +175,7 @@ class ShareProposalControllerTest {
                 () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
                 () -> assertNotNull(response.getBody()),
                 () -> assertEquals(serviceResponse, response.getBody().getData()),
-                () -> assertEquals("공유 요청 거절", response.getBody().getMessage()),
+                () -> assertEquals("공유 요청 거절 성공", response.getBody().getMessage()),
                 () -> verify(shareProposalService).rejectShareProposal(shareProposalId)
         );
     }

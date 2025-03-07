@@ -85,8 +85,7 @@ public class LetterController implements LetterControllerDocs {
     public ResponseEntity<BaseResponse<LetterResponse>> temporarySaveLetter(
             @PathVariable (name="letterId")Long letterId, @Valid @RequestBody TemporarySaveLetterRequest request) {
 
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new BaseResponse<>(letterService.temporarySaveLetter(letterId, request),"임시 저장 완료 "));
+        return ResponseEntity.ok(BaseResponse.of(letterService.temporarySaveLetter(letterId, request),"임시 저장 완료 "));
     }
 
     /**

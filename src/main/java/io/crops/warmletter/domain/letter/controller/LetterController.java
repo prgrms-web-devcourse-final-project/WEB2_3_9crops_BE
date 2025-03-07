@@ -81,11 +81,11 @@ public class LetterController implements LetterControllerDocs {
     /**
      * 임시저장 편지 생성
      */
-    @PostMapping("/letters/{letterId}/temporary-save")
+    @PostMapping("/letters/temporary-save")
     public ResponseEntity<BaseResponse<LetterResponse>> temporarySaveLetter(
-            @PathVariable (name="letterId")Long letterId, @Valid @RequestBody TemporarySaveLetterRequest request) {
+            @Valid @RequestBody TemporarySaveLetterRequest request) {
 
-        return ResponseEntity.ok(BaseResponse.of(letterService.temporarySaveLetter(letterId, request),"임시 저장 완료 "));
+        return ResponseEntity.ok(BaseResponse.of(letterService.temporarySaveLetter(request),"임시 저장 완료 "));
     }
 
     /**
@@ -93,8 +93,7 @@ public class LetterController implements LetterControllerDocs {
      */
     @DeleteMapping("/letters/{letterId}/temporary-save")
     public ResponseEntity<BaseResponse<Map<String,Long>>> deleteTemporarySaveLetter(@PathVariable Long letterId) {
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new BaseResponse<>(letterService.deleteTemporarySaveLetter(letterId),"임시 저장 편지 삭제 완료"));
+        return ResponseEntity.ok(BaseResponse.of(letterService.deleteTemporarySaveLetter(letterId),"임시 저장 편지 삭제 완료"));
     }
 
     /**

@@ -184,21 +184,35 @@ public class LetterService {
     }
 
     @Transactional
-    public LetterResponse temporarySaveLetter(Long letterId, TemporarySaveLetterRequest request) {
+    public LetterResponse temporarySaveLetter(TemporarySaveLetterRequest request) {
         Long writerId = authFacade.getCurrentUserId();
         String writerZipCode = authFacade.getZipCode();
 
-        Letter letter = letterRepository.findByIdAndWriterId(letterId, writerId)
-                .orElseThrow(LetterNotBelongException::new);
+        Letter letter;
 
-        letter.updateTemporarySave(
-                request.getReceiverId(),
-                request.getMatchingId(),
-                request.getParentLetterId(),
-                request.getCategory(),
-                request.getTitle(),
-                request.getContent()
-        );
+        if (request.getLetterId() == null) {
+            letter = Letter.builder()
+                    .receiverId(request.getReceiverId())
+                    .matchingId(request.getMatchingId())
+                    .parentLetterId(request.getParentLetterId())
+                    .title(request.getTitle())
+                    .content(request.getContent())
+                    .category(request.getCategory())
+                    .paperType(request.getPaperType())
+                    .fontType(request.getFontType())
+                    .status(Status.SAVED)
+                    .build();
+
+            letterRepository.save(letter);
+        } else {
+            letter = letterRepository.findByIdAndWriterId(request.getLetterId(), writerId)
+                    .orElseThrow(LetterNotBelongException::new);
+
+            letter.updateTitle(request.getTitle());
+            letter.updateContent(request.getContent());
+            letter.updatePaperType(request.getPaperType());
+            letter.updateFontType(request.getFontType());
+        }
 
         return LetterResponse.fromEntity(letter, writerZipCode);
     }

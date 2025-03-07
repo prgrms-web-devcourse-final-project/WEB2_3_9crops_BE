@@ -76,14 +76,14 @@ public class LetterResponse {
     }
 
     //이전편지 변환
-    public static LetterResponse fromEntityForPreviousLetters(Letter letter, String zipCode, Long myId, Long matchingId) {
+    public static LetterResponse fromEntityForPreviousLetters(Letter letter, String zipCode, Long matchingId) {
         return LetterResponse.builder()
                 .letterId(letter.getId()) //이전 편지의 정보들
                 .zipCode(zipCode)
                 .title(letter.getTitle())
                 .content(letter.getContent())
                 .category(letter.getCategory())
-                .memberId(myId)         //편지를 쓴 자기 자신의 id -> 이전 편지의 정보가 아님~!
+                .memberId(letter.getWriterId()) //이전 편지를 쓴 사용자
                 .matchingId(matchingId)
                 .build();
     }

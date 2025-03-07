@@ -72,7 +72,7 @@ public class AuthService {
                     .httpOnly(true)    // JavaScript에서 쿠키에 접근할 수 없도록 설정
                     .secure(true)      // HTTPS에서만 쿠키가 전송되도록 설정
                     .sameSite("None")  // 크로스 도메인 요청 허용
-                    .domain("serverDomain")
+                    .domain(serverDomain)
                     .path("/")         // 쿠키가 유효한 경로 설정
                     .maxAge(Duration.ofDays(14))  // 쿠키의 유효기간 설정 (14일)
                     .build();

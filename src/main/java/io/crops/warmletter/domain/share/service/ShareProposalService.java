@@ -45,7 +45,7 @@ public class ShareProposalService {
         if (response == null) {
             throw new ShareProposalNotFoundException();
         }
-        // 알림 전송 TODO : 배포 후 테스트 예정
+        // 알림 전송
         notificationFacade.sendNotification(response.getZipCode(), request.getRecipientId(), AlarmType.SHARE, response.getShareProposalId().toString());
         return response;
     }
@@ -71,7 +71,7 @@ public class ShareProposalService {
                 .isActive(true)
                 .build();
         sharePost = sharePostRepository.save(sharePost);
-        // 알림 전송(양쪽다) / 인가 값이 없어서 일단 우편번호는 임시값으로 대체 TODO : 배포 후 테스트 예정
+        // 알림 전송(양쪽다) / 인가 값이 없어서 일단 우편번호는 임시값으로 대체
         notificationFacade.sendNotification("승인요청자", shareProposal.getRequesterId(), AlarmType.POSTED, sharePost.getId().toString());
         notificationFacade.sendNotification("승인수락자", shareProposal.getRecipientId(), AlarmType.POSTED, sharePost.getId().toString());
         return ShareProposalStatusResponse.builder()

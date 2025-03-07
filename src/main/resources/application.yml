@@ -37,12 +37,13 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: "https://${PROD_SERVER_DOMAIN}/login/oauth2/code/google"
             scope: email
 
           kakao:
             client-id: ${PROD_KAKAO_CLIENT_ID}
             client-secret: ${PROD_KAKAO_CLIENT_SECRET}
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "https://${PROD_SERVER_DOMAIN}/login/oauth2/code/kakao"
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
             client-name: Kakao
@@ -51,7 +52,7 @@ spring:
           naver:
             client-id: ${NAVER_CLIENT_ID}
             client-secret: ${NAVER_CLIENT_SECRET}
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "https://${PROD_SERVER_DOMAIN}/login/oauth2/code/naver"
             authorization-grant-type: authorization_code
             scope: email
             client-name: Naver
@@ -118,12 +119,13 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: "https://${SERVER_DOMAIN}/login/oauth2/code/google"
             scope: email
 
           kakao:
             client-id: ${KAKAO_CLIENT_ID}
             client-secret: ${KAKAO_CLIENT_SECRET}
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "https://${SERVER_DOMAIN}/login/oauth2/code/kakao"
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
             client-name: Kakao
@@ -132,7 +134,7 @@ spring:
           naver:
             client-id: ${NAVER_CLIENT_ID}
             client-secret: ${NAVER_CLIENT_SECRET}
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "https://${SERVER_DOMAIN}/login/oauth2/code/naver"
             authorization-grant-type: authorization_code
             scope: email
             client-name: Naver

@@ -406,7 +406,7 @@ class LetterServiceTest {
         );
         //verify 메서드로 letterRepository.save() 메서드가 정확히 1번 호출되었는지 확인
         verify(letterRepository).save(any(Letter.class));
-        verify(notificationFacade).sendNotification(anyString(), anyLong(), any(), anyString());
+        verify(notificationFacade).sendNotification(anyString(), anyLong(), any(), eq(null));
     }
 
 

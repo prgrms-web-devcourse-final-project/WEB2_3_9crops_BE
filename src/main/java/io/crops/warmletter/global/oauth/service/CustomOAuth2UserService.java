@@ -4,9 +4,9 @@ import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.entity.SocialAccount;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.domain.member.enums.SocialProvider;
-import io.crops.warmletter.domain.member.exception.DeletedMemberException;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
+import io.crops.warmletter.global.oauth.entity.OAuth2UserWithDeletedFlag;
 import io.crops.warmletter.global.oauth.entity.UserPrincipal;
 import io.crops.warmletter.global.oauth.exception.OAuth2EmailNotFoundException;
 import io.crops.warmletter.global.oauth.exception.OAuth2ProcessingException;
@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -89,7 +90,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
             // 탈퇴한 회원인지 확인
             if (!member.isActive()) {
-                throw new DeletedMemberException();
+                return createDeletedMemberPrincipal(oauth2User.getAttributes(), email);
             }
 
             // 이메일이 변경되었을 경우 업데이트
@@ -106,4 +107,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return UserPrincipal.create(member, oauth2User.getAttributes());
     }
 
+    // 탈퇴한 회원용 특별한 UserPrincipal 생성
+    private OAuth2User createDeletedMemberPrincipal(Map<String, Object> attributes, String email) {
+        // 권한 없는 특별한 UserPrincipal 객체 생성
+        // 이 객체는 나중에 CustomOAuth2AuthenticationSuccessHandler에서
+        // 특별 처리될 수 있음
+        return new OAuth2UserWithDeletedFlag(attributes, email);
+    }
 }

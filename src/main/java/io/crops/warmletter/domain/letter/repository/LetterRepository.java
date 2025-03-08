@@ -38,8 +38,10 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
 
     Optional<Letter> findByIdAndWriterId(Long letterId, Long writerId);
 
-    @Query("SELECT l FROM Letter l WHERE l.matchingId = :matchingId AND l.isActive = true " +
+    @Query("SELECT l FROM Letter l WHERE l.matchingId = :matchingId " +
+            "AND l.isActive = true " +
             "AND (l.writerId = :currentUserId OR l.status = 'DELIVERED') " +
+            "AND (l.writerId != :currentUserId OR l.status != 'SAVED') " +
             "ORDER BY l.id DESC")
     Page<Letter> findDeliveredOrMyLettersByMatchingId(
             @Param("matchingId") Long matchingId,

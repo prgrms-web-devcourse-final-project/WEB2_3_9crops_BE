@@ -41,7 +41,11 @@ public class DeliverySchedule {
         // lettersToComplete 조건을 만족하는 편지를 보낸 사람의 zipCode 조회
         List<LetterAlarmResponse> zipCodeData = letterRepository.findZipCodeByLettersToComplete(now);
         Map<Long, String> senderZipCodes = zipCodeData.stream()
-                .collect(Collectors.toMap(LetterAlarmResponse::getWriterId, LetterAlarmResponse::getZipCode));
+                .collect(Collectors.toMap(
+                        LetterAlarmResponse::getWriterId,
+                        LetterAlarmResponse::getZipCode,
+                        (existingZipCode, newZipCode) -> existingZipCode  // 중복 키 발생 시 기존 값 사용
+                ));
 
         if (!lettersToComplete.isEmpty()) {
             log.info("배송 완료 처리할 편지 수: {}", lettersToComplete.size());

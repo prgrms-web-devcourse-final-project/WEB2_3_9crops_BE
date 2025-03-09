@@ -1232,7 +1232,6 @@ class LetterServiceTest {
         Long currentUserId = 1L;
         LetterDraftResponse letterDraftResponse = LetterDraftResponse.builder()
                 .letterId(200L)
-                .writerId(currentUserId)
                 .receiverId(2L)
                 .parentLetterId(50L)
                 .title("제목")
@@ -1240,9 +1239,6 @@ class LetterServiceTest {
                 .category(Category.CONSULT)
                 .paperType(PaperType.COMFORT)
                 .fontType(FontType.HIMCHAN)
-                .status(Status.SAVED)
-                .deliveryStartedAt(LocalDateTime.now())
-                .deliveryCompletedAt(LocalDateTime.now().plusHours(1))
                 .matchingId(300L)
                 .build();
         List<LetterDraftResponse> letterDraftResponses = Collections.singletonList(letterDraftResponse);

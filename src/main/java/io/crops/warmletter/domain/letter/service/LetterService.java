@@ -73,21 +73,21 @@ public class LetterService {
             //부모편지 조회
             Letter parentLetter = letterRepository.findById(request.getParentLetterId()).orElseThrow(ParentLetterNotFoundException::new);
 
-//            Long matchingId = request.getMatchingId() != null ? request.getMatchingId() : parentLetter.getMatchingId(); 만약을 위해..
+            Long matchingId = request.getMatchingId() != null ? request.getMatchingId() : parentLetter.getMatchingId();
 
             //현재 계속 주고 받을 수 있는 상황이면 답장 가능
-            boolean active = letterMatchingRepository.findById(request.getMatchingId()).orElseThrow(MatchingNotFoundException::new).isActive();
+            boolean active = letterMatchingRepository.findById(matchingId).orElseThrow(MatchingNotFoundException::new).isActive();
 
             if (active) {
                 builder.receiverId(request.getReceiverId())
                         .parentLetterId(request.getParentLetterId())
                         .letterType(LetterType.DIRECT)
                         .status(Status.IN_DELIVERY)
-                        .matchingId(request.getMatchingId());
+                        .matchingId(matchingId);
 
                 //첫편지면 matchingId 넣어줌 , 받는사람도 넣어줌.
                 if(parentLetter.getParentLetterId() == null) {
-                    parentLetter.updateMatchingId(request.getMatchingId());
+                    parentLetter.updateMatchingId(matchingId);
                     parentLetter.updateReceiverId(writerId);
                     parentLetter.updateLetterType(LetterType.DIRECT);
                     parentLetter.updateIsRead(true);
@@ -115,7 +115,7 @@ public class LetterService {
 
         if(parentLetterId == null){
             String zipCode = memberRepository.findById(letter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode();
-            LetterResponse response = LetterResponse.fromEntityForPreviousLetters(letter, zipCode, null);
+            LetterResponse response = LetterResponse.fromEntityForPreviousLetters(letter, zipCode, letter.getMatchingId());
             return List.of(response);
 
         }else{
@@ -247,7 +247,7 @@ public class LetterService {
             // 임시 저장 편지이면서 상태가 SAVED인 편지 조회 (작성자 기준)
             return letterRepository.findDraftLettersWithMatching(currentUserId, Status.SAVED)
                     .stream()
-                    .map(draft -> LetterResponse.fromDraftLetter(draft, authFacade.getZipCode()))
+                    .map(LetterResponse::fromDraftLetter)
                     .collect(Collectors.toList());
         } else {
             throw new BusinessException(INVALID_INPUT_VALUE);

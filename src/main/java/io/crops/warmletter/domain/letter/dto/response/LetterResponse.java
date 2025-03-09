@@ -115,22 +115,17 @@ public class LetterResponse {
     }
 
     // 임시 저장(draft) 변환 메서드 추가
-    public static LetterResponse fromDraftLetter(LetterDraftResponse draft, String zipCode) {
+    public static LetterResponse fromDraftLetter(LetterDraftResponse draft) {
         return builder()
                 .letterId(draft.getLetterId())
-                .writerId(draft.getWriterId())
+                .matchingId(draft.getMatchingId())
                 .receiverId(draft.getReceiverId())
                 .parentLetterId(draft.getParentLetterId())
-                .zipCode(zipCode)
                 .title(draft.getTitle())
                 .content(draft.getContent())
                 .category(draft.getCategory())
                 .paperType(draft.getPaperType())
                 .fontType(draft.getFontType())
-                .status(draft.getStatus())
-                .deliveryStartedAt(draft.getDeliveryStartedAt())
-                .deliveryCompletedAt(draft.getDeliveryCompletedAt())
-                .matchingId(draft.getMatchingId())
                 .build();
     }
 }

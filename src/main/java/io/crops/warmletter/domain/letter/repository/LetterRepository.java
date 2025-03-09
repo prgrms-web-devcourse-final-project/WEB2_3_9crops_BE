@@ -52,18 +52,14 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
 
     @Query("SELECT new io.crops.warmletter.domain.letter.dto.response.LetterDraftResponse(" +
             "l.id, " +
-            "l.writerId, " +
+            "l.matchingId, " +
             "l.receiverId, " +
             "l.parentLetterId, " +
             "l.title, " +
             "l.content, " +
             "l.category, " +
             "l.paperType, " +
-            "l.fontType, " +
-            "l.status, " +
-            "l.deliveryStartedAt, " +
-            "l.deliveryCompletedAt, " +
-            "l.matchingId) " +
+            "l.fontType) " +
             "FROM Letter l LEFT JOIN LetterMatching m ON l.matchingId = m.id " +
             "WHERE l.writerId = :writerId AND l.status = :status")
     List<LetterDraftResponse> findDraftLettersWithMatching(@Param("writerId") Long writerId,

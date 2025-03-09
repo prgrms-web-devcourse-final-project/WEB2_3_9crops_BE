@@ -23,7 +23,6 @@ public class LetterDraftResponse {
     private final PaperType paperType;
     private final FontType fontType;
     private final Status status;
-    private final boolean matched;
     private final LocalDateTime deliveryStartedAt;
     private final LocalDateTime deliveryCompletedAt;
     private final Long matchingId;

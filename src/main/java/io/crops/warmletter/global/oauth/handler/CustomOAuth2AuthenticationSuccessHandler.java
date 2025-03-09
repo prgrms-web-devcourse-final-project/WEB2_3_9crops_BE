@@ -1,6 +1,7 @@
 package io.crops.warmletter.global.oauth.handler;
 
 import io.crops.warmletter.global.jwt.service.TokenStorage;
+import io.crops.warmletter.global.oauth.entity.OAuth2UserWithDeletedFlag;
 import io.crops.warmletter.global.oauth.entity.UserPrincipal;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,6 +28,16 @@ public class CustomOAuth2AuthenticationSuccessHandler extends SavedRequestAwareA
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws ServletException, IOException {
+
+        Object principal = authentication.getPrincipal();
+
+        // 탈퇴 회원인 경우 특별 처리
+        if (principal instanceof OAuth2UserWithDeletedFlag) {
+            String redirectUrl = redirectUri + "/auth-callback?error=deleted_member";
+            getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+            return;
+        }
+
         oAuth2AuthenticationSuccessHandler.onAuthenticationSuccess(request, response, null, authentication); // 기존 successHandler 호출
 
         // Access Token을 Authorization 헤더에서 가져오기

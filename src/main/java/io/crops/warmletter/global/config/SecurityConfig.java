@@ -78,7 +78,6 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                                 .userInfoEndpoint(userInfo -> userInfo
                                         .userService(customOAuth2UserService))
-                        // 나중에 Handler 구현 후 추가될 부분
                         .successHandler(customOAuth2AuthenticationSuccessHandler)
                         .failureHandler(oAuth2AuthenticationFailureHandler)
                 ).addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),

@@ -115,7 +115,7 @@ public class LetterService {
 
         if(parentLetterId == null){
             String zipCode = memberRepository.findById(letter.getWriterId()).orElseThrow(MemberNotFoundException::new).getZipCode();
-            LetterResponse response = LetterResponse.fromEntityForPreviousLetters(letter, zipCode, null);
+            LetterResponse response = LetterResponse.fromEntityForPreviousLetters(letter, zipCode, letter.getMatchingId());
             return List.of(response);
 
         }else{

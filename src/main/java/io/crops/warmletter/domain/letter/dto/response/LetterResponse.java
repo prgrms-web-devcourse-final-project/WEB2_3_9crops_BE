@@ -128,7 +128,6 @@ public class LetterResponse {
                 .paperType(draft.getPaperType())
                 .fontType(draft.getFontType())
                 .status(draft.getStatus())
-                .matched(draft.isMatched())
                 .deliveryStartedAt(draft.getDeliveryStartedAt())
                 .deliveryCompletedAt(draft.getDeliveryCompletedAt())
                 .matchingId(draft.getMatchingId())

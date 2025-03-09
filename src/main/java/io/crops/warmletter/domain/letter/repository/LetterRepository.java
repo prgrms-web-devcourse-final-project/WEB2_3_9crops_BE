@@ -51,7 +51,7 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
     List<Letter> findByReceiverIdAndStatus(Long currentUserId, Status status);
 
     @Query("SELECT new io.crops.warmletter.domain.letter.dto.response.LetterDraftResponse(" +
-            "l.id AS letterId, " +
+            "l.id, " +
             "l.writerId, " +
             "l.receiverId, " +
             "l.parentLetterId, " +
@@ -61,7 +61,6 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
             "l.paperType, " +
             "l.fontType, " +
             "l.status, " +
-            "CASE WHEN m.id IS NOT NULL THEN m.isActive ELSE false END AS matched, " +
             "l.deliveryStartedAt, " +
             "l.deliveryCompletedAt, " +
             "l.matchingId) " +

@@ -1241,7 +1241,6 @@ class LetterServiceTest {
                 .paperType(PaperType.COMFORT)
                 .fontType(FontType.HIMCHAN)
                 .status(Status.SAVED)
-                .matched(true)
                 .deliveryStartedAt(LocalDateTime.now())
                 .deliveryCompletedAt(LocalDateTime.now().plusHours(1))
                 .matchingId(300L)

@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
+@AllArgsConstructor
 public class LetterDraftResponse {
 
     private final Long letterId;

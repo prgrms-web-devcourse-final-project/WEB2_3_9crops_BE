@@ -51,10 +51,20 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
     List<Letter> findByReceiverIdAndStatus(Long currentUserId, Status status);
 
     @Query("SELECT new io.crops.warmletter.domain.letter.dto.response.LetterDraftResponse(" +
-            "l.id, l.writerId, l.receiverId, l.parentLetterId, " +
-            "l.title, l.content, l.category, l.paperType, l.fontType, l.status, " +
-            "CASE WHEN m.id IS NOT NULL THEN m.isActive ELSE false END, " +
-            "l.deliveryStartedAt, l.deliveryCompletedAt, l.matchingId) " +
+            "l.id AS letterId, " +
+            "l.writerId, " +
+            "l.receiverId, " +
+            "l.parentLetterId, " +
+            "l.title, " +
+            "l.content, " +
+            "l.category, " +
+            "l.paperType, " +
+            "l.fontType, " +
+            "l.status, " +
+            "CASE WHEN m.id IS NOT NULL THEN m.isActive ELSE false END AS matched, " +
+            "l.deliveryStartedAt, " +
+            "l.deliveryCompletedAt, " +
+            "l.matchingId) " +
             "FROM Letter l LEFT JOIN LetterMatching m ON l.matchingId = m.id " +
             "WHERE l.writerId = :writerId AND l.status = :status")
     List<LetterDraftResponse> findDraftLettersWithMatching(@Param("writerId") Long writerId,

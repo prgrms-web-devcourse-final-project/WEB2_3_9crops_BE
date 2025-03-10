@@ -12,4 +12,5 @@ public class MeResponse {
     private float temperature;
     private SocialProvider social;
     private String email;
+    private int warningCount;
 }

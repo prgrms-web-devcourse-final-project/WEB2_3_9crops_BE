@@ -88,4 +88,13 @@ public interface LetterRepository extends JpaRepository<Letter, Long> {
             "WHERE l.status = 'IN_DELIVERY' " +
             "AND l.deliveryCompletedAt <= :now")
     List<LetterAlarmResponse> findZipCodeByLettersToComplete(LocalDateTime now);
+
+    Optional<Letter> findByWriterIdAndParentLetterIdAndStatusAndTitleAndContent(
+            Long writerId,
+            Long parentLetterId,
+            Status status,
+            String title,
+            String content
+    );
+
 }

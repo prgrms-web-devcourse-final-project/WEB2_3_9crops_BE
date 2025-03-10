@@ -22,6 +22,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -42,7 +43,7 @@ class TimelineServiceTest {
 
     @Test
     @DisplayName("타임라인 조회 성공")
-    void get_EventPost_success(){
+    void get_eventPost_success(){
         // given
         Long memberId = 1L;
         when(authFacade.getCurrentUserId()).thenReturn(memberId);
@@ -154,5 +155,21 @@ class TimelineServiceTest {
         assertTrue(readNotificationResponse.get(0).isRead());
         assertEquals(3L, readNotificationResponse.get(1).getNotificationId());
         assertTrue(readNotificationResponse.get(1).isRead());
+    }
+
+    @Test
+    @DisplayName("읽지 않은 알림 개수 조회 성공")
+    void get_notificationNotRead_success(){
+        // given
+        int notReadCount = 2;
+
+        when(timelineRepository.countByMemberIdAndIsReadIsFalse(any(Long.class))).thenReturn(notReadCount);
+
+        // when
+        Map<String, Integer> timelineResponse = timelineService.getNotificationNotRead();
+
+        // then
+        assertNotNull(timelineResponse);
+        assertEquals(notReadCount, timelineResponse.get("notReadCount"));
     }
 }

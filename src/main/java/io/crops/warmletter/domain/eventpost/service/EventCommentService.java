@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.eventpost.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventCommentRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.EventCommentResponse;
 import io.crops.warmletter.domain.eventpost.entity.EventComment;
@@ -21,11 +22,13 @@ public class EventCommentService {
     private final AuthFacade authFacade;
     private final EventCommentRepository eventCommentRepository;
     private final EventPostRepository eventPostRepository;
+    private final BadWordService badWordService;
 
     public EventCommentResponse createEventComment(CreateEventCommentRequest createEventCommentRequest, Long eventPostId) {
         if(!eventPostRepository.existsByIdAndIsActiveIsTrue(eventPostId)) {
             throw new EventPostNotFoundException();
         }
+        badWordService.validateText(createEventCommentRequest.getContent());
 
         Long writerId = authFacade.getCurrentUserId();
 

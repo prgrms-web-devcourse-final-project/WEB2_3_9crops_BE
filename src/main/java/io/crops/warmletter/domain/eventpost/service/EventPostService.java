@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.eventpost.service;
 
+import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.*;
 import io.crops.warmletter.domain.eventpost.entity.EventPost;
@@ -25,6 +26,7 @@ import java.util.Map;
 public class EventPostService {
     private final EventPostRepository eventPostRepository;
     private final EventCommentRepository eventCommentRepository;
+    private final BadWordService badWordService;
 
     @Transactional(readOnly = true)
     public Page<EventPostsResponse> getEventPosts(Pageable eventPostPageable) {
@@ -32,6 +34,8 @@ public class EventPostService {
     }
 
     public EventPostResponse createEventPost(CreateEventPostRequest createEventPostRequest) {
+        badWordService.validateText(createEventPostRequest.getTitle());
+
         EventPost eventPost = EventPost.builder()
                 .title(createEventPostRequest.getTitle())
                 .build();

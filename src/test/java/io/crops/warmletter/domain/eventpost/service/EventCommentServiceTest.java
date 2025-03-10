@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.eventpost.service;
 
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventCommentRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.EventCommentResponse;
 import io.crops.warmletter.domain.eventpost.entity.EventComment;
@@ -38,8 +39,13 @@ class EventCommentServiceTest {
     @Mock
     private AuthFacade authFacade;
 
+    @Mock
+    private BadWordService badWordService;
+
     @InjectMocks
     private EventCommentService eventCommentService;
+
+
 
     @Test
     @DisplayName("게시판 댓글 생성 성공")
@@ -59,10 +65,12 @@ class EventCommentServiceTest {
                 .build();
         ReflectionTestUtils.setField(eventComment, "id", 1L);
 
+
         when(eventPostRepository.existsByIdAndIsActiveIsTrue(1L)).thenReturn(true);
         when(eventCommentRepository.save(any(EventComment.class))).thenReturn(eventComment);
 
         //when
+        badWordService.validateText(createEventCommentRequest.getContent());
         EventCommentResponse eventCommentResponse = eventCommentService.createEventComment(createEventCommentRequest,1L);
 
         //then

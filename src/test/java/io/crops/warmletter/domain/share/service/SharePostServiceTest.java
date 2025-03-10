@@ -1,7 +1,6 @@
 package io.crops.warmletter.domain.share.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.dto.response.ShareLetterPostResponse;
-import io.crops.warmletter.domain.share.dto.response.SharePostDeleteResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.entity.SharePost;
@@ -330,15 +329,12 @@ class SharePostServiceTest {
         // Given
         Long sharePostId = 1L;
         Long currentUserId = 10L;
-        Long requesterId = 10L;
 
         SharePost sharePost = new SharePost(1L, "테스트 게시글", true);
-        SharePostDeleteResponse response = new SharePostDeleteResponse(
-                sharePost, requesterId);
 
         when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
-        when(sharePostRepository.findSharePostWithRequesterIdById(sharePostId))
-                .thenReturn(Optional.of(response));
+        when(sharePostRepository.findByIdAndRequesterId(sharePostId, currentUserId))
+                .thenReturn(Optional.of(sharePost));
 
         // When
         sharePostService.deleteSharePost(sharePostId);
@@ -346,7 +342,7 @@ class SharePostServiceTest {
         // Then
         assertFalse(sharePost.isActive());
         verify(authFacade).getCurrentUserId();
-        verify(sharePostRepository).findSharePostWithRequesterIdById(sharePostId);
+        verify(sharePostRepository).findByIdAndRequesterId(sharePostId, currentUserId);
     }
 
     @Test
@@ -355,23 +351,16 @@ class SharePostServiceTest {
         // Given
         Long sharePostId = 1L;
         Long currentUserId = 10L;
-        Long requesterId = 20L;
-
-        SharePost sharePost = new SharePost(1L, "테스트 게시글", true);
-        SharePostDeleteResponse response = new SharePostDeleteResponse(
-                sharePost, requesterId);
 
         when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
-        when(sharePostRepository.findSharePostWithRequesterIdById(sharePostId))
-                .thenReturn(Optional.of(response));
+        when(sharePostRepository.findByIdAndRequesterId(sharePostId, currentUserId))
+                .thenReturn(Optional.empty());
 
         // When & Then
         assertThrows(ShareAccessException.class,
                 () -> sharePostService.deleteSharePost(sharePostId));
 
-        // 삭제가 실행되지 않았으므로 여전히 active 상태여야 함
-        assertTrue(sharePost.isActive());
         verify(authFacade).getCurrentUserId();
-        verify(sharePostRepository).findSharePostWithRequesterIdById(sharePostId);
+        verify(sharePostRepository).findByIdAndRequesterId(sharePostId, currentUserId);
     }
 }

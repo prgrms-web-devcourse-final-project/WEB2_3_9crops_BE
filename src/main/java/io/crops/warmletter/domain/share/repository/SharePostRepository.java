@@ -1,5 +1,4 @@
 package io.crops.warmletter.domain.share.repository;
-import io.crops.warmletter.domain.share.dto.response.SharePostDeleteResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.entity.SharePost;
 import org.springframework.data.domain.Page;
@@ -19,11 +18,11 @@ public interface SharePostRepository extends JpaRepository<SharePost,Long>, Cust
             "WHERE sp.isActive = true ")
     Page<SharePostResponse> findAllActiveSharePostsWithZipCodes(Pageable pageable);
 
-    @Query("SELECT new io.crops.warmletter.domain.share.dto.response.SharePostDeleteResponse(" +
-            "sp, proposal.requesterId) " +
-            "FROM SharePost sp " +
+    @Query("SELECT sp FROM SharePost sp " +
             "JOIN ShareProposal proposal ON sp.shareProposalId = proposal.id " +
-            "WHERE sp.id = :sharePostId")
-    Optional<SharePostDeleteResponse> findSharePostWithRequesterIdById(Long sharePostId);
+            "WHERE sp.id = :sharePostId AND proposal.requesterId = :memberId")
+    Optional<SharePost> findByIdAndRequesterId(Long sharePostId, Long memberId);
+
+
 
 }

@@ -17,13 +17,13 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByZipCode(String ZipCode);
 
     @Query("select new io.crops.warmletter.domain.member.dto.response.MeResponse(" +
-            "m.zipCode, m.temperature.value, sa.provider, m.email) " +
+            "m.zipCode, m.temperature.value, sa.provider, m.email, m.warningCount) " +
             "from Member m join m.socialAccounts sa " +
             "where m.id = :id " +
             "order by sa.id asc limit 1")
     Optional<MeResponse> findMeById(Long id);
 
-    // 벌크 연선
+    // 벌크 연산
     @Modifying
     @Query("UPDATE Member m SET m.isActive = false WHERE m.isActive = true AND m.warningCount >= 3")
     int suspendMembersWithExcessiveWarnings();

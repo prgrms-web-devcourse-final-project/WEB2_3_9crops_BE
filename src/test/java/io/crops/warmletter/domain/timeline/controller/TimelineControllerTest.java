@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -116,5 +117,19 @@ class TimelineControllerTest {
                 .andDo(print());
     }
 
+    @Test
+    @DisplayName("GET 읽지 않은 알림 개수 조회 성공")
+    void get_notificationNotRead_success() throws Exception {
+        // given
+        Map<String, Integer> respnse = Map.of("notReadCount",2);
 
+        when(timelineService.getNotificationNotRead()).thenReturn(respnse);
+
+        // when & then
+        mockMvc.perform(get("/api/notifications/not-read"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.notReadCount").value(2))
+                .andExpect(jsonPath("$.message").value("읽지 않은 알림 개수 조회 성공"))
+                .andDo(print());
+    }
 }

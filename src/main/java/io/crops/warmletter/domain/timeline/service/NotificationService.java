@@ -27,6 +27,7 @@ public class NotificationService {
 
     public SseEmitter subscribeNotification(){
         Long memberId = authFacade.getCurrentUserId();
+
         SseEmitter emitter = new SseEmitter(600_000L); // 10분 후 타임아웃 설정
 
         emitters.put(memberId, emitter);
@@ -112,13 +113,15 @@ public class NotificationService {
     // 연결을 확인하기 위한 Heartbeat를 30초마다 실행
     @Scheduled(fixedRate = 30000)
     public void sendHeartbeat() {
+        NotificationResponse notificationResponse = NotificationResponse.builder()
+                .title("heartbeat")
+                .alarmType("TEST").build();
         for (Map.Entry<Long, SseEmitter> entry : emitters.entrySet()) {
             Long memberId = entry.getKey();
             SseEmitter emitter = entry.getValue();
             try {
                 emitter.send(SseEmitter.event()
-                        .name("heartbeat")
-                        .data("ping"));
+                        .data(notificationResponse, MediaType.APPLICATION_JSON));
             } catch (IOException e) {
                 emitters.remove(memberId);
                 log.warn("사용자 ID : {} 대상 Heartbeat 전송 실패",memberId);

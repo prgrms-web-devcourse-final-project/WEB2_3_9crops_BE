@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static io.crops.warmletter.global.error.common.ErrorCode.INVALID_INPUT_VALUE;
@@ -91,6 +92,13 @@ public class LetterService {
                     parentLetter.updateReceiverId(writerId);
                     parentLetter.updateLetterType(LetterType.DIRECT);
                     parentLetter.updateIsRead(true);
+                }
+
+                if(request.getLetterId() != null) {
+                    Letter letter = letterRepository.findById(request.getLetterId()).orElseThrow(LetterNotFoundException::new);
+                    if (letter.getStatus() == Status.SAVED) {
+                        letterRepository.delete(letter);
+                    }
                 }
             }
         }

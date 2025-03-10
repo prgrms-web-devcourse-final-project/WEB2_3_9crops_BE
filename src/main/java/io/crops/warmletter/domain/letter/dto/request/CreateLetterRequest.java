@@ -35,10 +35,12 @@ public class CreateLetterRequest {
 
     private Long matchingId;
 
+    private Long letterId;
+
     @Builder
     public CreateLetterRequest(Long receiverId, Long parentLetterId, String title,
                                String content, Category category,
-                               PaperType paperType, FontType fontType, Long matchingId) {
+                               PaperType paperType, FontType fontType, Long matchingId, Long letterId) {
         this.receiverId = receiverId;
         this.parentLetterId = parentLetterId;
         this.title = title;
@@ -47,6 +49,7 @@ public class CreateLetterRequest {
         this.paperType = paperType;
         this.fontType = fontType;
         this.matchingId = matchingId;
+        this.letterId = letterId;
     }
 
     public void updateMatchingId(Long matchingId) {

@@ -73,9 +73,11 @@ public class ShareProposalService {
                 .isActive(true)
                 .build();
         sharePost = sharePostRepository.save(sharePost);
-        // 알림 전송(양쪽다) / 인가 값이 없어서 일단 우편번호는 임시값으로 대체
-        notificationFacade.sendNotification("승인요청자", shareProposal.getRequesterId(), AlarmType.POSTED, sharePost.getId().toString());
-        notificationFacade.sendNotification("승인수락자", shareProposal.getRecipientId(), AlarmType.POSTED, sharePost.getId().toString());
+        // 알림 전송(양쪽다)
+        String requestZipCode = shareProposalRepository.findZipCodeByRequesterId(shareProposal.getRequesterId());
+        String recipientZipCode = shareProposalRepository.findZipCodeByRequesterId(shareProposal.getRecipientId());
+        notificationFacade.sendNotification(recipientZipCode, shareProposal.getRequesterId(), AlarmType.POSTED, sharePost.getId().toString());
+        notificationFacade.sendNotification(requestZipCode, shareProposal.getRecipientId(), AlarmType.POSTED, sharePost.getId().toString());
         return ShareProposalStatusResponse.builder()
                 .shareProposalId(shareProposal.getId())
                 .status(shareProposal.getStatus())

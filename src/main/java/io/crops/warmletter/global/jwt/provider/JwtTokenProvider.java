@@ -25,7 +25,7 @@ public class JwtTokenProvider {
 
     private final RedisTemplate<String, String> redisTemplate;
 
-    private final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 30; // 30분
+    private final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 5; // 30분
     private final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 14; // 14일
 
     private Key key; // JWT 서명에 사용할 키

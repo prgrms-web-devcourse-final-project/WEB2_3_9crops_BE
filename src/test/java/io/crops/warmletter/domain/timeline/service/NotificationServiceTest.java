@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.timeline.service;
 
+import io.crops.warmletter.domain.auth.exception.UnauthorizedException;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.timeline.dto.response.NotificationResponse;
 import io.crops.warmletter.domain.timeline.entity.Timeline;
@@ -73,7 +74,7 @@ class NotificationServiceTest {
     }
 
     @Test
-    @DisplayName("SSE가 완료될 때 onCompletion이 호출 성공")
+    @DisplayName("연결이 종료 성공")
     void test_sseEmitter_onCompletion() {
         // Given
         Long memberId = 1L;
@@ -102,6 +103,21 @@ class NotificationServiceTest {
 
         // Then: emitters에서 제거되었는지 확인
         assertFalse(emitters.containsKey(memberId));
+    }
+
+    @Test
+    @DisplayName("인증되지 않은 사용자가 SSE 구독 시 Unauthorized 응답 반환")
+    void test_unauthorizedUser_returnsUnauthorizedSseEmitter() throws IOException {
+        // Given
+        when(authFacade.getCurrentUserId()).thenThrow(new UnauthorizedException());
+        // When
+        SseEmitter sseEmitter = notificationService.subscribeNotification();
+
+        // Then
+        assertNotNull(sseEmitter);
+        assertEquals(0L, sseEmitter.getTimeout());
+        assertTrue(emitters.isEmpty());
+
     }
 
     @Test

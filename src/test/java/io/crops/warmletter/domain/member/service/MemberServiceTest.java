@@ -206,7 +206,8 @@ class MemberServiceTest {
                         member.getZipCode(),
                         member.getTemperatureValue(),
                         socialAccount.getProvider(),
-                        member.getEmail()
+                        member.getEmail(),
+                        member.getWarningCount()
                 )));
         //when
         MeResponse meResponse = memberService.getMe();
@@ -216,6 +217,7 @@ class MemberServiceTest {
         assertThat(member.getTemperatureValue()).isEqualTo(meResponse.getTemperature());
         assertThat(socialAccount.getProvider()).isEqualTo(meResponse.getSocial());
         assertThat(member.getEmail()).isEqualTo(meResponse.getEmail());
+        assertThat(member.getWarningCount()).isZero();
 
         verify(authFacade).getCurrentUserId();
         verify(memberRepository).findMeById(memberId);

@@ -1,7 +1,10 @@
 package io.crops.warmletter.domain.share.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.share.dto.response.SharePostDeleteResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
+import io.crops.warmletter.domain.share.entity.SharePost;
+import io.crops.warmletter.domain.share.exception.ShareAccessException;
 import io.crops.warmletter.domain.share.exception.SharePageException;
 import io.crops.warmletter.domain.share.exception.SharePostNotFoundException;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
@@ -11,7 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Service
@@ -44,5 +46,21 @@ public class SharePostService {
         Long memberId = authFacade.getCurrentUserId();
 
         return sharePostRepository.findMyRequestedActiveSharePosts(memberId);
+    }
+
+    @Transactional
+    public void deleteSharePost(Long sharePostId) {
+        Long memberId = authFacade.getCurrentUserId();
+
+        SharePostDeleteResponse response = sharePostRepository.findSharePostWithRequesterIdById(sharePostId)
+                .orElseThrow(() -> new SharePostNotFoundException());
+
+        if (!response.getRequesterId().equals(memberId)) {
+            throw new ShareAccessException();
+        }
+
+        SharePost sharePost = response.getSharePost();
+        sharePost.deactivate();
+
     }
 }

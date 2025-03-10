@@ -9,7 +9,7 @@ import io.crops.warmletter.domain.share.entity.SharePost;
 import io.crops.warmletter.domain.share.entity.ShareProposal;
 import io.crops.warmletter.domain.share.entity.ShareProposalLetter;
 import io.crops.warmletter.domain.share.enums.ProposalStatus;
-import io.crops.warmletter.domain.share.exception.ShareProposalAccessException;
+import io.crops.warmletter.domain.share.exception.ShareAccessException;
 import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException;
 import io.crops.warmletter.domain.share.repository.*;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
@@ -115,7 +115,7 @@ public class ShareProposalService {
                 .orElseThrow(() -> new ShareProposalNotFoundException());
 
         if (!shareProposal.getRecipientId().equals(memberId)) {
-            throw new ShareProposalAccessException();
+            throw new ShareAccessException();
         }
 
         return shareProposalRepository.findShareProposalDetailById(shareProposalId);

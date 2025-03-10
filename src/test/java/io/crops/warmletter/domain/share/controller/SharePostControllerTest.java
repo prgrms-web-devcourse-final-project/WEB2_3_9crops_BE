@@ -1,9 +1,8 @@
 package io.crops.warmletter.domain.share.controller;
-
 import io.crops.warmletter.domain.share.dto.response.ShareLetterPostResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
-import io.crops.warmletter.domain.share.entity.SharePost;
+import io.crops.warmletter.domain.share.exception.ShareAccessException;
 import io.crops.warmletter.domain.share.service.SharePostService;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
@@ -18,15 +17,13 @@ import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-
-
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -41,11 +38,9 @@ class SharePostControllerTest {
 
     @MockitoBean
     private SharePostService sharePostService;
-
-
-
     private SharePostResponse sharePostResponse1;
     private SharePostResponse sharePostResponse2;
+
     @BeforeEach
     void createSharePost() {
         // 테스트에서 사용되는 값을 고정
@@ -212,5 +207,40 @@ class SharePostControllerTest {
                 .andDo(print());
 
         verify(sharePostService).getMySharePosts();
+    }
+
+    @Test
+    @DisplayName("공유 게시글 삭제 성공")
+    void deleteSharePost_Success() throws Exception {
+        // Given
+        Long sharePostId = 1L;
+        doNothing().when(sharePostService).deleteSharePost(sharePostId);
+
+        // When & Then
+        mockMvc.perform(delete("/api/share-posts/{sharePostId}", sharePostId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("삭제 성공"))
+                .andDo(print());
+
+        verify(sharePostService).deleteSharePost(sharePostId);
+    }
+    @Test
+    @DisplayName("권한 없는 사용자의 게시글 삭제 시도시 예외 처리")
+    void deleteSharePost_Unauthorized() throws Exception {
+        // Given
+        Long sharePostId = 1L;
+        doThrow(new ShareAccessException())
+                .when(sharePostService).deleteSharePost(sharePostId);
+
+        // When & Then
+        mockMvc.perform(delete("/api/share-posts/{sharePostId}", sharePostId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("SHARE-004"))
+                .andExpect(jsonPath("$.message").value("해당 공유에 권한이 없습니다."))
+                .andDo(print());
+
+        verify(sharePostService).deleteSharePost(sharePostId);
     }
 }

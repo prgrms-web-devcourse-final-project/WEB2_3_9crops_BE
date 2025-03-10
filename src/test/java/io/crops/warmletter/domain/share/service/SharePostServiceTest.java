@@ -1,10 +1,10 @@
 package io.crops.warmletter.domain.share.service;
-
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.dto.response.ShareLetterPostResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.entity.SharePost;
+import io.crops.warmletter.domain.share.exception.ShareAccessException;
 import io.crops.warmletter.domain.share.exception.SharePageException;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.global.error.common.ErrorCode;
@@ -17,12 +17,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
-
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -325,4 +323,44 @@ class SharePostServiceTest {
         verify(sharePostRepository).findMyRequestedActiveSharePosts(memberId);
     }
 
+    @Test
+    @DisplayName("공유 게시글 삭제 성공")
+    void deleteSharePost_Success() {
+        // Given
+        Long sharePostId = 1L;
+        Long currentUserId = 10L;
+
+        SharePost sharePost = new SharePost(1L, "테스트 게시글", true);
+
+        when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
+        when(sharePostRepository.findByIdAndRequesterId(sharePostId, currentUserId))
+                .thenReturn(Optional.of(sharePost));
+
+        // When
+        sharePostService.deleteSharePost(sharePostId);
+
+        // Then
+        assertFalse(sharePost.isActive());
+        verify(authFacade).getCurrentUserId();
+        verify(sharePostRepository).findByIdAndRequesterId(sharePostId, currentUserId);
+    }
+
+    @Test
+    @DisplayName("권한 없는 사용자의 게시글 삭제시 예외 발생")
+    void deleteSharePost_ThrowsException_WhenUserUnauthorized() {
+        // Given
+        Long sharePostId = 1L;
+        Long currentUserId = 10L;
+
+        when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
+        when(sharePostRepository.findByIdAndRequesterId(sharePostId, currentUserId))
+                .thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(ShareAccessException.class,
+                () -> sharePostService.deleteSharePost(sharePostId));
+
+        verify(authFacade).getCurrentUserId();
+        verify(sharePostRepository).findByIdAndRequesterId(sharePostId, currentUserId);
+    }
 }

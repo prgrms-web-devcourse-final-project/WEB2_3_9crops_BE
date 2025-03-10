@@ -43,7 +43,7 @@ public class ReportController {
     }
 
     @GetMapping
-    @Operation(summary = "신고 목록 조회", description = "신고 목록 조회하는 API입니다. 테스트용")
+    @Operation(summary = "신고 목록 조회", description = "신고 목록 조회하는 API입니다.")
     public ResponseEntity<BaseResponse<PageResponse<ReportsResponse>>> getAllReports(
             @RequestParam(required = false) String reportType,
             @RequestParam(required = false) String status,

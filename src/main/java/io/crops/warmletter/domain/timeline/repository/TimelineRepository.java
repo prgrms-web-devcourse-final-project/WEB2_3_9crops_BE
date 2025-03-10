@@ -32,5 +32,5 @@ public interface TimelineRepository extends JpaRepository<Timeline, Long> {
     @Query("SELECT tl FROM Timeline tl WHERE tl.id IN :ids")
     List<Timeline> findByIds(@Param("ids") List<Long> ids);
 
-
+    int countByMemberIdAndIsReadIsFalse(Long memberId);
 }

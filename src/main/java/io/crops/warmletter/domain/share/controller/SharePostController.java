@@ -41,19 +41,11 @@ public class SharePostController {
                 .body(new BaseResponse<>(sharePostService.getPostDetail(sharePostId), "성공"));
     }
 
-    @Operation(summary = "나의 공유 게시글 조회", description = " 나의 공유 게시글 조회합니다. ")
+    @Operation(summary = "나의 공유 게시글 조회", description = " 나의 공유 게시글 조회 ")
     @GetMapping("/me")
     public ResponseEntity<BaseResponse<List<SharePostResponse>>> getMySharePosts() {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new BaseResponse<>(sharePostService.getMySharePosts(),"나의 공유 게시글 조회 성공"));
-    }
-
-    @Operation(summary = "나의 공유 게시글 삭제", description = " 나의 공유 게시글을 삭제합니다. ")
-    @DeleteMapping("/{sharePostId}")
-    public ResponseEntity<BaseResponse<Void>> deleteSharePost(@PathVariable(name = "sharePostId") Long sharePostId) {
-        sharePostService.deleteSharePost(sharePostId);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(new BaseResponse<>(null, "삭제 성공"));
     }
 
 }

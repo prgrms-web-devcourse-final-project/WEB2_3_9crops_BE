@@ -94,15 +94,12 @@ public class LetterService {
                     parentLetter.updateIsRead(true);
                 }
 
-                // 현재 작성 중인 특정 임시저장 편지만 찾아서 삭제
-                Optional<Letter> savedLetter = letterRepository.findByWriterIdAndParentLetterIdAndStatusAndTitleAndContent(
-                        writerId,
-                        request.getParentLetterId(),
-                        Status.SAVED,
-                        request.getTitle(),
-                        request.getContent()
-                );
-                savedLetter.ifPresent(letterRepository::delete);
+                if(request.getLetterId() != null) {
+                    Letter letter = letterRepository.findById(request.getLetterId()).orElseThrow(LetterNotFoundException::new);
+                    if (letter.getStatus() == Status.SAVED) {
+                        letterRepository.delete(letter);
+                    }
+                }
             }
         }
         Letter letter = builder.build();

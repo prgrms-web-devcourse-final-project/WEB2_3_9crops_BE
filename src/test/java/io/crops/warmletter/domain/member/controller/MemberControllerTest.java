@@ -97,7 +97,8 @@ class MemberControllerTest {
         float temperature = 36.5f;
         SocialProvider social = SocialProvider.GOOGLE;
         String email = "test@test.com";
-        MeResponse response = new MeResponse(zipCode, temperature, social, email);
+        int warningCount = 1;
+        MeResponse response = new MeResponse(zipCode, temperature, social, email, warningCount);
 
         when(memberService.getMe()).thenReturn(response);
 
@@ -108,6 +109,7 @@ class MemberControllerTest {
                 .andExpect(jsonPath("$.data.temperature").value(temperature))
                 .andExpect(jsonPath("$.data.social").value(SocialProvider.GOOGLE.name()))
                 .andExpect(jsonPath("$.data.email").value(email))
+                .andExpect(jsonPath("$.data.warningCount").value(warningCount))
                 .andExpect(jsonPath("$.message").value("마이페이지 조회 완료"));
     }
 

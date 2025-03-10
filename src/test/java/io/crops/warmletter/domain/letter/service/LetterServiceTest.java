@@ -409,6 +409,162 @@ class LetterServiceTest {
         verify(notificationFacade).sendNotification(anyString(), anyLong(), any(), eq(null));
     }
 
+    @Test
+    @DisplayName("임시저장 편지 ID가 제공된 경우 해당 편지 삭제 후 새 편지 생성")
+    void createLetter_deletesSavedLetterWhenLetterIdProvided() {
+        // given
+        Long currentUserId = 1L;
+        Long temporaryLetterId = 10L;
+
+        Letter temporarySavedLetter = Letter.builder()
+                .writerId(currentUserId)
+                .title("임시저장 제목")
+                .content("임시저장 내용")
+                .status(Status.SAVED)
+                .build();
+        ReflectionTestUtils.setField(temporarySavedLetter, "id", temporaryLetterId);
+
+        // 새 요청 객체에 임시저장 편지 ID 포함
+        CreateLetterRequest request = CreateLetterRequest.builder()
+                .receiverId(3L)
+                .parentLetterId(5L)
+                .title("새 제목")
+                .content("새 내용")
+                .category(Category.ETC)
+                .paperType(PaperType.PAPER)
+                .fontType(FontType.GYEONGGI)
+                .matchingId(100L)
+                .letterId(temporaryLetterId) // 임시저장 편지 ID
+                .build();
+
+        Letter parentLetter = Letter.builder()
+                .writerId(2L)
+                .parentLetterId(null)
+                .build();
+        ReflectionTestUtils.setField(parentLetter, "id", 5L);
+
+        // 새롭게 저장될 편지 객체
+        Letter newLetter = Letter.builder()
+                .writerId(currentUserId)
+                .receiverId(3L)
+                .parentLetterId(5L)
+                .letterType(LetterType.DIRECT)
+                .title("새 제목")
+                .content("새 내용")
+                .category(Category.ETC)
+                .paperType(PaperType.PAPER)
+                .fontType(FontType.GYEONGGI)
+                .status(Status.IN_DELIVERY)
+                .matchingId(100L)
+                .build();
+        ReflectionTestUtils.setField(newLetter, "id", 20L);
+
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(1L)
+                .secondMemberId(2L)
+                .matchedAt(LocalDateTime.now())
+                .build();
+        ReflectionTestUtils.setField(matching, "id", 100L);
+
+        when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
+        when(letterRepository.findById(request.getParentLetterId())).thenReturn(Optional.of(parentLetter));
+        when(letterMatchingRepository.findById(100L)).thenReturn(Optional.of(matching));
+        when(letterRepository.findById(temporaryLetterId)).thenReturn(Optional.of(temporarySavedLetter));
+        when(letterRepository.save(any(Letter.class))).thenReturn(newLetter);
+        when(authFacade.getZipCode()).thenReturn("12345");
+
+        // when
+        LetterResponse response = letterService.createLetter(request);
+
+        // then
+        verify(letterRepository).delete(temporarySavedLetter);
+        verify(letterRepository).save(any(Letter.class));
+
+        // 응답 검증
+        assertAll("편지 응답 검증",
+                () -> assertNotNull(response),
+                () -> assertEquals(20L, response.getLetterId()),
+                () -> assertEquals("새 제목", response.getTitle()),
+                () -> assertEquals("새 내용", response.getContent())
+        );
+    }
+
+    @Test
+    @DisplayName("임시저장 편지 ID가 제공되었으나 SAVED 상태가 아닌 경우 삭제하지 않음")
+    void createLetter_doesNotDeleteNonSavedLetter() {
+        // given
+        Long currentUserId = 1L;
+        Long nonSavedLetterId = 10L;
+
+        Letter nonSavedLetter = Letter.builder()
+                .writerId(currentUserId)
+                .title("배달 중인 편지 제목")
+                .content("배달 중인 편지 내용")
+                .status(Status.IN_DELIVERY) // SAVED가 아닌 상태
+                .build();
+        ReflectionTestUtils.setField(nonSavedLetter, "id", nonSavedLetterId);
+
+        CreateLetterRequest request = CreateLetterRequest.builder()
+                .receiverId(3L)
+                .parentLetterId(5L)
+                .title("새 제목")
+                .content("새 내용")
+                .category(Category.ETC)
+                .paperType(PaperType.PAPER)
+                .fontType(FontType.GYEONGGI)
+                .matchingId(100L)
+                .letterId(nonSavedLetterId)
+                .build();
+
+        Letter parentLetter = Letter.builder()
+                .writerId(2L)
+                .parentLetterId(null)
+                .build();
+        ReflectionTestUtils.setField(parentLetter, "id", 5L);
+
+        Letter newLetter = Letter.builder()
+                .writerId(currentUserId)
+                .receiverId(3L)
+                .parentLetterId(5L)
+                .letterType(LetterType.DIRECT)
+                .title("새 제목")
+                .content("새 내용")
+                .category(Category.ETC)
+                .paperType(PaperType.PAPER)
+                .fontType(FontType.GYEONGGI)
+                .status(Status.IN_DELIVERY)
+                .matchingId(100L)
+                .build();
+        ReflectionTestUtils.setField(newLetter, "id", 20L);
+
+        LetterMatching matching = LetterMatching.builder()
+                .firstMemberId(1L)
+                .secondMemberId(2L)
+                .matchedAt(LocalDateTime.now())
+                .build();
+        ReflectionTestUtils.setField(matching, "id", 100L);
+
+        when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
+        when(letterRepository.findById(request.getParentLetterId())).thenReturn(Optional.of(parentLetter));
+        when(letterMatchingRepository.findById(100L)).thenReturn(Optional.of(matching));
+        when(letterRepository.findById(nonSavedLetterId)).thenReturn(Optional.of(nonSavedLetter));
+        when(letterRepository.save(any(Letter.class))).thenReturn(newLetter);
+        when(authFacade.getZipCode()).thenReturn("12345");
+
+        // when
+        LetterResponse response = letterService.createLetter(request);
+
+        // then
+        verify(letterRepository, never()).delete(nonSavedLetter);
+        verify(letterRepository).save(any(Letter.class));
+
+        // 응답 검증
+        assertAll("편지 응답 검증",
+                () -> assertNotNull(response),
+                () -> assertEquals(20L, response.getLetterId())
+        );
+    }
+
 
     @Test
     @DisplayName("이전 편지 목록 조회 성공 테스트")

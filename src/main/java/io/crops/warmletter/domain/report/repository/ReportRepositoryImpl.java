@@ -85,16 +85,16 @@ public class ReportRepositoryImpl implements ReportRepositoryCustom {
 
         if (reportType != null) {
             try {
-                ReportType validReportType = ReportType.valueOf(reportType.toUpperCase()); // ✅ String → Enum 변환
-                query.where(report.reportType.eq(validReportType));  // ✅ Enum으로 비교
+                ReportType validReportType = ReportType.valueOf(reportType.toUpperCase());
+                query.where(report.reportType.eq(validReportType));
             } catch (IllegalArgumentException ignored) {
                 // 변환 실패하면 필터링 안 함 (전체 조회)
             }
         }
         if (status != null) {
             try {
-                ReportStatus validStatus = ReportStatus.valueOf(status.toUpperCase()); // ✅ String → Enum 변환
-                query.where(report.reportStatus.eq(validStatus));  // ✅ Enum으로 비교
+                ReportStatus validStatus = ReportStatus.valueOf(status.toUpperCase());
+                query.where(report.reportStatus.eq(validStatus));
             } catch (IllegalArgumentException ignored) {
                 // 변환 실패하면 필터링 안 함 (전체 조회)
             }
@@ -109,7 +109,8 @@ public class ReportRepositoryImpl implements ReportRepositoryCustom {
 
         JPAQuery<Long> countQuery = queryFactory
                 .select(report.count())
-                .from(report);
+                .from(report)
+                .where(query.getMetadata().getWhere());
 
         return PageableExecutionUtils.getPage(reports, pageable, countQuery::fetchOne);
     }

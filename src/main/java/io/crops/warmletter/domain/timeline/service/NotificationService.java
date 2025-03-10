@@ -26,8 +26,8 @@ public class NotificationService {
     private final TimelineRepository timelineRepository;
 
     public SseEmitter subscribeNotification(){
-        SseEmitter emitter = new SseEmitter(600_000L); // 10분 후 타임아웃 설정
         Long memberId = authFacade.getCurrentUserId();
+        SseEmitter emitter = new SseEmitter(600_000L); // 10분 후 타임아웃 설정
 
         emitters.put(memberId, emitter);
 

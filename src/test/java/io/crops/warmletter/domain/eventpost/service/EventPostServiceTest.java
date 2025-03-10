@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.eventpost.service;
 
+import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.eventpost.dto.request.CreateEventPostRequest;
 import io.crops.warmletter.domain.eventpost.dto.response.*;
 import io.crops.warmletter.domain.eventpost.entity.EventPost;
@@ -35,6 +36,9 @@ class EventPostServiceTest {
 
     @Mock
     private EventCommentRepository eventCommentRepository;
+
+    @Mock
+    private BadWordService badWordService;
 
     @InjectMocks
     private EventPostService eventPostService;
@@ -83,6 +87,7 @@ class EventPostServiceTest {
         when(eventPostRepository.save(any(EventPost.class))).thenReturn(eventPost);
 
         //when
+        badWordService.validateText(createEventPostRequest.getTitle());
         EventPostResponse eventPostResponse = eventPostService.createEventPost(createEventPostRequest);
 
         //then

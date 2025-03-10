@@ -2,7 +2,7 @@ package io.crops.warmletter.domain.share.controller;
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
 import io.crops.warmletter.domain.share.dto.response.*;
 import io.crops.warmletter.domain.share.enums.ProposalStatus;
-import io.crops.warmletter.domain.share.exception.ShareProposalAccessException;
+import io.crops.warmletter.domain.share.exception.ShareAccessException;
 import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException;
 import io.crops.warmletter.domain.share.service.ShareProposalService;
 import io.crops.warmletter.global.error.common.ErrorCode;
@@ -341,10 +341,10 @@ class ShareProposalControllerTest {
         // Given
         Long shareProposalId = 1L;
         when(shareProposalService.getShareProposalDetail(shareProposalId))
-                .thenThrow(new ShareProposalAccessException());
+                .thenThrow(new ShareAccessException());
 
         // When
-        assertThrows(ShareProposalAccessException.class,
+        assertThrows(ShareAccessException.class,
                 () -> shareProposalController.getShareProposalDetail(shareProposalId),
                 "권한 없어서 터트림 "
         );

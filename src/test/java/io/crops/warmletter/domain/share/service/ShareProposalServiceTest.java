@@ -5,7 +5,7 @@ import io.crops.warmletter.domain.share.dto.response.*;
 import io.crops.warmletter.domain.share.entity.SharePost;
 import io.crops.warmletter.domain.share.entity.ShareProposal;
 import io.crops.warmletter.domain.share.enums.ProposalStatus;
-import io.crops.warmletter.domain.share.exception.ShareProposalAccessException;
+import io.crops.warmletter.domain.share.exception.ShareAccessException;
 import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalLetterRepository;
@@ -519,7 +519,7 @@ class ShareProposalServiceTest {
         when(shareProposalRepository.findById(shareProposalId)).thenReturn(Optional.of(shareProposal));
 
         // When & Then
-        assertThrows(ShareProposalAccessException.class,
+        assertThrows(ShareAccessException.class,
                 () -> shareProposalService.getShareProposalDetail(shareProposalId));
 
         verify(authFacade).getCurrentUserId();

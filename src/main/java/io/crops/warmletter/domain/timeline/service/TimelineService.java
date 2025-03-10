@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -64,7 +65,12 @@ public class TimelineService {
                     .isRead(timeline.isRead())
                     .build());
         }
-
         return timelineResponses;
+    }
+
+    public Map<String,Integer> getNotificationNotRead(){
+        Long memberId = authFacade.getCurrentUserId();
+        int notReadCount = timelineRepository.countByMemberIdAndIsReadIsFalse(memberId);
+        return Map.of("notReadCount", notReadCount);
     }
 }

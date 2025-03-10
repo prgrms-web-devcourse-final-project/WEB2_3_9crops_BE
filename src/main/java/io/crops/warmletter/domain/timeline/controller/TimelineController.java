@@ -8,6 +8,7 @@ import io.crops.warmletter.global.response.PageResponse;
 import io.crops.warmletter.global.util.PageableConverter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -44,5 +46,11 @@ public class TimelineController {
     @Operation(summary = "모든 알림 읽음 처리", description = "로그인한 사용자의 모든 알림을 읽음 처리합니다.")
     public ResponseEntity<BaseResponse<List<ReadNotificationResponse>>> updateNotificationAllRead() {
         return ResponseEntity.ok(BaseResponse.of(timeLineService.updateNotificationAllRead(),"모든 알림 읽음 처리 성공"));
+    }
+
+    @GetMapping("/notifications/not-read")
+    @Operation(summary = "읽지 않은 알림 개수 조회", description = "로그인한 사용자의 읽지 않은 알림 개수를 조회합니다.")
+    public ResponseEntity<BaseResponse<Map<String,Integer>>> getNotificationsNotRead() {
+        return ResponseEntity.ok(BaseResponse.of(timeLineService.getNotificationNotRead(),"읽지 않은 알림 개수 조회 성공"));
     }
 }

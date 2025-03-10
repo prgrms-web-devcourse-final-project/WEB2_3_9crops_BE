@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static io.crops.warmletter.global.error.common.ErrorCode.INVALID_INPUT_VALUE;
@@ -92,6 +93,16 @@ public class LetterService {
                     parentLetter.updateLetterType(LetterType.DIRECT);
                     parentLetter.updateIsRead(true);
                 }
+
+                // 현재 작성 중인 특정 임시저장 편지만 찾아서 삭제
+                Optional<Letter> savedLetter = letterRepository.findByWriterIdAndParentLetterIdAndStatusAndTitleAndContent(
+                        writerId,
+                        request.getParentLetterId(),
+                        Status.SAVED,
+                        request.getTitle(),
+                        request.getContent()
+                );
+                savedLetter.ifPresent(letterRepository::delete);
             }
         }
         Letter letter = builder.build();

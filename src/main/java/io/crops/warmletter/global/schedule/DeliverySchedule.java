@@ -3,18 +3,14 @@ package io.crops.warmletter.global.schedule;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.Status;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
-import io.crops.warmletter.domain.timeline.dto.request.NotificationRequest;
+import io.crops.warmletter.domain.letter.service.LetterProcessingService;
 import io.crops.warmletter.domain.timeline.dto.response.LetterAlarmResponse;
-import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,7 +26,7 @@ import java.util.stream.Collectors;
 public class DeliverySchedule {
 
     private final LetterRepository letterRepository;
-    private final ApplicationEventPublisher notificationPublisher;
+    private final LetterProcessingService letterProcessingService;
     @Qualifier("deliveryTaskExecutor")
     private final AsyncTaskExecutor taskExecutor;
 
@@ -64,7 +60,8 @@ public class DeliverySchedule {
             for (Letter letter : lettersToComplete) {
                 CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
                     try {
-                        processLetter(letter, senderZipCodes.get(letter.getWriterId()));
+                        // 별도 서비스를 통해 트랜잭션 관리
+                        letterProcessingService.processDeliveryCompletion(letter, senderZipCodes.get(letter.getWriterId()));
                         log.info("편지 ID: {} 배송 완료 처리됨", letter.getId());
                         return true;
                     } catch (Exception e) {
@@ -76,14 +73,20 @@ public class DeliverySchedule {
                 futures.add(future);
             }
 
-            // 모든 비동기 작업 완료 대기 (옵션)
+            // 모든 비동기 작업 완료 대기
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
             // 성공/실패 편지 수 계산
             long successCount = futures.stream().filter(f -> {
                 try {
                     return f.get();
+                } catch (InterruptedException e) {
+                    // 인터럽트 상태 복원
+                    Thread.currentThread().interrupt();
+                    log.error("편지 처리 중 스레드 인터럽트 발생", e);
+                    return false;
                 } catch (Exception e) {
+                    log.error("편지 처리 중 오류 발생", e);
                     return false;
                 }
             }).count();
@@ -93,22 +96,5 @@ public class DeliverySchedule {
             log.info("배송 완료 처리할 편지가 없습니다.");
         }
         log.info("--------- 배송 완료 처리 완료 ---------");
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void processLetter(Letter letter, String senderZipCode) {
-        // 편지 상태 업데이트
-        letter.updateStatus(Status.DELIVERED);
-        letterRepository.save(letter);
-
-        // 알림 전송
-        if (letter.getReceiverId() != null && senderZipCode != null) {
-            notificationPublisher.publishEvent(NotificationRequest.builder()
-                    .senderZipCode(senderZipCode)
-                    .receiverId(letter.getReceiverId())
-                    .alarmType(AlarmType.LETTER)
-                    .data(letter.getId().toString())
-                    .build());
-        }
     }
 }

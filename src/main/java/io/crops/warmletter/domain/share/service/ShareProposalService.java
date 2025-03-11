@@ -14,7 +14,6 @@ import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException
 import io.crops.warmletter.domain.share.repository.*;
 import io.crops.warmletter.domain.timeline.dto.request.NotificationRequest;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
-import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -79,8 +78,8 @@ public class ShareProposalService {
                 .build();
         sharePost = sharePostRepository.save(sharePost);
         // 알림 전송(양쪽 다)
-        String requestZipCode = shareProposalRepository.findZipCodeByRequesterId(shareProposal.getRequesterId());
-        String recipientZipCode = shareProposalRepository.findZipCodeByRecipientId(shareProposal.getRecipientId());
+        String requestZipCode = shareProposalRepository.findZipCodeByRequesterId(shareProposalId, shareProposal.getRequesterId());
+        String recipientZipCode = shareProposalRepository.findZipCodeByRecipientId(shareProposalId, shareProposal.getRecipientId());
         notificationPublisher.publishEvent(NotificationRequest.builder()
                 .senderZipCode(recipientZipCode)
                 .receiverId(shareProposal.getRequesterId())

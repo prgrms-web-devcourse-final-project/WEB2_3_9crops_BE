@@ -1,7 +1,6 @@
 package io.crops.warmletter.domain.timeline.facade;
 
 import io.crops.warmletter.domain.timeline.dto.request.NotificationRequest;
-import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import io.crops.warmletter.domain.timeline.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;

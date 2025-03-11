@@ -4,6 +4,7 @@ package io.crops.warmletter.domain.badword.service;
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
+import io.crops.warmletter.domain.badword.dto.response.BadWordResponse;
 import io.crops.warmletter.domain.badword.dto.response.UpdateBadWordResponse;
 import io.crops.warmletter.domain.badword.entity.BadWord;
 import io.crops.warmletter.domain.badword.exception.BadWordContainsException;
@@ -33,7 +34,8 @@ public class BadWordService {
     private static final String BAD_WORD_PATTERN = "[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9\\s]";
 
 
-    public void createBadWord(CreateBadWordRequest request) {
+    @Transactional
+    public BadWordResponse createBadWord(CreateBadWordRequest request) {
         String word = request.getWord();
 
         boolean exists = badWordRepository.existsByWord(word);
@@ -46,10 +48,10 @@ public class BadWordService {
                 .isUsed(true)
                 .build();
 
-
-        badWordRepository.save(badWord);
+        BadWord savedBadWord = badWordRepository.save(badWord);
 
         redisTemplate.opsForHash().put(BAD_WORD_KEY, badWord.getId().toString(), word);
+        return new BadWordResponse(savedBadWord.getId(), savedBadWord.getWord(), savedBadWord.isUsed());
     }
 
 
@@ -58,12 +60,9 @@ public class BadWordService {
         BadWord badWord = badWordRepository.findById(badWordId)
                 .orElseThrow(BadWordNotFoundException::new);
         badWord.updateStatus(request.isUsed());
+        redisTemplate.opsForHash().delete(BAD_WORD_KEY,badWordId.toString(), badWord.getWord());
+        redisTemplate.opsForHash().put(BAD_WORD_KEY,badWordId.toString(), badWord.getWord());
 
-        if (request.isUsed()) {
-            redisTemplate.opsForHash().put(BAD_WORD_KEY,badWordId.toString(), badWord.getWord());
-        } else {
-            redisTemplate.opsForHash().delete(BAD_WORD_KEY,badWordId.toString(), badWord.getWord());
-        }
     }
 
     public List<Map<String, String>> getBadWords() {

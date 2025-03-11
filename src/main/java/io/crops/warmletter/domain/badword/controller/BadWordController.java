@@ -4,6 +4,7 @@ package io.crops.warmletter.domain.badword.controller;
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
+import io.crops.warmletter.domain.badword.dto.response.BadWordResponse;
 import io.crops.warmletter.domain.badword.dto.response.UpdateBadWordResponse;
 import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.global.response.BaseResponse;
@@ -28,9 +29,9 @@ public class BadWordController {
 
     @PostMapping
     @Operation(summary = "금칙어 등록", description = "금칙어 등록하는 API입니다.")
-    public ResponseEntity<BaseResponse<Void>> createBadWord(@RequestBody @Valid CreateBadWordRequest request) {
-        badWordService.createBadWord(request);
-        return ResponseEntity.ok(BaseResponse.of(null, "금칙어 등록완료"));
+    public ResponseEntity<BaseResponse<BadWordResponse>> createBadWord(@RequestBody @Valid CreateBadWordRequest request) {
+        BadWordResponse response = badWordService.createBadWord(request);
+        return ResponseEntity.ok(BaseResponse.of(response, "금칙어 등록완료"));
     }
 
     @PatchMapping("/{badWordId}/status")

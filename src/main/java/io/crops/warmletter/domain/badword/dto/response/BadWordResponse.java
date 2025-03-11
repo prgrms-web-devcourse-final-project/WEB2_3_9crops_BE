@@ -13,6 +13,10 @@ public class BadWordResponse {
     @Schema(description = "금지어 단어", example = "비속어")
     private String word;
 
-    @JsonProperty("isUsed")
     private boolean isUsed;
+
+    @JsonProperty("isUsed")
+    public boolean isUsed() {
+        return isUsed;
+    }
 }

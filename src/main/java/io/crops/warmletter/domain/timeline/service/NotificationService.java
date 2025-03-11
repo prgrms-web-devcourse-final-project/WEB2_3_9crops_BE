@@ -57,7 +57,6 @@ public class NotificationService {
     }
 
     // 편지 수신, 신고 조치, 공유 요청, 공유 게시글 등록 시 호출 필요
-    @Transactional
     public void createNotification(String senderZipCode, Long receiverId, AlarmType alarmType, String data){
         Timeline.TimelineBuilder builder = Timeline.builder()
                 .memberId(receiverId)

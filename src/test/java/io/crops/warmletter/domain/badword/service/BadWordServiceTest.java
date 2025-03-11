@@ -131,39 +131,52 @@ class BadWordServiceTest {
                 .build();
         UpdateBadWordStatusRequest request = new UpdateBadWordStatusRequest(true);
 
+        // badWordRepository.findById() 호출에 대해 badWord 반환
         when(badWordRepository.findById(1L)).thenReturn(Optional.of(badWord));
+        // badWordRepository.save() 호출 시 입력된 객체에 ID를 설정하여 반환하도록 스텁 설정
+        when(badWordRepository.save(any(BadWord.class))).thenAnswer(invocation -> {
+            BadWord updated = invocation.getArgument(0);
+            // 예시로 ID를 1L로 설정
+            ReflectionTestUtils.setField(updated, "id", 1L);
+            return updated;
+        });
+
         // when
         badWordService.updateBadWordStatus(1L, request);
 
         // then
         assertTrue(badWord.isUsed());
-        // 서비스 코드에서 hashOperations.put 호출하므로 해당 호출 검증
+        // hashOperations.put 호출 검증 (활성화 상태이므로 Redis에 업데이트)
         verify(hashOperations).put("bad_word", "1", "비속어");
     }
-
 
     @Test
     @DisplayName("금칙어 상태 업데이트 - 비활성화 성공")
     void updateBadWordStatus_deactivate_success() {
         // given
         BadWord badWord = BadWord.builder()
-                .id(1L)  // ID를 직접 할당
+                .id(1L)  // ID 직접 할당
                 .word("비속어")
                 .isUsed(true)
                 .build();
 
         UpdateBadWordStatusRequest request = new UpdateBadWordStatusRequest(false);
 
-        // Mock 동작 설정
+        // findById는 기존 badWord를 반환하도록 설정
         when(badWordRepository.findById(1L)).thenReturn(Optional.of(badWord));
-        // when
+        // save() 호출 시 업데이트된 객체를 반환하도록 스텁 설정 (이 경우 ID는 그대로 1L)
+        when(badWordRepository.save(any(BadWord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // when: 상태 업데이트 메서드 호출 (비활성화)
         badWordService.updateBadWordStatus(1L, request);
 
         // then
-        assertFalse(badWord.isUsed()); // 상태 업데이트 확인
+        // 상태가 false로 변경되었는지 검증
+        assertFalse(badWord.isUsed());
+        // Redis 캐시에서 해당 금칙어 삭제가 호출되었는지 검증
         verify(hashOperations).delete("bad_word", "1", "비속어");
     }
-//
+
     @Test
     @DisplayName("금칙어가 포함되어 있지 않을 때 정상 통과")
     void validateText_noBadWord_success() {
@@ -286,7 +299,6 @@ class BadWordServiceTest {
         // given
         Long badWordId = 1L;
         BadWord badWord = new BadWord();
-        // 필요한 경우 badWord에 속성을 추가할 수 있습니다.
         when(badWordRepository.findById(badWordId)).thenReturn(Optional.of(badWord));
 
         // when
@@ -311,7 +323,6 @@ class BadWordServiceTest {
     @Test
     @DisplayName("금칙어가 포함된 경우 - 예외 발생")
     void testValidateTextWithBadWord() {
-        // 테스트용 텍스트: 금칙어가 독립된 단어로 존재하도록 공백을 둡니다.
         String targetStr = "이 문장에는 금칙어0 가 포함되어 있습니다.";
         System.out.println("targetStr: " + targetStr);
 
@@ -319,7 +330,6 @@ class BadWordServiceTest {
         Map<Object, Object> testBadWords = new HashMap<>();
         testBadWords.put("1", "금칙어0");
 
-        // 테스트 케이스 내에서 모의 데이터를 재설정(오버라이드)합니다.
         when(hashOperations.entries(BAD_WORD_KEY)).thenReturn(testBadWords);
         assertThrows(BadWordContainsException.class, () -> {
             badWordService.validateText(targetStr);

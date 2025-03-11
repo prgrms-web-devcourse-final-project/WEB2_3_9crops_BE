@@ -27,6 +27,14 @@ public class SharePostLikeService {
         if (sharePostId == null)
             throw new ShareInvalidInputValue();
 
-        return sharePostLikeRepository.getLikeCountAndStatus(sharePostId,memberId);
+        boolean isLikedInRedis = postLikeRedisManager.isLiked(sharePostId,memberId);
+
+        SharePostLikeResponse response = sharePostLikeRepository.getLikeCountAndStatus(sharePostId,memberId);
+
+        if (isLikedInRedis != response.isLiked()) {
+            return new SharePostLikeResponse(response.getLikeCount(), isLikedInRedis);
+        }
+
+        return response;
     }
 }

@@ -4,6 +4,7 @@ package io.crops.warmletter.domain.badword.service;
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
+import io.crops.warmletter.domain.badword.dto.response.BadWordResponse;
 import io.crops.warmletter.domain.badword.dto.response.UpdateBadWordResponse;
 import io.crops.warmletter.domain.badword.entity.BadWord;
 import io.crops.warmletter.domain.badword.exception.BadWordContainsException;
@@ -33,7 +34,8 @@ public class BadWordService {
     private static final String BAD_WORD_PATTERN = "[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9\\s]";
 
 
-    public void createBadWord(CreateBadWordRequest request) {
+    @Transactional
+    public BadWordResponse createBadWord(CreateBadWordRequest request) {
         String word = request.getWord();
 
         boolean exists = badWordRepository.existsByWord(word);
@@ -46,24 +48,23 @@ public class BadWordService {
                 .isUsed(true)
                 .build();
 
-
-        badWordRepository.save(badWord);
+        BadWord savedBadWord = badWordRepository.save(badWord);
 
         redisTemplate.opsForHash().put(BAD_WORD_KEY, badWord.getId().toString(), word);
+        return new BadWordResponse(savedBadWord.getId(), savedBadWord.getWord(), savedBadWord.isUsed());
     }
 
 
     @Transactional
-    public void updateBadWordStatus(Long badWordId, UpdateBadWordStatusRequest request) {
+    public BadWordResponse updateBadWordStatus(Long badWordId, UpdateBadWordStatusRequest request) {
         BadWord badWord = badWordRepository.findById(badWordId)
                 .orElseThrow(BadWordNotFoundException::new);
         badWord.updateStatus(request.isUsed());
+        BadWord savedBadWord = badWordRepository.save(badWord);
+        redisTemplate.opsForHash().delete(BAD_WORD_KEY,badWordId.toString(), badWord.getWord());
+        redisTemplate.opsForHash().put(BAD_WORD_KEY,badWordId.toString(), badWord.getWord());
+        return new BadWordResponse(savedBadWord.getId(), savedBadWord.getWord(), savedBadWord.isUsed());
 
-        if (request.isUsed()) {
-            redisTemplate.opsForHash().put(BAD_WORD_KEY,badWordId.toString(), badWord.getWord());
-        } else {
-            redisTemplate.opsForHash().delete(BAD_WORD_KEY,badWordId.toString(), badWord.getWord());
-        }
     }
 
     public List<Map<String, String>> getBadWords() {
@@ -71,12 +72,18 @@ public class BadWordService {
         return entries.entrySet().stream()
                 .map(e -> {
                     Map<String, String> map = new HashMap<>();
-                    map.put("id", e.getKey().toString());
+                    // 여기서 id 변수를 선언합니다.
+                    String id = e.getKey().toString();
+                    map.put("id", id);
                     map.put("word", e.getValue().toString());
+                    // DB에서 조회한 isUsed 값을 포함 (없으면 기본값 false)
+                    Optional<BadWord> optional = badWordRepository.findById(Long.valueOf(id));
+                    map.put("isUsed", optional.map(bw -> Boolean.toString(bw.isUsed())).orElse("false"));
                     return map;
                 })
-                .toList();
+                .collect(Collectors.toList());
     }
+
 
     @Transactional
     public UpdateBadWordResponse updateBadWord(Long id, UpdateBadWordRequest request) {

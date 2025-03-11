@@ -1,6 +1,5 @@
 package io.crops.warmletter.domain.timeline.service;
 
-import io.crops.warmletter.domain.auth.exception.UnauthorizedException;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.timeline.dto.response.NotificationResponse;
 import io.crops.warmletter.domain.timeline.entity.Timeline;
@@ -9,6 +8,7 @@ import io.crops.warmletter.domain.timeline.repository.TimelineRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,7 +57,9 @@ public class NotificationService {
     }
 
     // 편지 수신, 신고 조치, 공유 요청, 공유 게시글 등록 시 호출 필요
-    public void createNotification(String senderZipCode, Long receiverId, AlarmType alarmType, String data){
+    @Transactional
+    public void createNotification(String senderZipCode, Long receiverId, AlarmType alarmType, String data) {
+
         Timeline.TimelineBuilder builder = Timeline.builder()
                 .memberId(receiverId)
                 // data = LETTER: letterId / REPORT: adminMemo, 경고횟수 / SHARE: shareProposalId / POSTED: sharePostId
@@ -111,6 +113,7 @@ public class NotificationService {
     }
 
     // 연결을 확인하기 위한 Heartbeat를 30초마다 실행
+    @Async
     @Scheduled(fixedRate = 30000)
     public void sendHeartbeat() {
         NotificationResponse notificationResponse = NotificationResponse.builder()

@@ -46,8 +46,8 @@ class BadWordCacheInitializerTest {
         Long id2 = 2L;
         // given
         List<BadWordResponse> badWords = List.of(
-                new BadWordResponse(id1, "시발"),
-                new BadWordResponse(id2, "병신")
+                new BadWordResponse(id1, "시발", true),
+                new BadWordResponse(id2, "병신", true)
         );
         when(badWordRepository.findAllBadWords()).thenReturn(badWords);
 

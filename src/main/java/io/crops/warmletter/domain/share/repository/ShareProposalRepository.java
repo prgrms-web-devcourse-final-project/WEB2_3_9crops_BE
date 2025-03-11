@@ -9,12 +9,14 @@ public interface ShareProposalRepository extends JpaRepository<ShareProposal,Lon
     @Query("SELECT m.zipCode " +
             "FROM ShareProposal proposal " +
             "JOIN Member m ON proposal.requesterId = m.id " +
-            "WHERE proposal.requesterId = :requesterId")
-    String findZipCodeByRequesterId(Long requesterId);
+            "WHERE proposal.id = :id " +
+            "AND proposal.requesterId = :requesterId ")
+    String findZipCodeByRequesterId(Long id, Long requesterId);
 
     @Query("SELECT m.zipCode " +
             "FROM ShareProposal proposal " +
             "JOIN Member m ON proposal.recipientId = m.id " +
-            "WHERE proposal.recipientId = :recipientId")
-    String findZipCodeByRecipientId(Long recipientId);
+            "WHERE proposal.id = :id " +
+            "AND proposal.recipientId = :recipientId ")
+    String findZipCodeByRecipientId(Long id, Long recipientId);
 }

@@ -17,6 +17,7 @@ import io.crops.warmletter.domain.member.entity.Member;
 import io.crops.warmletter.domain.member.enums.Role;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
+import io.crops.warmletter.domain.timeline.dto.request.NotificationRequest;
 import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.lang.reflect.Field;
@@ -60,6 +62,9 @@ class LetterServiceTest {
 
     @Mock
     private NotificationFacade notificationFacade;
+
+    @Mock
+    private ApplicationEventPublisher notificationPublisher;
 
     @InjectMocks
     private LetterService letterService;
@@ -406,7 +411,7 @@ class LetterServiceTest {
         );
         //verify 메서드로 letterRepository.save() 메서드가 정확히 1번 호출되었는지 확인
         verify(letterRepository).save(any(Letter.class));
-        verify(notificationFacade).sendNotification(anyString(), anyLong(), any(), eq(null));
+        verify(notificationPublisher).publishEvent(any(NotificationRequest.class));
     }
 
     @Test
@@ -479,7 +484,7 @@ class LetterServiceTest {
         // then
         verify(letterRepository).delete(temporarySavedLetter);
         verify(letterRepository).save(any(Letter.class));
-
+        verify(notificationPublisher).publishEvent(any(NotificationRequest.class));
         // 응답 검증
         assertAll("편지 응답 검증",
                 () -> assertNotNull(response),
@@ -557,7 +562,7 @@ class LetterServiceTest {
         // then
         verify(letterRepository, never()).delete(nonSavedLetter);
         verify(letterRepository).save(any(Letter.class));
-
+        verify(notificationPublisher).publishEvent(any(NotificationRequest.class));
         // 응답 검증
         assertAll("편지 응답 검증",
                 () -> assertNotNull(response),

@@ -10,6 +10,7 @@ import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalLetterRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalRepository;
+import io.crops.warmletter.domain.timeline.dto.request.NotificationRequest;
 import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import io.crops.warmletter.global.error.common.ErrorCode;
 import io.crops.warmletter.global.error.exception.BusinessException;
@@ -20,6 +21,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -44,7 +46,7 @@ class ShareProposalServiceTest {
     private SharePostRepository sharePostRepository;
 
     @Mock
-    private NotificationFacade notificationFacade;
+    private ApplicationEventPublisher notificationPublisher;
 
     @Mock
     private AuthFacade authFacade;
@@ -84,6 +86,7 @@ class ShareProposalServiceTest {
         verify(shareProposalRepository).save(any(ShareProposal.class));
         verify(shareProposalLetterRepository).saveAll(anyList());
         verify(shareProposalRepository).findShareProposalWithZipCode(anyLong());
+        verify(notificationPublisher).publishEvent(any(NotificationRequest.class));
     }
 
 
@@ -137,6 +140,7 @@ class ShareProposalServiceTest {
         verify(shareProposalRepository).save(any(ShareProposal.class));
         verify(shareProposalLetterRepository).saveAll(Collections.emptyList()); // 빈 리스트가 전달됨
         verify(shareProposalRepository).findShareProposalWithZipCode(anyLong());
+        verify(notificationPublisher).publishEvent(any(NotificationRequest.class));
     }
 
     @Test
@@ -268,7 +272,6 @@ class ShareProposalServiceTest {
         // then
         assertThat(response).isNotNull();
         assertThat(response.getShareProposalId()).isEqualTo(shareProposalId);
-        verify(notificationFacade, times(2)).sendNotification(any(), any(), any(), any());
         assertThat(response.getStatus()).isEqualTo(ProposalStatus.APPROVED);
         assertThat(response.getSharePostId()).isEqualTo(sharePostId);
 
@@ -277,6 +280,7 @@ class ShareProposalServiceTest {
         verify(shareProposalRepository).findById(shareProposalId);
         verify(sharePostRepository).save(any(SharePost.class));
         verify(shareProposal).updateStatus(ProposalStatus.APPROVED);
+        verify(notificationPublisher,times(2)).publishEvent(any(NotificationRequest.class));
 
         SharePost createdPost = sharePostCaptor.getValue();
         assertThat(createdPost.getShareProposalId()).isEqualTo(shareProposalId);

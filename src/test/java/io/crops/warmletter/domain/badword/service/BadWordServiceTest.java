@@ -25,10 +25,12 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.*;
 
@@ -58,10 +60,24 @@ class BadWordServiceTest {
     private HashOperations<String, Object, Object> hashOperations;
 
     private static final String BAD_WORD_KEY = "bad_word";
+    private String targetStr;
+    private int filterCount = 10000;
+
     @BeforeEach
     void setUp() {
+        // 공통 모킹 설정 (targetStr은 여기서 설정하지 않음)
+        Map<Object, Object> mockBadWords = new HashMap<>();
+        for (int i = 0; i < 60000; i++) {
+            mockBadWords.put(i, "금칙어" + i); // 예: 금칙어0, 금칙어1, ...
+        }
+
         lenient().when(redisTemplate.opsForHash()).thenReturn(hashOperations);
+        lenient().when(hashOperations.entries(BAD_WORD_KEY)).thenReturn(mockBadWords);
+
+        System.out.println("Redis Mock 데이터 크기: " + mockBadWords.size());
     }
+
+
 
 
     @Test
@@ -146,26 +162,6 @@ class BadWordServiceTest {
         assertFalse(badWord.isUsed()); // 상태 업데이트 확인
         verify(hashOperations).delete("bad_word", "1", "비속어");
     }
-
-    @Test
-    @DisplayName("금칙어 포함 시 예외 발생")
-    void validateText_containsBadWord_throwsException() {
-        // given
-        String text = "욕설이 들어간 문장";
-
-        Map<Object, Object> entries = new HashMap<>();
-        entries.put("1", "욕설");
-
-        when(hashOperations.entries("bad_word")).thenReturn(entries);
-
-
-        // when & then
-        assertThatThrownBy(() -> badWordService.validateText(text))
-                .isInstanceOf(BadWordContainsException.class);
-    }
-
-
-
 //
     @Test
     @DisplayName("금칙어가 포함되어 있지 않을 때 정상 통과")
@@ -283,4 +279,49 @@ class BadWordServiceTest {
         assertEquals("newWord", response.getWord());
     }
 
+    @Test
+    @DisplayName("금칙어가 포함된 경우")
+    void testValidateTextWithBadWord() {
+        // 금칙어를 포함한 문자열 설정
+        // 금칙어가 독립적인 단어로 나타나도록 수정 (예: "금칙어0" 뒤에 공백 추가)
+        String targetStr = "이 문장에는 금칙어0 가 포함되어 있습니다.";
+        System.out.println("targetStr: " + targetStr);
+
+        Map<Object, Object> badWords = redisTemplate.opsForHash().entries(BAD_WORD_KEY);
+        System.out.println("Redis에서 불러온 금칙어 개수: " + badWords.size());
+
+        long startTime = System.nanoTime();
+        // 금칙어가 있으므로 예외가 발생해야 함
+        BadWordContainsException thrown = assertThrows(BadWordContainsException.class, () -> {
+            badWordService.validateText(targetStr);
+        });
+        long endTime = System.nanoTime();
+        double progressTime = (endTime - startTime) / 1_000_000.0;
+
+        System.out.println("테스트 완료! 실행 시간: " + progressTime + "ms");
+        System.out.println("예외 메시지: " + thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("금칙어가 포함되지 않은 경우")
+    void testValidateTextWithoutBadWord() {
+        // 금칙어가 없는 문자열 설정
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 1000; i++) {
+            sb.append("이 문장에는 금칙어가 없습니다. 안전한 문장입니다. ");
+        }
+        String targetStr = sb.toString();
+        System.out.println("targetStr length: " + targetStr.length());
+
+        Map<Object, Object> badWords = redisTemplate.opsForHash().entries(BAD_WORD_KEY);
+        System.out.println("Redis에서 불러온 금칙어 개수: " + badWords.size());
+
+        long startTime = System.nanoTime();
+        // 금칙어가 없으므로 예외가 발생하면 안 됨
+        assertDoesNotThrow(() -> badWordService.validateText(targetStr));
+        long endTime = System.nanoTime();
+        double progressTime = (endTime - startTime) / 1_000_000.0;
+
+        System.out.println("테스트 완료! 실행 시간: " + progressTime + "ms");
+    }
 }

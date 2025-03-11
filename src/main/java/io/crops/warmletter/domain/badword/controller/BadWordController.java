@@ -36,12 +36,11 @@ public class BadWordController {
 
     @PatchMapping("/{badWordId}/status")
     @Operation(summary = "금칙어 상태변경", description = "금칙어 상태변경 활성여부 API입니다.")
-    public ResponseEntity<BaseResponse<Void>> updateBadWordStatus(
+    public ResponseEntity<BaseResponse<BadWordResponse>> updateBadWordStatus(
             @PathVariable Long badWordId,
             @RequestBody @Valid UpdateBadWordStatusRequest request) {
-
-        badWordService.updateBadWordStatus(badWordId, request);
-        return ResponseEntity.ok(BaseResponse.of(null, "금칙어 상태 변경 완료"));
+        BadWordResponse response = badWordService.updateBadWordStatus(badWordId, request);
+        return ResponseEntity.ok(BaseResponse.of(response, "금칙어 상태 변경 완료"));
     }
 
     @GetMapping

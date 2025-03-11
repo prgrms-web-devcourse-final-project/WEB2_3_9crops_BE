@@ -56,12 +56,14 @@ public class BadWordService {
 
 
     @Transactional
-    public void updateBadWordStatus(Long badWordId, UpdateBadWordStatusRequest request) {
+    public BadWordResponse updateBadWordStatus(Long badWordId, UpdateBadWordStatusRequest request) {
         BadWord badWord = badWordRepository.findById(badWordId)
                 .orElseThrow(BadWordNotFoundException::new);
         badWord.updateStatus(request.isUsed());
+        BadWord savedBadWord = badWordRepository.save(badWord);
         redisTemplate.opsForHash().delete(BAD_WORD_KEY,badWordId.toString(), badWord.getWord());
         redisTemplate.opsForHash().put(BAD_WORD_KEY,badWordId.toString(), badWord.getWord());
+        return new BadWordResponse(savedBadWord.getId(), savedBadWord.getWord(), savedBadWord.isUsed());
 
     }
 

@@ -30,6 +30,7 @@ public class CustomSharePostRepositoryImpl implements CustomSharePostRepository 
     private static final QLetter LETTER = new QLetter("letter");
     private static final QMember WRITER = new QMember("writer");
     private static final QMember RECEIVER = new QMember("receiver");
+    private static final QMember REQUESTER = new QMember("requester");
 
     @Override
     public Optional<SharePostDetailResponse> findDetailById(Long sharePostId) {
@@ -37,6 +38,7 @@ public class CustomSharePostRepositoryImpl implements CustomSharePostRepository 
                 .select(
                         SHARE_POST.id,
                         PROPOSAL.message,
+                        REQUESTER.zipCode,
                         LETTER.id,
                         LETTER.content,
                         WRITER.zipCode,
@@ -45,6 +47,7 @@ public class CustomSharePostRepositoryImpl implements CustomSharePostRepository 
                 )
                 .from(SHARE_POST)
                 .leftJoin(PROPOSAL).on(SHARE_POST.shareProposalId.eq(PROPOSAL.id))
+                .leftJoin(REQUESTER).on(PROPOSAL.requesterId.eq(REQUESTER.id))
                 .leftJoin(PROPOSAL_LETTER).on(PROPOSAL.id.eq(PROPOSAL_LETTER.proposalId))
                 .leftJoin(LETTER).on(PROPOSAL_LETTER.letterId.eq(LETTER.id))
                 .leftJoin(WRITER).on(LETTER.writerId.eq(WRITER.id))
@@ -59,7 +62,7 @@ public class CustomSharePostRepositoryImpl implements CustomSharePostRepository 
 
         SharePostDetailResponse response = SharePostDetailResponse.builder()
                 .sharePostId(results.get(0).get(SHARE_POST.id))
-                .zipCode(results.get(0).get(WRITER.zipCode))
+                .zipCode(results.get(0).get(REQUESTER.zipCode))
                 .sharePostContent(results.get(0).get(PROPOSAL.message))
                 .letters(results.stream()
                         .map(tuple -> ShareLetterPostResponse.builder()

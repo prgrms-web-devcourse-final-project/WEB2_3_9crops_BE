@@ -12,6 +12,9 @@ import io.crops.warmletter.domain.badword.exception.DuplicateBadWordException;
 import io.crops.warmletter.domain.badword.repository.BadWordRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.ahocorasick.trie.Emit;
+import org.ahocorasick.trie.PayloadEmit;
+import org.ahocorasick.trie.Trie;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +29,7 @@ public class BadWordService {
     private final RedisTemplate<String, String> redisTemplate; // Redis 추가
 
     private static final String BAD_WORD_KEY = "bad_word";
-    private static final String BAD_WORD_PATTERN = "[^가-힣a-zA-Z0-9]";
+    private static final String BAD_WORD_PATTERN = "[^가-힣a-zA-Z0-9\\s]";
 
     public void createBadWord(CreateBadWordRequest request) {
         String word = request.getWord();
@@ -95,22 +98,32 @@ public class BadWordService {
 
     //필터링
     public void validateText(String text) {
+        // Redis에서 금칙어 데이터를 불러옴
         Map<Object, Object> entries = redisTemplate.opsForHash().entries(BAD_WORD_KEY);
 
+        // 금칙어 목록을 Set으로 변환
         Set<String> badWords = entries.values().stream()
                 .map(Object::toString)
                 .collect(Collectors.toSet());
 
+        // 아호코라식 트리(Trie) 생성 (단어 단위 매칭, 대소문자 구분 없이)
+        Trie.TrieBuilder builder = Trie.builder().onlyWholeWords().caseInsensitive();
+        for (String badWord : badWords) {
+            builder.addKeyword(badWord);
+        }
+        Trie badWordTrie = builder.build();
+
+        // 텍스트에서 특수문자만 제거하고, 공백은 그대로 유지 (공백 덕분에 단어가 분리됨)
         String sanitizedText = text.replaceAll(BAD_WORD_PATTERN, "");
 
+        // 아호코라식 트리로 텍스트를 검사
+        Collection<Emit> matches = badWordTrie.parseText(sanitizedText);
 
-        for (String badWord : badWords) {
-            // 금칙어도 혹시 특수문자 있을 수 있으니까 정제
-            String sanitizedBadWord = badWord.replaceAll("[^가-힣a-zA-Z0-9]", "");
-
-            if (sanitizedText.contains(sanitizedBadWord)) {
-                throw new BadWordContainsException();
-            }
+        // 금칙어가 발견되면 예외를 던짐
+        if (!matches.isEmpty()) {
+            throw new BadWordContainsException();
         }
     }
+
+
 }

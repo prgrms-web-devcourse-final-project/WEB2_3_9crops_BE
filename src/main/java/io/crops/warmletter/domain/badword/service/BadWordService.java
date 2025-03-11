@@ -26,7 +26,7 @@ public class BadWordService {
     private final RedisTemplate<String, String> redisTemplate; // Redis 추가
 
     private static final String BAD_WORD_KEY = "bad_word";
-    private static final String BAD_WORD_PATTERN = "[^가-힣a-zA-Z0-9]";
+    private static final String BAD_WORD_PATTERN = "[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]";
 
     public void createBadWord(CreateBadWordRequest request) {
         String word = request.getWord();
@@ -93,6 +93,18 @@ public class BadWordService {
         return new UpdateBadWordResponse(badWord.getWord());
     }
 
+    @Transactional
+    public void deleteBadWord(Long id) {
+        BadWord badWord = badWordRepository.findById(id)
+                .orElseThrow(BadWordNotFoundException:: new);
+
+        badWordRepository.delete(badWord);
+
+        redisTemplate.opsForHash().delete(BAD_WORD_KEY, id.toString());
+    }
+
+
+
     //필터링
     public void validateText(String text) {
         Map<Object, Object> entries = redisTemplate.opsForHash().entries(BAD_WORD_KEY);
@@ -106,7 +118,7 @@ public class BadWordService {
 
         for (String badWord : badWords) {
             // 금칙어도 혹시 특수문자 있을 수 있으니까 정제
-            String sanitizedBadWord = badWord.replaceAll("[^가-힣a-zA-Z0-9]", "");
+            String sanitizedBadWord = badWord.replaceAll(BAD_WORD_PATTERN, "");
 
             if (sanitizedText.contains(sanitizedBadWord)) {
                 throw new BadWordContainsException();

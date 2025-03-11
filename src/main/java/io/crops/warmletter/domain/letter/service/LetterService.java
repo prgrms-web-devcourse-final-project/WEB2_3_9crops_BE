@@ -5,7 +5,6 @@ import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.letter.dto.request.CreateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.EvaluateLetterRequest;
 import io.crops.warmletter.domain.letter.dto.request.TemporarySaveLetterRequest;
-import io.crops.warmletter.domain.letter.dto.response.LetterDraftResponse;
 import io.crops.warmletter.domain.letter.dto.response.LetterResponse;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.entity.LetterMatching;
@@ -17,17 +16,17 @@ import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.exception.MemberNotFoundException;
 import io.crops.warmletter.domain.member.facade.MemberFacade;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
+import io.crops.warmletter.domain.timeline.dto.request.NotificationRequest;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
-import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import io.crops.warmletter.global.error.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static io.crops.warmletter.global.error.common.ErrorCode.INVALID_INPUT_VALUE;
@@ -44,7 +43,7 @@ public class LetterService {
     private final MemberFacade memberFacade;
     private final AuthFacade authFacade;
 
-    private final NotificationFacade notificationFacade;
+    private final ApplicationEventPublisher notificationPublisher;
 
     @Transactional
     public LetterResponse createLetter(CreateLetterRequest request) {
@@ -109,7 +108,12 @@ public class LetterService {
 
         // 알림 전송
         if(request.getReceiverId() != null){
-            notificationFacade.sendNotification(zipCode,request.getReceiverId(), AlarmType.SENDING,null);
+            notificationPublisher.publishEvent(NotificationRequest.builder()
+                    .senderZipCode(zipCode)
+                    .receiverId(request.getReceiverId())
+                    .alarmType(AlarmType.SENDING)
+                    .data(null)
+                    .build());
         }
 
         return LetterResponse.fromEntity(savedLetter, zipCode);

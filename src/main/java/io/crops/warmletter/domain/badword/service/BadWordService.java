@@ -29,7 +29,9 @@ public class BadWordService {
     private final RedisTemplate<String, String> redisTemplate; // Redis 추가
 
     private static final String BAD_WORD_KEY = "bad_word";
-    private static final String BAD_WORD_PATTERN = "[^가-힣a-zA-Z0-9\\s]";
+
+    private static final String BAD_WORD_PATTERN = "[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9\\s]";
+
 
     public void createBadWord(CreateBadWordRequest request) {
         String word = request.getWord();
@@ -96,6 +98,18 @@ public class BadWordService {
         return new UpdateBadWordResponse(badWord.getWord());
     }
 
+    @Transactional
+    public void deleteBadWord(Long id) {
+        BadWord badWord = badWordRepository.findById(id)
+                .orElseThrow(BadWordNotFoundException:: new);
+
+        badWordRepository.delete(badWord);
+
+        redisTemplate.opsForHash().delete(BAD_WORD_KEY, id.toString());
+    }
+
+
+
     //필터링
     public void validateText(String text) {
         // Redis에서 금칙어 데이터를 불러옴
@@ -118,7 +132,6 @@ public class BadWordService {
 
         // 아호코라식 트리로 텍스트를 검사
         Collection<Emit> matches = badWordTrie.parseText(sanitizedText);
-
         // 금칙어가 발견되면 예외를 던짐
         if (!matches.isEmpty()) {
             throw new BadWordContainsException();

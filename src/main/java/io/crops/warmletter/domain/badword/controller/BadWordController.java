@@ -59,4 +59,9 @@ public class BadWordController {
         return ResponseEntity.ok(BaseResponse.of(response, "금칙어 변경 성공"));
     }
 
+    @DeleteMapping("/{badwordId}")
+    public ResponseEntity<BaseResponse<String>> deleteBadWord(@PathVariable("badwordId") Long badWordId) {
+        badWordService.deleteBadWord(badWordId);
+        return ResponseEntity.ok(BaseResponse.of(null, "금칙어 영구삭제"));
+    }
 }

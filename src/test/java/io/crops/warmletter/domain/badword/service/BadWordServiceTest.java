@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.badword.service;
 
 import io.crops.warmletter.config.TestConfig;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
@@ -280,26 +281,49 @@ class BadWordServiceTest {
     }
 
     @Test
-    @DisplayName("금칙어가 포함된 경우")
+    @DisplayName("deleteBadWord - 성공 케이스: 존재하는 금칙어 삭제")
+    void deleteBadWord_success() {
+        // given
+        Long badWordId = 1L;
+        BadWord badWord = new BadWord();
+        // 필요한 경우 badWord에 속성을 추가할 수 있습니다.
+        when(badWordRepository.findById(badWordId)).thenReturn(Optional.of(badWord));
+
+        // when
+        badWordService.deleteBadWord(badWordId);
+
+        // then: 리포지토리에서 delete() 메서드 호출 및 Redis에서 삭제 호출 검증
+        verify(badWordRepository).delete(badWord);
+        verify(hashOperations).delete(BAD_WORD_KEY, badWordId.toString());
+    }
+
+    @Test
+    @DisplayName("deleteBadWord - 실패 케이스: 존재하지 않는 금칙어 삭제 시 예외 발생")
+    void deleteBadWord_notFound() {
+        // given
+        Long badWordId = 2L;
+        when(badWordRepository.findById(badWordId)).thenReturn(Optional.empty());
+
+        // when & then: BadWordNotFoundException 발생 검증
+        assertThrows(BadWordNotFoundException.class, () -> badWordService.deleteBadWord(badWordId));
+    }
+
+    @Test
+    @DisplayName("금칙어가 포함된 경우 - 예외 발생")
     void testValidateTextWithBadWord() {
-        // 금칙어를 포함한 문자열 설정
-        // 금칙어가 독립적인 단어로 나타나도록 수정 (예: "금칙어0" 뒤에 공백 추가)
+        // 테스트용 텍스트: 금칙어가 독립된 단어로 존재하도록 공백을 둡니다.
         String targetStr = "이 문장에는 금칙어0 가 포함되어 있습니다.";
         System.out.println("targetStr: " + targetStr);
 
-        Map<Object, Object> badWords = redisTemplate.opsForHash().entries(BAD_WORD_KEY);
-        System.out.println("Redis에서 불러온 금칙어 개수: " + badWords.size());
+        // 해당 테스트에서 사용할 모의 금칙어 데이터: 오직 "금칙어0"만 포함
+        Map<Object, Object> testBadWords = new HashMap<>();
+        testBadWords.put("1", "금칙어0");
 
-        long startTime = System.nanoTime();
-        // 금칙어가 있으므로 예외가 발생해야 함
-        BadWordContainsException thrown = assertThrows(BadWordContainsException.class, () -> {
+        // 테스트 케이스 내에서 모의 데이터를 재설정(오버라이드)합니다.
+        when(hashOperations.entries(BAD_WORD_KEY)).thenReturn(testBadWords);
+        assertThrows(BadWordContainsException.class, () -> {
             badWordService.validateText(targetStr);
         });
-        long endTime = System.nanoTime();
-        double progressTime = (endTime - startTime) / 1_000_000.0;
-
-        System.out.println("테스트 완료! 실행 시간: " + progressTime + "ms");
-        System.out.println("예외 메시지: " + thrown.getMessage());
     }
 
     @Test

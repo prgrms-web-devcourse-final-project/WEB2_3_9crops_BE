@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import static org.mockito.Mockito.doNothing;
 
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -139,4 +140,18 @@ class BadWordControllerTest {
                 .andExpect(jsonPath("$.message").value("금칙어 변경 성공"));
     }
 
+    @Test
+    @DisplayName("금칙어 영구삭제 컨트롤러 테스트 - 성공")
+    void deleteBadWord_Success() throws Exception {
+        // 테스트용 금칙어 id
+        Long badwordId = 1L;
+
+        // badWordService.deleteBadWord(badwordId) 호출 시 아무 작업도 하지 않도록 설정
+        doNothing().when(badWordService).deleteBadWord(badwordId);
+
+        // DELETE 요청을 보내고, 응답 상태와 메시지 검증
+        mockMvc.perform(delete("/api/bad-words/{badwordId}", badwordId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("금칙어 영구삭제"));
+    }
 }

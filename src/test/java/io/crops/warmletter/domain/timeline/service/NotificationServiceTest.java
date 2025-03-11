@@ -106,21 +106,6 @@ class NotificationServiceTest {
     }
 
     @Test
-    @DisplayName("인증되지 않은 사용자가 SSE 구독 시 Unauthorized 응답 반환")
-    void test_unauthorizedUser_returnsUnauthorizedSseEmitter() throws IOException {
-        // Given
-        when(authFacade.getCurrentUserId()).thenThrow(new UnauthorizedException());
-        // When
-        SseEmitter sseEmitter = notificationService.subscribeNotification();
-
-        // Then
-        assertNotNull(sseEmitter);
-        assertEquals(0L, sseEmitter.getTimeout());
-        assertTrue(emitters.isEmpty());
-
-    }
-
-    @Test
     @DisplayName("알림 생성 성공 - SENDING")
     void create_notificationSENDING_success() {
         String zipCode = "12345";

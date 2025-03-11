@@ -27,24 +27,7 @@ public class NotificationService {
     private final TimelineRepository timelineRepository;
 
     public SseEmitter subscribeNotification(){
-        Long memberId;
-        try {
-            memberId = authFacade.getCurrentUserId();
-        } catch (UnauthorizedException e){
-            log.warn("SSE 구독 실패: 인증되지 않은 사용자");
-            SseEmitter emitter = new SseEmitter(0L);
-            NotificationResponse notificationResponse = NotificationResponse.builder()
-                    .title("Unauthorized")
-                    .alarmType("TEST").build();
-            try{
-                emitter.send(SseEmitter.event()
-                        .data(notificationResponse));
-            }catch (IOException ioException){
-                log.warn("SSE 에러 전송 실패 - Unauthorized");
-            }
-            emitter.complete();
-            return emitter;
-        }
+        Long memberId = authFacade.getCurrentUserId();
 
         SseEmitter emitter = new SseEmitter(600_000L); // 10분 후 타임아웃 설정
 

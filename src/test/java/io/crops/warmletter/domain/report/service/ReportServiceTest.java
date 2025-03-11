@@ -27,6 +27,7 @@ import io.crops.warmletter.domain.report.repository.ReportRepository;
 import io.crops.warmletter.domain.share.entity.SharePost;
 import io.crops.warmletter.domain.share.exception.SharePostNotFoundException;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
+import io.crops.warmletter.domain.timeline.dto.request.NotificationRequest;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import io.crops.warmletter.global.error.exception.BusinessException;
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -59,7 +61,7 @@ class ReportServiceTest {
     @Mock private SharePostRepository sharePostRepository;
     @Mock private EventCommentRepository eventCommentRepository;
     @Mock private AuthFacade authFacade;
-    @Mock private NotificationFacade notificationFacade;
+    @Mock private ApplicationEventPublisher notificationPublisher;
     @Mock private MemberRepository memberRepository;
     private Report report;
     private Member reportedMember;
@@ -383,7 +385,7 @@ class ReportServiceTest {
         // Then
         assertThat(response.getStatus()).isEqualTo(ReportStatus.RESOLVED);
         assertThat(reportedMember.getWarningCount()).isEqualTo(1); // increaseWarningCount 호출됨
-        verify(notificationFacade, times(1)).sendNotification(any(), any(), any(), any());
+        verify(notificationPublisher).publishEvent(any(NotificationRequest.class));
         verify(reportRepository, times(1)).save(any(Report.class));
         verify(memberRepository, times(1)).save(any(Member.class));
     }
@@ -685,7 +687,7 @@ class ReportServiceTest {
         // 신고 상태는 업데이트되지만, deactivateTarget가 false이므로 Warning Count 증가 및 Notification 미발송
         verify(reportRepository, times(1)).save(any(Report.class));
         verify(memberRepository, never()).save(any(Member.class));
-        verify(notificationFacade, never()).sendNotification(any(), any(), any(), any());
+        verify(notificationPublisher, never()).publishEvent(any(NotificationRequest.class));
     }
 
     // 추가된 테스트 케이스들 (추가된 부분만 발췌)
@@ -715,7 +717,7 @@ class ReportServiceTest {
                 r.getReportStatus() == ReportStatus.PENDING &&
                         "신고되었습니다.".equals(r.getAdminMemo())
         ));
-        verify(notificationFacade, never()).sendNotification(any(), any(), any(), any());
+        verify(notificationPublisher,never()).publishEvent(any(NotificationRequest.class));
     }
 
     @Test

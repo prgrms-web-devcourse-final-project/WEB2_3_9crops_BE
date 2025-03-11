@@ -28,10 +28,12 @@ import io.crops.warmletter.domain.share.exception.SharePostNotFoundException;
 import io.crops.warmletter.domain.share.exception.ShareProposalNotFoundException;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import io.crops.warmletter.domain.share.repository.ShareProposalRepository;
+import io.crops.warmletter.domain.timeline.dto.request.NotificationRequest;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -56,7 +58,8 @@ public class ReportService {
     private final ReportModerationService reportModerationService;
 
     private final AuthFacade authFacde;
-    private final NotificationFacade notificationFacade;
+
+    private final ApplicationEventPublisher notificationPublisher;
 
     @Transactional
     public UpdateReportResponse updateReport(Long reportId, UpdateReportRequest request) {
@@ -81,7 +84,12 @@ public class ReportService {
             }
             resolvePendingReports(report);
             // targetMemberId로 알림 전송
-            notificationFacade.sendNotification(null, targetMemberId, AlarmType.REPORT, report.getAdminMemo()+"§"+reportedMember.getWarningCount());
+            notificationPublisher.publishEvent(NotificationRequest.builder()
+                    .senderZipCode(null)
+                    .receiverId(targetMemberId)
+                    .alarmType(AlarmType.REPORT)
+                    .data(report.getAdminMemo()+"§"+reportedMember.getWarningCount())
+                    .build());
         }
         return new UpdateReportResponse(report,reportedMember);
     }
@@ -142,7 +150,13 @@ public class ReportService {
                         .orElseThrow(MemberNotFoundException::new);
                 reportedMember.increaseWarningCount();
                 memberRepository.save(reportedMember);
-                notificationFacade.sendNotification(null, targetMemberId, AlarmType.REPORT, report.getAdminMemo()+"§"+reportedMember.getWarningCount());
+                // 알림
+                notificationPublisher.publishEvent(NotificationRequest.builder()
+                        .senderZipCode(null)
+                        .receiverId(targetMemberId)
+                        .alarmType(AlarmType.REPORT)
+                        .data(report.getAdminMemo()+"§"+reportedMember.getWarningCount())
+                        .build());
             }
             resolvePendingReports(report);
         }

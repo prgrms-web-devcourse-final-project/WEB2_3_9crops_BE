@@ -4,12 +4,14 @@ import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.Status;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
 import io.crops.warmletter.domain.member.repository.MemberRepository;
+import io.crops.warmletter.domain.timeline.dto.request.NotificationRequest;
 import io.crops.warmletter.domain.timeline.dto.response.LetterAlarmResponse;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -25,7 +27,8 @@ import java.util.stream.Collectors;
 public class DeliverySchedule {
 
     private final LetterRepository letterRepository;
-    private final NotificationFacade notificationFacade;
+
+    private final ApplicationEventPublisher notificationPublisher;
 
     @Transactional
     @Scheduled(cron = "0 */1 * * * *", zone = "Asia/Seoul")
@@ -55,11 +58,12 @@ public class DeliverySchedule {
                 letter.updateStatus(Status.DELIVERED);
                 log.info("편지 ID: {} 배송 완료 처리됨", letter.getId());
                 // 도착 알림 전송
-                notificationFacade.sendNotification(
-                        senderZipCodes.get(letter.getWriterId()),
-                        letter.getReceiverId(),
-                        AlarmType.LETTER,
-                        letter.getId().toString());
+                notificationPublisher.publishEvent(NotificationRequest.builder()
+                        .senderZipCode(senderZipCodes.get(letter.getWriterId()))
+                        .receiverId(letter.getReceiverId())
+                        .alarmType(AlarmType.LETTER)
+                        .data(letter.getId().toString())
+                        .build());
             }
 
             // 변경사항 저장

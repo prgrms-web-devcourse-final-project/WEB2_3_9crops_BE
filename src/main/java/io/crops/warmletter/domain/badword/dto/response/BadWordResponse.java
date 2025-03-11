@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.badword.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,4 +12,7 @@ public class BadWordResponse {
     private Long id;
     @Schema(description = "금지어 단어", example = "비속어")
     private String word;
+
+    @JsonProperty("isUsed")
+    private boolean isUsed;
 }

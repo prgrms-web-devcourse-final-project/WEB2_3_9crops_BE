@@ -71,12 +71,18 @@ public class BadWordService {
         return entries.entrySet().stream()
                 .map(e -> {
                     Map<String, String> map = new HashMap<>();
-                    map.put("id", e.getKey().toString());
+                    // 여기서 id 변수를 선언합니다.
+                    String id = e.getKey().toString();
+                    map.put("id", id);
                     map.put("word", e.getValue().toString());
+                    // DB에서 조회한 isUsed 값을 포함 (없으면 기본값 false)
+                    Optional<BadWord> optional = badWordRepository.findById(Long.valueOf(id));
+                    map.put("isUsed", optional.map(bw -> Boolean.toString(bw.isUsed())).orElse("false"));
                     return map;
                 })
-                .toList();
+                .collect(Collectors.toList());
     }
+
 
     @Transactional
     public UpdateBadWordResponse updateBadWord(Long id, UpdateBadWordRequest request) {

@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.timeline.facade;
 
+import io.crops.warmletter.domain.timeline.dto.request.NotificationRequest;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import io.crops.warmletter.domain.timeline.service.NotificationService;
 import org.junit.jupiter.api.DisplayName;
@@ -25,17 +26,21 @@ class NotificationFacadeTest {
     @DisplayName("알림 전송 요청 정상 전달")
     void send_createNotification_success() {
         // given
-        String senderZipCode = "12345";
-        Long receiverId = 1L;
-        AlarmType alarmType = AlarmType.POSTED;  // 예시로 POSTED 사용
-        String data = "Test";
+        NotificationRequest notificationRequest = NotificationRequest.builder()
+                .senderZipCode("12345")
+                .receiverId(1L)
+                .alarmType(AlarmType.POSTED)
+                .data("Test").build();
 
         // when
-        notificationFacade.sendNotification(senderZipCode, receiverId, alarmType, data);
+        notificationFacade.sendNotification(notificationRequest);
 
         // then
-        verify(notificationService, times(1))
-                .createNotification(senderZipCode, receiverId, alarmType, data);
+        verify(notificationService, times(1)).createNotification(
+                        notificationRequest.getSenderZipCode(),
+                        notificationRequest.getReceiverId(),
+                        notificationRequest.getAlarmType(),
+                        notificationRequest.getData());
     }
 
 

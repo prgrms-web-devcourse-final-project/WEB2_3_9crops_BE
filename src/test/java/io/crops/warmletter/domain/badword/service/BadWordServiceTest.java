@@ -1,6 +1,7 @@
 package io.crops.warmletter.domain.badword.service;
 
 import io.crops.warmletter.config.TestConfig;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import io.crops.warmletter.domain.badword.dto.request.CreateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordRequest;
 import io.crops.warmletter.domain.badword.dto.request.UpdateBadWordStatusRequest;
@@ -283,4 +284,31 @@ class BadWordServiceTest {
         assertEquals("newWord", response.getWord());
     }
 
+    @Test
+    @DisplayName("deleteBadWord - 성공 케이스: 존재하는 금칙어 삭제")
+    void deleteBadWord_success() {
+        // given
+        Long badWordId = 1L;
+        BadWord badWord = new BadWord();
+        // 필요한 경우 badWord에 속성을 추가할 수 있습니다.
+        when(badWordRepository.findById(badWordId)).thenReturn(Optional.of(badWord));
+
+        // when
+        badWordService.deleteBadWord(badWordId);
+
+        // then: 리포지토리에서 delete() 메서드 호출 및 Redis에서 삭제 호출 검증
+        verify(badWordRepository).delete(badWord);
+        verify(hashOperations).delete(BAD_WORD_KEY, badWordId.toString());
+    }
+
+    @Test
+    @DisplayName("deleteBadWord - 실패 케이스: 존재하지 않는 금칙어 삭제 시 예외 발생")
+    void deleteBadWord_notFound() {
+        // given
+        Long badWordId = 2L;
+        when(badWordRepository.findById(badWordId)).thenReturn(Optional.empty());
+
+        // when & then: BadWordNotFoundException 발생 검증
+        assertThrows(BadWordNotFoundException.class, () -> badWordService.deleteBadWord(badWordId));
+    }
 }

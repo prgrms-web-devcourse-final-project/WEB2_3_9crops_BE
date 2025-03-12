@@ -3,22 +3,21 @@ package io.crops.warmletter.global.schedule;
 import io.crops.warmletter.domain.letter.entity.Letter;
 import io.crops.warmletter.domain.letter.enums.Status;
 import io.crops.warmletter.domain.letter.repository.LetterRepository;
-import io.crops.warmletter.domain.member.repository.MemberRepository;
-import io.crops.warmletter.domain.timeline.dto.request.NotificationRequest;
+import io.crops.warmletter.domain.letter.service.LetterProcessingService;
 import io.crops.warmletter.domain.timeline.dto.response.LetterAlarmResponse;
-import io.crops.warmletter.domain.timeline.enums.AlarmType;
-import io.crops.warmletter.domain.timeline.facade.NotificationFacade;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -27,10 +26,10 @@ import java.util.stream.Collectors;
 public class DeliverySchedule {
 
     private final LetterRepository letterRepository;
+    private final LetterProcessingService letterProcessingService;
+    @Qualifier("deliveryTaskExecutor")
+    private final AsyncTaskExecutor taskExecutor;
 
-    private final ApplicationEventPublisher notificationPublisher;
-
-    @Transactional
     @Scheduled(cron = "0 */1 * * * *", zone = "Asia/Seoul")
     public void processDeliveryCompletion() {
         String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -38,37 +37,61 @@ public class DeliverySchedule {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // 배송 완료 조건을 만족하는 편지 목록 조회 (배송 중이면서 배송 완료 시간이 현재보다 이전인 편지)
+        // 배송 완료 조건을 만족하는 편지 목록 조회
         List<Letter> lettersToComplete = letterRepository.findByStatusAndDeliveryCompletedAtLessThanEqual(
                 Status.IN_DELIVERY, now);
-        // lettersToComplete 조건을 만족하는 편지를 보낸 사람의 zipCode 조회
+
+        // zipCode 조회
         List<LetterAlarmResponse> zipCodeData = letterRepository.findZipCodeByLettersToComplete(now);
         Map<Long, String> senderZipCodes = zipCodeData.stream()
                 .collect(Collectors.toMap(
                         LetterAlarmResponse::getWriterId,
                         LetterAlarmResponse::getZipCode,
-                        (existingZipCode, newZipCode) -> existingZipCode  // 중복 키 발생 시 기존 값 사용
+                        (existingZipCode, newZipCode) -> existingZipCode
                 ));
 
         if (!lettersToComplete.isEmpty()) {
             log.info("배송 완료 처리할 편지 수: {}", lettersToComplete.size());
 
-            // 각 편지의 상태를 DELIVERED로 변경
+            // 결과 추적을 위한 CompletableFuture 목록
+            List<CompletableFuture<Boolean>> futures = new ArrayList<>();
+
+            // 각 편지를 비동기적으로 처리
             for (Letter letter : lettersToComplete) {
-                letter.updateStatus(Status.DELIVERED);
-                log.info("편지 ID: {} 배송 완료 처리됨", letter.getId());
-                // 도착 알림 전송
-                notificationPublisher.publishEvent(NotificationRequest.builder()
-                        .senderZipCode(senderZipCodes.get(letter.getWriterId()))
-                        .receiverId(letter.getReceiverId())
-                        .alarmType(AlarmType.LETTER)
-                        .data(letter.getId().toString())
-                        .build());
+                CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
+                    try {
+                        // 별도 서비스를 통해 트랜잭션 관리
+                        letterProcessingService.processDeliveryCompletion(letter, senderZipCodes.get(letter.getWriterId()));
+                        log.info("편지 ID: {} 배송 완료 처리됨", letter.getId());
+                        return true;
+                    } catch (Exception e) {
+                        log.error("편지 ID: {} 배송 완료 처리 실패: {}", letter.getId(), e.getMessage(), e);
+                        return false;
+                    }
+                }, taskExecutor);
+
+                futures.add(future);
             }
 
-            // 변경사항 저장
-            letterRepository.saveAll(lettersToComplete);
-            log.info("총 {}개의 편지 배송 완료 처리됨", lettersToComplete.size());
+            // 모든 비동기 작업 완료 대기
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+            // 성공/실패 편지 수 계산
+            long successCount = futures.stream().filter(f -> {
+                try {
+                    return f.get();
+                } catch (InterruptedException e) {
+                    // 인터럽트 상태 복원
+                    Thread.currentThread().interrupt();
+                    log.error("편지 처리 중 스레드 인터럽트 발생", e);
+                    return false;
+                } catch (Exception e) {
+                    log.error("편지 처리 중 오류 발생", e);
+                    return false;
+                }
+            }).count();
+
+            log.info("총 {}개 중 {}개의 편지 배송 완료 처리 성공", lettersToComplete.size(), successCount);
         } else {
             log.info("배송 완료 처리할 편지가 없습니다.");
         }

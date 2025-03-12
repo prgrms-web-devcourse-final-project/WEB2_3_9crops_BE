@@ -32,7 +32,10 @@ public class Letter extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Category category;       // 편지 분류 (enum: 쿠폰, 응원, 그외 등)
 
+    @Column(length = 50)
     private String title;            // 제목
+
+    @Column(length = 1000)
     private String content;          // 내용
 
     @Enumerated(EnumType.STRING)

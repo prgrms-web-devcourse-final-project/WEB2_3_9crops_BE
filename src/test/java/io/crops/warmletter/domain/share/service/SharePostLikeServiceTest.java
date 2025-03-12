@@ -1,4 +1,5 @@
 package io.crops.warmletter.domain.share.service;
+
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
 import io.crops.warmletter.domain.share.cache.PostLikeRedisManager;
 import io.crops.warmletter.domain.share.dto.response.SharePostLikeResponse;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -54,7 +56,6 @@ class SharePostLikeServiceTest {
         SharePostLikeResponse mockResponse = new SharePostLikeResponse(5L, true);
 
         when(authFacade.getCurrentUserId()).thenReturn(memberId);
-        when(redisManager.isLiked(sharePostId, memberId)).thenReturn(true);
         when(sharePostLikeRepository.getLikeCountAndStatus(sharePostId, memberId))
                 .thenReturn(mockResponse);
 
@@ -66,7 +67,6 @@ class SharePostLikeServiceTest {
         assertEquals(5L, result.getLikeCount());
         assertTrue(result.isLiked());
         verify(authFacade).getCurrentUserId();
-        verify(redisManager).isLiked(sharePostId, memberId);
         verify(sharePostLikeRepository).getLikeCountAndStatus(sharePostId, memberId);
     }
 
@@ -79,7 +79,6 @@ class SharePostLikeServiceTest {
         SharePostLikeResponse mockResponse = new SharePostLikeResponse(10L, false);
 
         when(authFacade.getCurrentUserId()).thenReturn(memberId);
-        when(redisManager.isLiked(sharePostId, memberId)).thenReturn(false);
         when(sharePostLikeRepository.getLikeCountAndStatus(sharePostId, memberId))
                 .thenReturn(mockResponse);
 
@@ -91,7 +90,6 @@ class SharePostLikeServiceTest {
         assertEquals(10L, result.getLikeCount());
         assertFalse(result.isLiked());
         verify(authFacade).getCurrentUserId();
-        verify(redisManager).isLiked(sharePostId, memberId);
         verify(sharePostLikeRepository).getLikeCountAndStatus(sharePostId, memberId);
     }
 
@@ -108,31 +106,6 @@ class SharePostLikeServiceTest {
         });
 
         verify(authFacade).getCurrentUserId();
-        verify(redisManager, never()).isLiked(any(), any());
         verify(sharePostLikeRepository, never()).getLikeCountAndStatus(any(), any());
-    }
-    @Test
-    @DisplayName("좋아요 개수와 상태 조회 - Redis는 false, DB는 true일 때 redis 우선 ")
-    void getLikeCountAndStatus_RedisNotLikedDbLiked() {
-        // given
-        Long sharePostId = 1L;
-        Long memberId = 1L;
-        SharePostLikeResponse mockResponse = new SharePostLikeResponse(10L, true);
-
-        when(authFacade.getCurrentUserId()).thenReturn(memberId);
-        when(redisManager.isLiked(sharePostId, memberId)).thenReturn(false);
-        when(sharePostLikeRepository.getLikeCountAndStatus(sharePostId, memberId))
-                .thenReturn(mockResponse);
-
-        // when
-        SharePostLikeResponse result = sharePostLikeService.getLikeCountAndStatus(sharePostId);
-
-        // then
-        assertNotNull(result);
-        assertEquals(10L, result.getLikeCount());
-        assertFalse(result.isLiked());
-        verify(authFacade).getCurrentUserId();
-        verify(redisManager).isLiked(sharePostId, memberId);
-        verify(sharePostLikeRepository).getLikeCountAndStatus(sharePostId, memberId);
     }
 }

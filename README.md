@@ -39,7 +39,7 @@
 ### 인프라
 - **배포**: Docker, AWS EC2
 - **CI/CD**: Github Actions
-- **품질 관리**: SonarCloud, JaCoCo
+- **품질 관리**: SonarCloud, JaCoCo, Jira
 
 ## 📂 프로젝트 구조
 

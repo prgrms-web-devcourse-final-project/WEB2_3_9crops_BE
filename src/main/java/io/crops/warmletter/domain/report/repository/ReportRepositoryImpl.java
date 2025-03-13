@@ -74,7 +74,7 @@ public class ReportRepositoryImpl implements ReportRepositoryCustom {
                 .leftJoin(reporter).on(reporter.id.eq(report.memberId)) // 신고자
                 .leftJoin(letter).on(report.letterId.eq(letter.id)) // 편지
                 .leftJoin(sharePost).on(report.sharePostId.eq(sharePost.id)) // 공유게시글
-                .leftJoin(shareProposal).on(shareProposal.id.eq(sharePost.id)) // 공유요청
+                .leftJoin(shareProposal).on(shareProposal.id.eq(sharePost.shareProposalId))
                 .leftJoin(eventComment).on(report.eventCommentId.eq(eventComment.id)) // 이벤트 댓글
                 .leftJoin(target).on(
                         report.letterId.isNotNull().and(target.id.eq(letter.writerId))

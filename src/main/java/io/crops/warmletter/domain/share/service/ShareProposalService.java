@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.share.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
 import io.crops.warmletter.domain.share.dto.response.ShareInboxResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareProposalDetailResponse;
@@ -29,12 +30,12 @@ public class ShareProposalService {
     private final ShareProposalLetterRepository shareProposalLetterRepository;
     private final SharePostRepository sharePostRepository;
     private final AuthFacade authFacade;
-
+    private final BadWordService badWordService;
     private final ApplicationEventPublisher notificationPublisher;
 
     @Transactional
     public ShareProposalResponse requestShareProposal(ShareProposalRequest request) {
-
+        badWordService.validateText(request.getMessage());
         Long requesterId = authFacade.getCurrentUserId();
 
         ShareProposal shareProposal = shareProposalRepository.save(request.toEntity(requesterId));

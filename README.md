@@ -9,7 +9,7 @@
 - 배포 URL : https://www.ddasum.kr/
 
 ## 구성원
-| [이영섭](https://github.com/chesthyeon) | [고진영](https://github.com/Kojinyoung7220) | [양한동](https://github.com/yhd1101) | [이종찬](https://github.com/LeeVell) | [허정현](https://github.com/HeoJeongHyeon) |
+| [이영섭](https://github.com/leeys9423) | [고진영](https://github.com/Kojinyoung7220) | [양한동](https://github.com/yhd1101) | [이종찬](https://github.com/LeeVell) | [허정현](https://github.com/HeoJeongHyeon) |
 | --- | --- | --- | --- | --- |
 | <a href="https://github.com/leeys9423"><img src="https://avatars.githubusercontent.com/u/67312117?v=4" width="100px;" alt=""/></a> | <a href="https://github.com/Kojinyoung7220"><img src="https://avatars.githubusercontent.com/u/133757475?v=4" width="100px;" alt=""/></a> | <a href="https://github.com/yhd1101"><img src="https://avatars.githubusercontent.com/u/117626705?v=4" width="100px;" alt=""/></a> | <a href="https://github.com/LeeVell"><img src="https://avatars.githubusercontent.com/u/50389081?v=4" width="100px;" alt=""/></a> | <a href="https://github.com/HeoJeongHyeon"><img src="https://avatars.githubusercontent.com/u/188425240?v=4" width="100px;" alt=""/></a> |
 | PO | Team-Lead  | Clerk | Clerk | Clerk |

@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -44,6 +45,7 @@ public class ReportController {
 
     @GetMapping
     @Operation(summary = "신고 목록 조회", description = "신고 목록 조회하는 API입니다.")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<PageResponse<ReportsResponse>>> getAllReports(
             @RequestParam(required = false) String reportType,
             @RequestParam(required = false) String status,
@@ -60,6 +62,7 @@ public class ReportController {
 
     @PatchMapping("/{reportId}")
     @Operation(summary = "신고 처리", description = "신고 처리해주는 API 입니다 . PENDING-미처리, RESOLVED-해결 ,REJECTED-거절 ")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<UpdateReportResponse>> updateReport(@PathVariable Long reportId, @RequestBody @Valid UpdateReportRequest request) {
         UpdateReportResponse response = reportService.updateReport(reportId, request);
         return ResponseEntity.ok(BaseResponse.of(response, "신고 처리 완료"));

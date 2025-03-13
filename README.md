@@ -13,7 +13,7 @@
 | --- | --- | --- | --- | --- |
 | <a href="https://github.com/leeys9423"><img src="https://avatars.githubusercontent.com/u/67312117?v=4" width="100px;" alt=""/></a> | <a href="https://github.com/Kojinyoung7220"><img src="https://avatars.githubusercontent.com/u/133757475?v=4" width="100px;" alt=""/></a> | <a href="https://github.com/yhd1101"><img src="https://avatars.githubusercontent.com/u/117626705?v=4" width="100px;" alt=""/></a> | <a href="https://github.com/LeeVell"><img src="https://avatars.githubusercontent.com/u/50389081?v=4" width="100px;" alt=""/></a> | <a href="https://github.com/HeoJeongHyeon"><img src="https://avatars.githubusercontent.com/u/188425240?v=4" width="100px;" alt=""/></a> |
 | PO | Team-Lead  | Clerk | Clerk | Clerk |
-| 소셜로그인, 인증 및 인가 | 편지, JIRA | AWS, 금칙어, 신고 |  알림, 이벤트 게시판 | 공유 편지 및 게시판 |
+| 소셜로그인,<br/> 인증 및 인가 | 편지, JIRA | AWS,<br/> 금칙어, 신고 |  알림,<br/> 이벤트 게시판 | 공유 편지,<br/> 공유 편지 게시판 |
 
 ## 📋 프로젝트 개요
 

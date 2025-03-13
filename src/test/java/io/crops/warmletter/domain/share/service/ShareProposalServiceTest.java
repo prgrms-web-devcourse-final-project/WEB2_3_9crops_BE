@@ -1,5 +1,6 @@
 package io.crops.warmletter.domain.share.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.badword.service.BadWordService;
 import io.crops.warmletter.domain.share.dto.request.ShareProposalRequest;
 import io.crops.warmletter.domain.share.dto.response.*;
 import io.crops.warmletter.domain.share.entity.SharePost;
@@ -49,6 +50,9 @@ class ShareProposalServiceTest {
     private ApplicationEventPublisher notificationPublisher;
 
     @Mock
+    private BadWordService badWordService;
+
+    @Mock
     private AuthFacade authFacade;
 
     @InjectMocks
@@ -73,6 +77,7 @@ class ShareProposalServiceTest {
         when(authFacade.getCurrentUserId()).thenReturn(requesterId);
         when(shareProposalRepository.save(any(ShareProposal.class))).thenReturn(shareProposal);
         when(shareProposalRepository.findShareProposalWithZipCode(anyLong())).thenReturn(expectedResponse);
+        doNothing().when(badWordService).validateText(request.getMessage());
 
         ShareProposalResponse response = shareProposalService.requestShareProposal(request);
 
@@ -82,6 +87,7 @@ class ShareProposalServiceTest {
                 () -> assertEquals(expectedResponse.getZipCode(), response.getZipCode())
         );
 
+        verify(badWordService).validateText(request.getMessage());
         verify(authFacade).getCurrentUserId(); // AuthFacade 호출 검증 추가
         verify(shareProposalRepository).save(any(ShareProposal.class));
         verify(shareProposalLetterRepository).saveAll(anyList());
@@ -103,11 +109,13 @@ class ShareProposalServiceTest {
         );
 
         when(authFacade.getCurrentUserId()).thenReturn(currentUserId);
+        doNothing().when(badWordService).validateText(request.getMessage());
 
         // when & then
         NullPointerException exception = assertThrows(NullPointerException.class, () ->
                 shareProposalService.requestShareProposal(request));
 
+        verify(badWordService).validateText(request.getMessage());
         verify(authFacade).getCurrentUserId();
     }
 
@@ -218,6 +226,7 @@ class ShareProposalServiceTest {
         verify(authFacade).getCurrentUserId();
         verify(shareProposalRepository).save(any(ShareProposal.class));
     }
+
 
     @Test
     @DisplayName("존재하지 않는 공유 제안 승인 실패")

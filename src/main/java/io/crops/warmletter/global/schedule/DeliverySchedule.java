@@ -30,7 +30,7 @@ public class DeliverySchedule {
     @Qualifier("deliveryTaskExecutor")
     private final AsyncTaskExecutor taskExecutor;
 
-    @Scheduled(cron = "0 */1 * * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "*/15 * * * * *", zone = "Asia/Seoul")
     public void processDeliveryCompletion() {
         String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         log.info("--------- 배송 완료 처리 시작: {} ---------", currentTime);

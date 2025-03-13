@@ -6,6 +6,7 @@ import io.crops.warmletter.domain.share.exception.ShareInvalidInputValue;
 import io.crops.warmletter.domain.share.repository.SharePostLikeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,7 +18,18 @@ public class SharePostLikeService {
 
     public void toggleLike(Long postId) {
         Long memberId = authFacade.getCurrentUserId();
-        postLikeRedisManager.toggleLike(postId, memberId);
+        // Redis 먼저 조회 후, DB 조회
+        Optional<Boolean> redisLikeStatus = postLikeRedisManager.getLikedStatus(postId, memberId);
+
+        boolean currentLikeStatus = redisLikeStatus.orElseGet(() ->
+                sharePostLikeRepository.findBySharePostIdAndMemberId(postId, memberId)
+                        .map(entity -> entity.isLiked())
+                        .orElse(false)
+        );
+
+        boolean newStatus = !currentLikeStatus;
+
+        postLikeRedisManager.toggleLike(postId, memberId, newStatus);
     }
 
     public SharePostLikeResponse getLikeCountAndStatus(Long sharePostId) {
@@ -26,7 +38,18 @@ public class SharePostLikeService {
 
         if (sharePostId == null)
             throw new ShareInvalidInputValue();
+        // DB 조회
+        SharePostLikeResponse dbResponse = sharePostLikeRepository.getLikeCountAndStatus(sharePostId, memberId);
+        // Redis에서 동기화안된 카운트 가져옴.
+        int redisLikeCount = postLikeRedisManager.getLikeCount(sharePostId);
+        // 좋아요 상태 확인 없으면 DB 값으로
+        Optional<Boolean> redisLikeStatus = postLikeRedisManager.getLikedStatus(sharePostId, memberId);
+        boolean isLiked = redisLikeStatus.orElse(dbResponse.isLiked());
 
-        return sharePostLikeRepository.getLikeCountAndStatus(sharePostId,memberId);
+        return new SharePostLikeResponse(
+                dbResponse.getLikeCount() + redisLikeCount,
+                isLiked
+        );
+
     }
 }

@@ -17,7 +17,7 @@
 
 ## 📋 프로젝트 개요
 
-WarmLetter는 다음과 같은 기능을 제공합니다:
+36.5는 다음과 같은 기능을 제공합니다:
 
 - **랜덤 편지**: 카테고리별 랜덤 편지 작성 및 매칭
 - **편지 주고받기**: 매칭된 사용자와 지속적인 편지 교환
@@ -29,7 +29,7 @@ WarmLetter는 다음과 같은 기능을 제공합니다:
 ## 🛠 기술 스택
 
 ### 백엔드
-- **언어 및 프레임워크**: Java 17, Spring Boot 3.0
+- **언어 및 프레임워크**: Java 17, Spring Boot 3.4
 - **보안**: Spring Security, JWT
 - **데이터베이스**: MySQL, Redis
 - **ORM**: Spring Data JPA, Querydsl

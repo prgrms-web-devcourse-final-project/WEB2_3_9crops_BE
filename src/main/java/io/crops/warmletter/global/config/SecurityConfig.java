@@ -62,11 +62,10 @@ public class SecurityConfig {
                                 authorizeRequests
                                         .requestMatchers("/api/reissue")
                                         .permitAll()
-                                        .requestMatchers("/api/auth/**")
+                                        .requestMatchers("/api/auth/token")
                                         .permitAll()
                                         .requestMatchers("/swagger-ui/**")
                                         .permitAll() // Swagger UI 허용
-                                        .requestMatchers("/api/**").permitAll()
                                         .requestMatchers("/v3/api-docs/**")
                                         .permitAll() // API Docs 허용
                                         .requestMatchers("/login/**")

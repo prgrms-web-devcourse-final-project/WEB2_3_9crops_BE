@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,6 +30,7 @@ public class BadWordController {
 
     @PostMapping
     @Operation(summary = "금칙어 등록", description = "금칙어 등록하는 API입니다.")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<BadWordResponse>> createBadWord(@RequestBody @Valid CreateBadWordRequest request) {
         BadWordResponse response = badWordService.createBadWord(request);
         return ResponseEntity.ok(BaseResponse.of(response, "금칙어 등록완료"));
@@ -36,6 +38,7 @@ public class BadWordController {
 
     @PatchMapping("/{badWordId}/status")
     @Operation(summary = "금칙어 상태변경", description = "금칙어 상태변경 활성여부 API입니다.")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<BadWordResponse>> updateBadWordStatus(
             @PathVariable Long badWordId,
             @RequestBody @Valid UpdateBadWordStatusRequest request) {
@@ -45,6 +48,7 @@ public class BadWordController {
 
     @GetMapping
     @Operation(summary = "금칙어 조회", description = "등록된 금칙어 조회하는 API입니다.")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<List<Map<String, String>>>> getBadWords() {
         List<Map<String, String>> response = badWordService.getBadWords();
         return ResponseEntity.ok(BaseResponse.of(response, "금칙어 조회"));
@@ -52,6 +56,7 @@ public class BadWordController {
 
     @PatchMapping("/{badWordId}")
     @Operation(summary = "금칙어 변경", description = "기존에 있는 금칙어를 변경하는 API입니다.")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<UpdateBadWordResponse>> updateBadWord(
             @PathVariable Long badWordId,
             @RequestBody @Valid UpdateBadWordRequest request) {
@@ -60,6 +65,7 @@ public class BadWordController {
     }
 
     @DeleteMapping("/{badwordId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<String>> deleteBadWord(@PathVariable("badwordId") Long badWordId) {
         badWordService.deleteBadWord(badWordId);
         return ResponseEntity.ok(BaseResponse.of(null, "금칙어 영구삭제"));

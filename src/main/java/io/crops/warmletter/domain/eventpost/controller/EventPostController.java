@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -27,6 +28,7 @@ public class EventPostController {
 
     @GetMapping("/admin/event-posts")
     @Operation(summary = "전체 이벤트 게시판 조회", description = "이벤트 게시판 전체를 조회합니다.")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<PageResponse<EventPostsResponse>>> getEventPosts(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Pageable eventPostsPageable = PageableConverter.convertToPageable(pageable);
@@ -35,12 +37,14 @@ public class EventPostController {
 
     @PostMapping("/admin/event-posts")
     @Operation(summary = "이벤트 게시판 생성", description = "미사용인 새로운 이벤트 게시판을 생성합니다.")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<EventPostResponse>> createEventPost(@RequestBody @Valid CreateEventPostRequest createEventPostRequest){
         return ResponseEntity.ok(BaseResponse.of(eventPostService.createEventPost(createEventPostRequest),"게시판 생성 성공"));
     }
 
     @DeleteMapping("/admin/event-posts/{eventPostId}")
     @Operation(summary = "이벤트 게시판 삭제", description = "특정 이벤트 게시판을 삭제합니다.(임시 기능)")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<Map<String,Long>>> deleteEventPost(@PathVariable Long eventPostId){
         return ResponseEntity.ok(BaseResponse.of(eventPostService.deleteEventPost(eventPostId),"게시판 삭제 성공"));
     }
@@ -62,6 +66,7 @@ public class EventPostController {
 
     @PatchMapping("/admin/event-posts/{eventPostId}/status")
     @Operation(summary = "이벤트 게시판 사용여부 변경", description = "이벤트 게시판의 사용 여부를 변경하며, 사용중인 게시판은 하나만 적용됩니다. (사용중(true) <-> 미사용(false))")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BaseResponse<EventPostStatusResponse>> updateEventPostIsUsed(@PathVariable Long eventPostId){
         return ResponseEntity.ok(BaseResponse.of(eventPostService.updateEventPostIsUsed(eventPostId),"게시판 사용여부 변경 성공"));
     }

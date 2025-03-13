@@ -1,5 +1,4 @@
 package io.crops.warmletter.domain.share.cache;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,8 +8,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,19 +33,21 @@ class PostLikeRedisManagerTest {
     }
 
     @Test
-    @DisplayName("좋아요 토글 - 최초 좋아요")
+    @DisplayName("좋아요 토글 - 좋아요 추가")
     void toggleLike_Success() {
         // given
         Long postId = 1L;
         Long memberId = 1L;
         String key = "post:1:like:memberId:1";
-        when(valueOperations.get(key)).thenReturn(null);
+        String countKey = "post:1:like:count";
+        boolean status = true;
 
         // when
-        postLikeRedisManager.toggleLike(postId, memberId);
+        postLikeRedisManager.toggleLike(postId, memberId,status);
 
         // then
         verify(valueOperations).set(key, "true");
+        verify(valueOperations).increment(countKey);
     }
 
     @Test
@@ -56,13 +57,48 @@ class PostLikeRedisManagerTest {
         Long postId = 1L;
         Long memberId = 1L;
         String key = "post:1:like:memberId:1";
-        when(valueOperations.get(key)).thenReturn("true");
+        String countKey = "post:1:like:count";
+        boolean status = false;
 
         // when
-        postLikeRedisManager.toggleLike(postId, memberId);
+        postLikeRedisManager.toggleLike(postId, memberId,status);
 
         // then
         verify(valueOperations).set(key, "false");
+        verify(valueOperations).decrement(countKey);
+    }
+
+    @Test
+    @DisplayName("좋아요 상태 조회 - Redis에 데이터 있음")
+    void getLikedStatus_DataExists() {
+        // given
+        Long postId = 1L;
+        Long memberId = 1L;
+        String key = "post:1:like:memberId:1";
+        when(valueOperations.get(key)).thenReturn("true");
+
+        // when
+        Optional<Boolean> result = postLikeRedisManager.getLikedStatus(postId, memberId);
+
+        // then
+        assertTrue(result.isPresent());
+        assertTrue(result.get());
+    }
+
+    @Test
+    @DisplayName("좋아요 상태 조회 - Redis에 데이터 없음")
+    void getLikedStatus_NoData() {
+        // given
+        Long postId = 1L;
+        Long memberId = 1L;
+        String key = "post:1:like:memberId:1";
+        when(valueOperations.get(key)).thenReturn(null);
+
+        // when
+        Optional<Boolean> result = postLikeRedisManager.getLikedStatus(postId, memberId);
+
+        // then
+        assertFalse(result.isPresent());
     }
 
     @Test
@@ -79,7 +115,7 @@ class PostLikeRedisManagerTest {
         assertTrue(likeStatus.get("post:1:like:memberId:1"));
         assertFalse(likeStatus.get("post:2:like:memberId:1"));
     }
-//        String value = redisTemplate.opsForValue().get(key);
+
     @Test
     @DisplayName("상태 확인 - 좋아요 없음")
     void isLiked_False() {
@@ -137,22 +173,53 @@ class PostLikeRedisManagerTest {
         assertFalse(result);
         verify(valueOperations).get(key);
     }
-
     @Test
-    @DisplayName("좋아요 토글 - false에서 true로 변경")
-    void toggleLike_FromFalseToTrue() {
+    @DisplayName("좋아요 카운트 조회")
+    void getLikeCount() {
         // given
         Long postId = 1L;
-        Long memberId = 1L;
-        String key = "post:1:like:memberId:1";
-        when(valueOperations.get(key)).thenReturn("false");
+        String countKey = "post:1:like:count";
+        when(valueOperations.get(countKey)).thenReturn("5");
 
         // when
-        postLikeRedisManager.toggleLike(postId, memberId);
+        int count = postLikeRedisManager.getLikeCount(postId);
 
         // then
-        verify(valueOperations).set(key, "true");
+        assertEquals(5, count);
+        verify(valueOperations).get(countKey);
     }
+
+    @Test
+    @DisplayName("좋아요 카운트 조회 - 데이터 없음")
+    void getLikeCount_NoData() {
+        // given
+        Long postId = 1L;
+        String countKey = "post:1:like:count";
+        when(valueOperations.get(countKey)).thenReturn(null);
+
+        // when
+        int count = postLikeRedisManager.getLikeCount(postId);
+
+        // then
+        assertEquals(0, count);
+        verify(valueOperations).get(countKey);
+    }
+
+//    @Test
+//    @DisplayName("좋아요 토글 - false에서 true로 변경")
+//    void toggleLike_FromFalseToTrue() {
+//        // given
+//        Long postId = 1L;
+//        Long memberId = 1L;
+//        String key = "post:1:like:memberId:1";
+//        when(valueOperations.get(key)).thenReturn("false");
+//
+//        // when
+//        postLikeRedisManager.toggleLike(postId, memberId,);
+//
+//        // then
+//        verify(valueOperations).set(key, "true");
+//    }
 
     @Test
     @DisplayName("isLiked - 빈 문자열 값일 경우 false 반환")
@@ -176,10 +243,9 @@ class PostLikeRedisManagerTest {
     void clearCache_WithNullKeys() {
         // given
         when(redisTemplate.keys("post:*:like:memberId:*")).thenReturn(null);
-
+        when(redisTemplate.keys("post:*:like:count")).thenReturn(null);
         // when
         postLikeRedisManager.clearCache();
-
         // then
         verify(redisTemplate, never()).delete(any(Set.class));
     }
@@ -207,6 +273,7 @@ class PostLikeRedisManagerTest {
     void clearCache_WithEmptySet() {
         // given
         when(redisTemplate.keys("post:*:like:memberId:*")).thenReturn(Set.of());
+        when(redisTemplate.keys("post:*:like:count")).thenReturn(Set.of());
 
         // when
         postLikeRedisManager.clearCache();

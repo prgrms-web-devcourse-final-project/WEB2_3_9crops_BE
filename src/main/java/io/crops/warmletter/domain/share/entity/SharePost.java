@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(
         indexes = {
-                @Index(name = "idx_sharepost_active_created", columnList = "isActive,createdAt")
+                @Index(name = "idx_sharepost_active_id", columnList = "isActive,id")
         }
 )
 public class SharePost extends BaseEntity {

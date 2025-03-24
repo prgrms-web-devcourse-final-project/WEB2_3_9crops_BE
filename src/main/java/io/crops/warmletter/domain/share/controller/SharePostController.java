@@ -1,21 +1,16 @@
 package io.crops.warmletter.domain.share.controller;
+import io.crops.warmletter.domain.share.dto.response.CursorResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.service.SharePostService;
 import io.crops.warmletter.global.response.BaseResponse;
-import io.crops.warmletter.global.response.PageResponse;
-import io.crops.warmletter.global.util.PageableConverter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-
 
 @RestController
 @RequestMapping("/api/share-posts")
@@ -27,11 +22,12 @@ public class SharePostController {
 
     @Operation(summary = "공유 게시글 목록 조회", description = "페이징 처리된 공유 게시글 목록을 조회합니다.")
     @GetMapping()
-    public ResponseEntity<BaseResponse<PageResponse<SharePostResponse>>> getAllPosts(
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    public ResponseEntity<BaseResponse<CursorResponse<SharePostResponse>>> getAllPosts(
+            @RequestParam(required = false) Long cursorId,
+            @RequestParam(defaultValue = "10") int size
     ) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(BaseResponse.of(new PageResponse<>(sharePostService.getAllPosts(PageableConverter.convertToPageable(pageable))), "공유 게시글 조회 성공"));
+                .body(BaseResponse.of(sharePostService.getAllPosts(cursorId, size), "공유 게시글 조회 성공"));
     }
 
     @Operation(summary = "공유 게시글 상세 조회", description = "특정 ID의 공유 게시글 상세 정보를 조회합니다.")

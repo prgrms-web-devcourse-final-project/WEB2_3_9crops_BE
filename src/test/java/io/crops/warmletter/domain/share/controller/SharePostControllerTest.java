@@ -1,4 +1,5 @@
 package io.crops.warmletter.domain.share.controller;
+import io.crops.warmletter.domain.share.dto.response.CursorResponse;
 import io.crops.warmletter.domain.share.dto.response.ShareLetterPostResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -21,7 +21,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -43,73 +42,78 @@ class SharePostControllerTest {
 
     @BeforeEach
     void createSharePost() {
-        // 테스트에서 사용되는 값을 고정
         LocalDateTime fixedCreatedAt = LocalDateTime.of(2025, 2, 28, 12, 0, 0, 0);
 
-        // SharePostResponse 객체를 새 생성자를 사용하여 생성
         sharePostResponse1 = new SharePostResponse(1L, 1L, "12345", "67890", "to share my post", true, fixedCreatedAt);
         sharePostResponse2 = new SharePostResponse(2L, 2L, "12345", "67890", "to share my post1", true, fixedCreatedAt);
     }
 
     @Test
-    @DisplayName("페이징된 공유 게시글 반환 ")
+    @DisplayName("커서 공유 게시글 반환 ")
     void getAllPosts() throws Exception {
         // given
-        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "createdAt"));
         List<SharePostResponse> posts = List.of(sharePostResponse1, sharePostResponse2);
-        Page<SharePostResponse> postPage = new PageImpl<>(posts, pageable, posts.size());
-        when(sharePostService.getAllPosts(any(Pageable.class))).thenReturn(postPage);
+        CursorResponse<SharePostResponse> cursorResponse = new CursorResponse<>(posts, 2L, true);
+        when(sharePostService.getAllPosts(null, 10)).thenReturn(cursorResponse);
 
         // when
         mockMvc.perform(get("/api/share-posts")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.content", hasSize(2)))
-                .andExpect(jsonPath("$.data.content[0].content").value("to share my post"))
-                .andExpect(jsonPath("$.data.content[1].content").value("to share my post1"))
-                .andExpect(jsonPath("$.data.currentPage").value(1))
-                .andExpect(jsonPath("$.data.totalElements").value(2))
-                .andExpect(jsonPath("$.data.size").value(10))
+                .andExpect(jsonPath("$.data.data", hasSize(2)))
+                .andExpect(jsonPath("$.data.data[0].content").value("to share my post"))
+                .andExpect(jsonPath("$.data.data[1].content").value("to share my post1"))
+                .andExpect(jsonPath("$.data.nextCursor").value(2))
+                .andExpect(jsonPath("$.data.hasNext").value(true))
                 .andExpect(jsonPath("$.message").value("공유 게시글 조회 성공"))
                 .andDo(print());
     }
 
+
+
     @Test
-    @DisplayName("페이지 파라미터에 따라서 해당 페이지 반환 ")
+    @DisplayName("커서 ID 파라미터에 따라서 해당 페이지 반환 ")
     void getAllPosts_ReturnsSpecificPage() throws Exception {
         // given
-        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<SharePostResponse> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 20);
+        List<SharePostResponse> posts = List.of(sharePostResponse2);
+        Long cursorId = 3L;
+        Long nextCursorId = 2L;
+        CursorResponse<SharePostResponse> cursorResponse = new CursorResponse<>(posts, nextCursorId, true);
 
-        when(sharePostService.getAllPosts(any(Pageable.class))).thenReturn(emptyPage);
+        when(sharePostService.getAllPosts(cursorId,10)).thenReturn(cursorResponse);
 
         // when & then
         mockMvc.perform(get("/api/share-posts")
-                        .param("page", "1")
+                        .param("cursorId", cursorId.toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.content").isArray())
-                .andExpect(jsonPath("$.data.currentPage").value(1))
-                .andExpect(jsonPath("$.data.totalElements").value(20))
+                .andExpect(jsonPath("$.data.data").isArray())
+                .andExpect(jsonPath("$.data.data", hasSize(1)))
+                .andExpect(jsonPath("$.data.nextCursor").value(nextCursorId))
+                .andExpect(jsonPath("$.data.hasNext").value(true))
                 .andExpect(jsonPath("$.message").value("공유 게시글 조회 성공"))
                 .andDo(print());
     }
-
-
     @Test
-    @DisplayName("음수 페이지 요청시 예외 발생")
-    void getAllPosts_ThrowsException_WhenPageNumberIsNegative() throws Exception {
+    @DisplayName("마지막 페이지 조회 - 다음 페이지 없음")
+    void getAllPosts_LastPage() throws Exception {
         // given
-        when(sharePostService.getAllPosts(any(Pageable.class)))
-                .thenThrow(new BusinessException(ErrorCode.INVALID_PAGE_REQUEST));
+        List<SharePostResponse> posts = List.of(sharePostResponse2);
+        Long cursorId = 3L;
+        CursorResponse<SharePostResponse> cursorResponse = new CursorResponse<>(posts, null, false);
+
+        when(sharePostService.getAllPosts(cursorId, 10)).thenReturn(cursorResponse);
 
         // when & then
         mockMvc.perform(get("/api/share-posts")
-                        .param("page", "-1")
+                        .param("cursorId", cursorId.toString())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_PAGE_REQUEST.getCode()))
-                .andExpect(jsonPath("$.message").value(ErrorCode.INVALID_PAGE_REQUEST.getMessage()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.data").isArray())
+                .andExpect(jsonPath("$.data.data", hasSize(1)))
+                .andExpect(jsonPath("$.data.nextCursor").isEmpty())
+                .andExpect(jsonPath("$.data.hasNext").value(false))
+                .andExpect(jsonPath("$.message").value("공유 게시글 조회 성공"))
                 .andDo(print());
     }
 

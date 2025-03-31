@@ -17,7 +17,6 @@ import io.crops.warmletter.domain.report.dto.response.ReportResponse;
 import io.crops.warmletter.domain.report.dto.response.ReportsResponse;
 import io.crops.warmletter.domain.report.dto.response.UpdateReportResponse;
 import io.crops.warmletter.domain.report.entity.Report;
-import io.crops.warmletter.domain.report.enums.ReasonType;
 import io.crops.warmletter.domain.report.enums.ReportStatus;
 import io.crops.warmletter.domain.report.enums.ReportType;
 import io.crops.warmletter.domain.report.exception.DuplicateReportException;
@@ -33,10 +32,11 @@ import io.crops.warmletter.domain.timeline.dto.request.NotificationRequest;
 import io.crops.warmletter.domain.timeline.enums.AlarmType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Async;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -45,7 +45,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ReportService {
 
@@ -55,7 +57,7 @@ public class ReportService {
     private final EventCommentRepository eventCommentRepository;
     private final MemberRepository memberRepository;
     private final ShareProposalRepository shareProposalRepository;
-    private final ReportModerationService reportModerationService;
+    private final ReportAsyncProcessor reportAsyncProcessor;
 
     private final AuthFacade authFacde;
 
@@ -101,7 +103,6 @@ public class ReportService {
     @Transactional
     public ReportResponse createReport(CreateReportRequest request) {
         Long memberId = authFacde.getCurrentUserId();
-        //Long memberId = 1L;
         Map<String, String> reportedContentMap = new HashMap<>();
         validateRequest(request, memberId, reportedContentMap);
         String reportedContent = reportedContentMap.get("content");
@@ -125,19 +126,12 @@ public class ReportService {
         }
         Report report = builder.build();
         Report savedReport = reportRepository.save(report);
-
-        processReportInBackground(savedReport.getId(), reportedContent, request.getReasonType(), request.getReason());
+        reportAsyncProcessor.processReportInBackground(savedReport.getId(), reportedContent, request.getReasonType(), request.getReason());
 
         return new ReportResponse(savedReport);
     }
 
     // 신고 AI 판별 비동기 처리
-    @Async
-    public void processReportInBackground(Long reportId, String reportedContent, ReasonType reasonType, String reason) {
-        Map<String, String> moderationResult = reportModerationService.moderateText(reportedContent, reasonType, reason);
-        updateReportWithAIResult(reportId, moderationResult);
-    }
-
     @Transactional
     public void updateReportWithAIResult(Long reportId, Map<String, String> moderationResult) {
         Report report = reportRepository.findById(reportId)

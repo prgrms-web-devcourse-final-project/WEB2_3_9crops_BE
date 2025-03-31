@@ -63,6 +63,9 @@ class ReportServiceTest {
     @Mock private MemberRepository memberRepository;
     private Report report;
     private Member reportedMember;
+
+    @Mock
+    private ReportAsyncProcessor reportAsyncProcessor;
     @InjectMocks private ReportService reportService;
     @Mock private ReportModerationService reportModerationService;
 
@@ -89,18 +92,17 @@ class ReportServiceTest {
 
     @Test
     @DisplayName("정상적인 신고 등록 (LETTER)")
-    void createReport_Success_Letter() throws Exception {
-        // Given: 신고 요청 생성
+    void createReport_Success_Letter() {
+        // Given
         CreateReportRequest request = new CreateReportRequest(
                 ReportType.LETTER,
                 ReasonType.ABUSE,
                 "부적절한 내용",
-                1L,  // letterId
+                1L, // letterId
                 null,
                 null
         );
 
-        // Letter 객체 생성 (fetchReportedContent 메서드에서 사용)
         Letter letter = Letter.builder()
                 .writerId(1003L)
                 .receiverId(null)
@@ -114,10 +116,8 @@ class ReportServiceTest {
                 .paperType(null)
                 .matchingId(null)
                 .build();
-        // 빌드 후 Reflection을 사용해 id 값을 설정
         ReflectionTestUtils.setField(letter, "id", 1L);
 
-        // Report 객체 생성 (reportRepository.save 반환값)
         Report report = Report.builder()
                 .id(1L)
                 .memberId(1003L)
@@ -131,50 +131,46 @@ class ReportServiceTest {
 
         // Stubbing
         when(authFacade.getCurrentUserId()).thenReturn(1003L);
-        // 불필요한 existsById stubbing은 제거하거나 lenient()로 처리:
-        // lenient().when(letterRepository.existsById(1L)).thenReturn(true);
         when(letterRepository.findById(1L)).thenReturn(Optional.of(letter));
         when(reportRepository.existsByLetterIdAndMemberId(1L, 1003L)).thenReturn(false);
         when(reportRepository.save(any(Report.class))).thenReturn(report);
 
-        // 비동기 목 데이터 테스트 추가
-        when(reportModerationService.moderateText(anyString(), any(), anyString()))
-                .thenReturn(Map.of("status", "RESOLVED"));
-        when(reportRepository.findById(report.getId())).thenReturn(Optional.of(report));
-        when(memberRepository.findById(1003L)).thenReturn(Optional.of(reportedMember));
-
-        // When: 신고 생성
+        // When
         ReportResponse response = reportService.createReport(request);
 
-        // Then: 결과 검증
+        // Then
         assertNotNull(response);
         assertEquals("LETTER", response.getReportType());
         assertEquals("ABUSE", response.getReasonType());
         assertEquals("부적절한 내용", response.getReason());
 
-        // 추가 검증 (예: repository 호출 횟수 등)
+        // Verify
         verify(authFacade, times(1)).getCurrentUserId();
-        // verify(letterRepository, times(1)).existsById(1L);  // 필요없으면 제거
-        verify(letterRepository, times(3)).findById(1L);
+        verify(letterRepository, times(1)).findById(1L);
         verify(reportRepository, times(1)).existsByLetterIdAndMemberId(1L, 1003L);
-        verify(reportRepository, times(2)).save(any(Report.class));
-        verify(reportModerationService, times(1)).moderateText(anyString(), any(), anyString()); // 비동기 메서드 호출 검증
+        verify(reportRepository, times(1)).save(any(Report.class));
+        verify(reportAsyncProcessor, times(1)).processReportInBackground(
+                any(Long.class),
+                any(String.class),
+                any(ReasonType.class),
+                any(String.class)
+        );
     }
+
 
     @Test
     @DisplayName("정상적인 신고 등록 (EVENT_COMMENT)")
     void createReport_Success_EventComment() throws Exception {
-        // Given: 신고 요청 생성
+        // Given
         CreateReportRequest request = new CreateReportRequest(
                 ReportType.EVENT_COMMENT,
                 ReasonType.HARASSMENT,
                 "혐오 발언",
                 null,
                 null,
-                3L    // eventCommentId
+                3L
         );
 
-        // Report 객체 생성 (reportRepository.save 반환값)
         Report report = Report.builder()
                 .id(3L)
                 .memberId(1003L)
@@ -186,36 +182,29 @@ class ReportServiceTest {
                 .eventCommentId(3L)
                 .build();
 
-        // EventComment 객체를 모킹하여 fetchReportedContent에서 사용될 데이터를 제공
         EventComment mockEventComment = mock(EventComment.class);
         when(mockEventComment.getContent()).thenReturn("테스트 댓글 내용");
 
         // Stubbing
         when(authFacade.getCurrentUserId()).thenReturn(1003L);
-        // fetchReportedContent 내부에서 eventCommentRepository.findById(3L)를 호출합니다.
         when(eventCommentRepository.findById(3L)).thenReturn(Optional.of(mockEventComment));
         when(reportRepository.existsByEventCommentIdAndMemberId(3L, 1003L)).thenReturn(false);
         when(reportRepository.save(any(Report.class))).thenReturn(report);
 
-        // 비동기 목 데이터 테스트 추가
-        when(reportModerationService.moderateText(anyString(), any(), anyString()))
-                .thenReturn(Map.of("status", "RESOLVED"));
-        when(reportRepository.findById(report.getId())).thenReturn(Optional.of(report));
-
-        // When: 신고 생성
+        // When
         ReportResponse response = reportService.createReport(request);
 
-        // Then: 결과 검증
+        // Then
         assertNotNull(response);
         assertEquals("EVENT_COMMENT", response.getReportType());
         assertEquals("HARASSMENT", response.getReasonType());
 
-        // 추가 검증: 각 의존성 호출 횟수 확인
+        // Verify
         verify(authFacade, times(1)).getCurrentUserId();
-        verify(eventCommentRepository, times(2)).findById(3L);
+        verify(eventCommentRepository, times(1)).findById(3L);
         verify(reportRepository, times(1)).existsByEventCommentIdAndMemberId(3L, 1003L);
-        verify(reportRepository, times(2)).save(any(Report.class));
-        verify(reportModerationService, times(1)).moderateText(anyString(), any(), anyString()); // 비동기 메서드 호출 검증
+        verify(reportRepository, times(1)).save(any(Report.class));
+        verify(reportModerationService, times(0)).moderateText(anyString(), any(), anyString()); // 호출 안되므로 검증 제외
     }
 
     @Test
@@ -233,7 +222,7 @@ class ReportServiceTest {
     @Test
     @DisplayName("정상적인 신고 등록 (SHARE_POST)")
     void createReport_Success_SharePost() {
-        // Given: 신고 요청 생성 (SHARE_POST 타입)
+        // Given
         CreateReportRequest request = new CreateReportRequest(
                 ReportType.SHARE_POST,
                 ReasonType.ETC,
@@ -246,7 +235,6 @@ class ReportServiceTest {
         SharePost sharePost = mock(SharePost.class);
         when(sharePost.getContent()).thenReturn("공유 게시글 내용");
 
-        // Report 객체 생성 (reportRepository.save 반환값)
         Report report = Report.builder()
                 .id(1L)
                 .memberId(1003L)
@@ -264,28 +252,21 @@ class ReportServiceTest {
         when(reportRepository.existsBySharePostIdAndMemberId(2L, 1003L)).thenReturn(false);
         when(reportRepository.save(any(Report.class))).thenReturn(report);
 
-        // 비동기 목 데이터 테스트 추가
-        when(reportModerationService.moderateText(anyString(), any(), anyString()))
-                .thenReturn(Map.of("status", "RESOLVED"));
-        when(reportRepository.findById(report.getId())).thenReturn(Optional.of(report));
-
-        // When: 신고 생성
+        // When
         ReportResponse response = reportService.createReport(request);
 
-        // Then: 결과 검증
+        // Then
         assertNotNull(response);
         assertEquals("SHARE_POST", response.getReportType());
         assertEquals("ETC", response.getReasonType());
         assertEquals("신고 내용", response.getReason());
 
-        // 각 의존성 호출 횟수 검증
-        verify(authFacade, times(1)).getCurrentUserId();
-        verify(sharePostRepository, times(2)).findById(2L);
-        verify(reportRepository, times(1)).existsBySharePostIdAndMemberId(2L, 1003L);
-        verify(reportRepository, times(2)).save(any(Report.class));
-        verify(reportModerationService, times(1)).moderateText(anyString(), any(), anyString()); // 비동기 메서드 호출 검증
+        // Verify
+        verify(authFacade).getCurrentUserId();
+        verify(sharePostRepository).findById(2L); // 호출 1회
+        verify(reportRepository).existsBySharePostIdAndMemberId(2L, 1003L);
+        verify(reportRepository, times(1)).save(any(Report.class)); // 저장은 실제로 2번 이뤄질 수 있음
     }
-
 
     @Test
     @DisplayName("예외 - 중복 Letter 신고")

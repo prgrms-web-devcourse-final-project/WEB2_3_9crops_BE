@@ -1,16 +1,14 @@
 package io.crops.warmletter.domain.share.service;
 import io.crops.warmletter.domain.auth.facade.AuthFacade;
+import io.crops.warmletter.domain.share.dto.response.CursorResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostDetailResponse;
 import io.crops.warmletter.domain.share.dto.response.SharePostResponse;
 import io.crops.warmletter.domain.share.entity.SharePost;
 import io.crops.warmletter.domain.share.exception.ShareAccessException;
-import io.crops.warmletter.domain.share.exception.SharePageException;
 import io.crops.warmletter.domain.share.exception.SharePostNotFoundException;
 import io.crops.warmletter.domain.share.repository.SharePostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -24,13 +22,17 @@ public class SharePostService {
     private final AuthFacade authFacade;
 
     @Transactional(readOnly = true)
-    public Page<SharePostResponse> getAllPosts(Pageable pageable) {
+    public CursorResponse<SharePostResponse> getAllPosts(Long cursorId, int size) {
+        List<SharePostResponse> responses = sharePostRepository.findAllActiveSharePostsWithZipCodes(cursorId, size+1);
 
-        if (pageable.getPageNumber() < 0) {
-            throw new SharePageException();
+        boolean hasNext = responses.size()>size;
+
+        if (hasNext) {
+            responses = responses.subList(0,size);
         }
+        Long nextCursorId = hasNext && !responses.isEmpty() ? responses.get(responses.size() - 1).getSharePostId() : null;
 
-        return sharePostRepository.findAllActiveSharePostsWithZipCodes(pageable);
+        return new CursorResponse<>(responses, nextCursorId, hasNext);
     }
 
     @Transactional(readOnly = true)
